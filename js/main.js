@@ -1,3 +1,4 @@
+// DOM 요소 참조
 const menuToggle = document.querySelector('.menu-toggle');
 const primaryNav = document.querySelector('.primary-nav');
 const topButton = document.querySelector('#top-button');
@@ -13,6 +14,7 @@ const projectsEmpty = document.querySelector('#projects-empty');
 const projectsError = document.querySelector('#projects-error');
 const typingText = document.querySelector('#typing-text');
 
+// 프로젝트 전역 설정
 const GITHUB_USERNAME = 'myy-dev';
 const STORAGE_THEME_KEY = 'portfolio-theme';
 const TYPING_MESSAGES = [
@@ -24,6 +26,7 @@ const TYPING_MESSAGES = [
 let allRepos = [];
 let selectedLanguage = 'ALL';
 
+// 모바일 메뉴 열기/닫기 및 메뉴 클릭 시 닫기
 if (menuToggle && primaryNav) {
   menuToggle.addEventListener('click', () => {
     const isOpen = primaryNav.classList.toggle('is-open');
@@ -38,9 +41,11 @@ if (menuToggle && primaryNav) {
   });
 }
 
+// 선택한 테마를 HTML 속성과 localStorage에 반영
 const setTheme = (theme) => {
   document.documentElement.setAttribute('data-theme', theme);
   localStorage.setItem(STORAGE_THEME_KEY, theme);
+
   if (themeToggle) {
     themeToggle.textContent = theme === 'dark' ? '☀️' : '🌙';
     themeToggle.setAttribute(
@@ -50,6 +55,7 @@ const setTheme = (theme) => {
   }
 };
 
+// 저장된 테마가 있으면 사용하고, 없으면 OS 설정을 기준으로 초기화
 const initTheme = () => {
   const savedTheme = localStorage.getItem(STORAGE_THEME_KEY);
   const preferDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -57,58 +63,80 @@ const initTheme = () => {
   setTheme(initialTheme);
 };
 
+// 현재 테마를 기준으로 다크/라이트 모드 전환
 const toggleTheme = () => {
   const currentTheme = document.documentElement.getAttribute('data-theme');
   setTheme(currentTheme === 'dark' ? 'light' : 'dark');
 };
 
+// 스크롤 위치에 따라 헤더 그림자와 맨 위 버튼 표시 상태 변경
 const handleScrollUi = () => {
   const y = window.scrollY;
+
   if (topButton) {
     topButton.classList.toggle('visible', y >= 300);
   }
+
   if (siteHeader) {
     siteHeader.classList.toggle('scrolled', y >= 60);
   }
 };
 
+// 이메일 형식 정규식
 const emailRegExp = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+// 지정한 시간만큼 비동기 흐름 지연
+const delay = (ms) =>
+  new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
+
+// 입력 필드별 에러 메시지 표시
 const setFieldError = (inputId, message) => {
   const errorElement = document.querySelector(`#${inputId}-error`);
+
   if (errorElement) {
     errorElement.textContent = message;
   }
 };
 
+// 연락 폼 입력값 검증 후 필드별 에러 객체 반환
 const validateForm = (formData) => {
   const errors = {};
+
   if (!formData.name.trim()) {
     errors.name = '이름 입력 필요';
   }
+
   if (!formData.email.trim()) {
     errors.email = '이메일 입력 필요';
   } else if (!emailRegExp.test(formData.email.trim())) {
     errors.email = '이메일 형식 확인 필요';
   }
+
   if (!formData.message.trim()) {
     errors.message = '메시지 입력 필요';
   }
+
   return errors;
 };
 
+// 프로젝트 목록의 로딩/빈 상태/에러 상태 UI 반영
 const setProjectsState = (state, message = '') => {
   if (!projectGrid || !projectsFeedback || !projectsEmpty || !projectsError) {
     return;
   }
+
   projectsFeedback.textContent = message;
   projectsEmpty.hidden = state !== 'empty';
   projectsError.hidden = state !== 'error';
+
   if (state !== 'success') {
     projectGrid.innerHTML = '';
   }
 };
 
+// GitHub 저장소 데이터를 프로젝트 카드 DOM으로 변환
 const createProjectCard = (repo) => {
   const card = document.createElement('article');
   card.className = 'project-card reveal';
@@ -119,8 +147,10 @@ const createProjectCard = (repo) => {
   return card;
 };
 
+// 저장소 언어 목록으로 필터 버튼 생성
 const renderFilterButtons = (repos) => {
   if (!projectFilters) return;
+
   const languages = [
     'ALL',
     ...new Set(
@@ -129,6 +159,7 @@ const renderFilterButtons = (repos) => {
         .filter((language) => typeof language === 'string' && language.trim()),
     ),
   ];
+
   projectFilters.innerHTML = '';
   languages.forEach((language) => {
     const button = document.createElement('button');
@@ -136,59 +167,84 @@ const renderFilterButtons = (repos) => {
     button.className = 'filter-button';
     button.textContent = language;
     button.dataset.language = language;
+
     if (language === selectedLanguage) {
       button.classList.add('active');
     }
+
     button.addEventListener('click', () => {
       selectedLanguage = language;
       renderProjectsByLanguage();
     });
+
     projectFilters.appendChild(button);
   });
 };
 
+// 선택한 언어 필터에 맞춰 프로젝트 목록 렌더링
 const renderProjectsByLanguage = () => {
-  if (!projectGrid || !projectFilters) return;
+  if (
+    !projectGrid ||
+    !projectFilters ||
+    !projectsFeedback ||
+    !projectsEmpty ||
+    !projectsError
+  ) {
+    return;
+  }
+
   const filteredRepos =
     selectedLanguage === 'ALL'
       ? allRepos
       : allRepos.filter((repo) => repo.language === selectedLanguage);
+
   projectGrid.innerHTML = '';
   filteredRepos.forEach((repo) => {
     projectGrid.appendChild(createProjectCard(repo));
   });
+
   projectsEmpty.hidden = filteredRepos.length !== 0;
   projectsError.hidden = true;
   projectsFeedback.textContent =
     selectedLanguage === 'ALL'
       ? `성공 상태 (${filteredRepos.length}건)`
       : `성공 상태 (${selectedLanguage}, ${filteredRepos.length}건)`;
+
   projectFilters.querySelectorAll('.filter-button').forEach((button) => {
     button.classList.toggle(
       'active',
       button.dataset.language === selectedLanguage,
     );
   });
+
   observeRevealItems();
 };
 
+// GitHub API에서 최신 저장소 목록 조회
 const fetchProjects = async () => {
   try {
     setProjectsState('loading', '로딩 중...');
-    const response = await fetch(
-      `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=8`,
-    );
+
+    const [response] = await Promise.all([
+      fetch(
+        `https://api.github.com/users/${GITHUB_USERNAME}/repos?sort=updated&per_page=8`,
+      ),
+      delay(2000),
+    ]);
+
     if (!response.ok) {
       if (response.status === 403) {
         throw new Error('GitHub API 호출 제한 상태');
       }
       throw new Error('프로젝트 조회 실패');
     }
+
     const repos = await response.json();
     if (!Array.isArray(repos) || repos.length === 0) {
       setProjectsState('empty', '빈 상태');
       return;
     }
+
     allRepos = repos.slice(0, 8);
     selectedLanguage = 'ALL';
     renderFilterButtons(allRepos);
@@ -198,6 +254,7 @@ const fetchProjects = async () => {
   }
 };
 
+// 화면에 들어온 섹션과 프로젝트 카드에 reveal 애니메이션 적용
 const observeRevealItems = () => {
   const revealItems = document.querySelectorAll('.section, .project-card');
   const observer = new IntersectionObserver(
@@ -210,25 +267,30 @@ const observeRevealItems = () => {
     },
     { threshold: 0.2 },
   );
+
   revealItems.forEach((item) => {
     item.classList.add('reveal');
     observer.observe(item);
   });
 };
 
+// 히어로 영역 소개 문구 타이핑 효과 실행
 const startTypingEffect = () => {
   if (!typingText) return;
+
   let textIndex = 0;
   let charIndex = 0;
   let isDeleting = false;
 
   const type = () => {
     const currentText = TYPING_MESSAGES[textIndex];
+
     if (isDeleting) {
       charIndex -= 1;
     } else {
       charIndex += 1;
     }
+
     typingText.textContent = currentText.slice(0, charIndex);
 
     let delay = isDeleting ? 50 : 95;
@@ -240,11 +302,14 @@ const startTypingEffect = () => {
       textIndex = (textIndex + 1) % TYPING_MESSAGES.length;
       delay = 260;
     }
+
     setTimeout(type, delay);
   };
+
   type();
 };
 
+// 이벤트 연결
 if (themeToggle) {
   themeToggle.addEventListener('click', toggleTheme);
 }
@@ -258,6 +323,7 @@ if (topButton) {
 if (contactForm) {
   contactForm.addEventListener('submit', async (event) => {
     event.preventDefault();
+
     const formData = {
       name: contactForm.name.value,
       email: contactForm.email.value,
@@ -265,15 +331,19 @@ if (contactForm) {
     };
     const formSuccess = document.querySelector('#form-success');
     const errors = validateForm(formData);
+
     setFieldError('name', errors.name || '');
     setFieldError('email', errors.email || '');
     setFieldError('message', errors.message || '');
+
     if (formSuccess) {
       formSuccess.textContent = '';
     }
+
     if (Object.keys(errors).length > 0) {
       return;
     }
+
     const endpoint = contactForm.dataset.formspreeEndpoint || '';
     if (!endpoint || endpoint.includes('your_form_id')) {
       if (formSuccess) {
@@ -281,6 +351,7 @@ if (contactForm) {
       }
       return;
     }
+
     try {
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -290,9 +361,11 @@ if (contactForm) {
         },
         body: JSON.stringify(formData),
       });
+
       if (!response.ok) {
         throw new Error('전송 실패');
       }
+
       if (formSuccess) {
         formSuccess.textContent = '메시지 전송 완료';
       }
@@ -315,6 +388,7 @@ if (retryProjectsButton) {
 
 window.addEventListener('scroll', handleScrollUi);
 
+// 초기 실행
 initTheme();
 handleScrollUi();
 observeRevealItems();

@@ -14,8 +14,7 @@
   </head>
   <!-- HTML 문서 본문 영역 -->
   <body>
-    <a class="skip-link" href="#main-content">본문 바로가기</a>
-    <!-- header 영역 -->
+    <!-- 헤더 컴포넌트 -->
     <header class="site-header" id="top">
       <div class="container nav-wrap">
         <a class="brand" href="#" aria-label="홈 이동">PORTFOLIO</a>
@@ -48,8 +47,9 @@
         </div>
       </div>
     </header>
-
+    <!-- main 컨텐츠 영역 -->
     <main id="main-content">
+      <!-- 히어로 컴포넌트 -->
       <section class="hero section" id="hero">
         <div class="container hero-grid">
           <div>
@@ -70,7 +70,7 @@
           </figure>
         </div>
       </section>
-
+      <!-- 소개 컴포넌트 -->
       <section class="about section" id="about">
         <div class="container">
           <h2>About</h2>
@@ -82,7 +82,7 @@
           </p>
         </div>
       </section>
-
+      <!-- 기술 스택 컴포넌트 -->
       <section class="skills section" id="skills">
         <div class="container">
           <h2>Skills</h2>
@@ -95,7 +95,7 @@
           </ul>
         </div>
       </section>
-
+      <!-- 프로젝트 컴포넌트 -->
       <section class="projects section" id="projects">
         <div class="container">
           <div class="section-head">
@@ -109,7 +109,13 @@
               ↻
             </button>
           </div>
-          <div class="project-filters" id="project-filters"></div>
+          <!-- 프로젝트 필터 -->
+          <div
+            class="project-filters"
+            aria-label="프로젝트 언어 필터"
+            id="project-filters"
+          ></div>
+          <!-- 프로젝트 로딩/빈 상태/에러 -->
           <div
             class="projects-feedback"
             id="projects-feedback"
@@ -117,7 +123,9 @@
           >
             프로젝트 로딩 준비 상태
           </div>
+          <!-- 프로젝트 목록 -->
           <div class="project-grid" id="project-grid"></div>
+          <!-- 프로젝트 없음 -->
           <div class="projects-empty" id="projects-empty" hidden>
             표시할 프로젝트가 없습니다.
           </div>
@@ -129,7 +137,7 @@
           </div>
         </div>
       </section>
-
+      <!-- 연락처 컴포넌트 -->
       <section class="contact section" id="contact">
         <div class="container">
           <h2>Contact</h2>
@@ -175,12 +183,13 @@
         </div>
       </section>
     </main>
-
+    <!-- 푸터 컴포넌트 -->
     <footer class="site-footer">
       <div class="container">
         <p>© 2026 Portfolio. All rights reserved.</p>
       </div>
     </footer>
+    <!-- 맨 위로 이동 버튼 컴포넌트 -->
     <button
       class="top-button"
       id="top-button"
