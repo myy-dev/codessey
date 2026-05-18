@@ -13,11 +13,18 @@
 
 ```text
 .
-├── index.html       # 메인 페이지
-├── css/             # 스타일시트 디렉토리
-│   └── style.css    # 외부 스타일시트
-├── js/              # JavaScript 디렉토리
-└── images/          # 이미지 디렉토리
+├── index.html           # 메인 페이지
+├── css/                 # 스타일시트 디렉토리
+│   ├── base.css         # 기본 스타일 및 변수
+│   ├── layout.css       # 전체 레이아웃 (header, footer 등)
+│   ├── components.css   # 공통 컴포넌트 (버튼, 카드 등)
+│   ├── sections.css     # 각 섹션별 스타일 (hero, about 등)
+│   ├── utilities.css    # 유틸리티 클래스
+│   ├── responsive.css   # 반응형 미디어 쿼리
+│   └── style.css        # 외부 스타일시트 (import 모음)
+├── js/                  # JavaScript 디렉토리
+│   └── main.js          # 메인 스크립트
+└── images/              # 이미지 디렉토리
 ```
 
 ## 수행 항목 체크리스트
