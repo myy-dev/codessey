@@ -207,8 +207,8 @@ const renderProjectsByLanguage = () => {
   projectsError.hidden = true;
   projectsFeedback.textContent =
     selectedLanguage === 'ALL'
-      ? `성공 상태 (${filteredRepos.length}건)`
-      : `성공 상태 (${selectedLanguage}, ${filteredRepos.length}건)`;
+      ? `전체 프로젝트 (${filteredRepos.length}건)`
+      : `${selectedLanguage} 프로젝트 (${filteredRepos.length}건)`;
 
   projectFilters.querySelectorAll('.filter-button').forEach((button) => {
     button.classList.toggle(
@@ -250,7 +250,7 @@ const fetchProjects = async () => {
     renderFilterButtons(allRepos);
     renderProjectsByLanguage();
   } catch (error) {
-    setProjectsState('error', error.message);
+    setProjectsState('error', '');
   }
 };
 
