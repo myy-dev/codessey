@@ -313,7 +313,7 @@ const startTypingEffect = () => {
 if (themeToggle) {
   themeToggle.addEventListener('click', toggleTheme);
 }
-
+// "위로 가기" 버튼 클릭 이벤트(부드럽게 올라가기)
 if (topButton) {
   topButton.addEventListener('click', () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -388,9 +388,9 @@ if (retryProjectsButton) {
 
 window.addEventListener('scroll', handleScrollUi);
 
-// 초기 실행
-initTheme();
-handleScrollUi();
-observeRevealItems();
-startTypingEffect();
-fetchProjects();
+// 초기 실행 (index.html의 script 태그에 defer 속성이 있어 DOM 로드 후 1회 자동 실행됨)
+initTheme(); // 다크/라이트 테마 초기화
+handleScrollUi(); // 스크롤 UI (헤더 스타일, 위로 가기 버튼 등) 초기화
+observeRevealItems(); // 스크롤 시 요소들이 나타나는 애니메이션(옵저버) 등록
+startTypingEffect(); // 히어로 영역의 직업 소개 타이핑 효과 시작
+fetchProjects(); // 깃허브 API를 호출하여 프로젝트 목록 초기 렌더링
