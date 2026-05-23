@@ -1,0 +1,165 @@
+.brand {
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.primary-nav {
+  display: none;
+  flex-direction: column;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 64px;
+  background: var(--surface);
+  border-bottom: 1px solid var(--line);
+}
+
+.primary-nav a {
+  padding: 0.875rem 1rem;
+  border-top: 1px solid var(--line);
+  border-left: 3px solid transparent;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease,
+    padding-left 0.2s ease;
+}
+
+.primary-nav a:hover,
+.primary-nav a:focus-visible {
+  border-left-color: var(--primary);
+  background: color-mix(in srgb, var(--primary) 10%, var(--surface));
+  color: var(--primary);
+  padding-left: 1.25rem;
+  outline: none;
+}
+
+.primary-nav.is-open {
+  display: flex;
+}
+
+.menu-toggle {
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+  display: grid;
+  place-content: center;
+  gap: 4px;
+  cursor: pointer;
+}
+
+.menu-toggle span {
+  width: 18px;
+  height: 2px;
+  background: var(--text);
+}
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--primary);
+  background: var(--primary);
+  color: #fff;
+  padding: 0.65rem 1rem;
+  border-radius: 999px;
+  font-weight: 700;
+  transition: 0.2s ease;
+  cursor: pointer;
+}
+
+.btn:hover {
+  background: var(--primary-strong);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--primary);
+}
+
+.btn-ghost:hover {
+  color: #ffffff;
+}
+
+.theme-toggle {
+  border-color: rgba(14, 109, 95, 0.28);
+}
+
+[data-theme='dark'] .theme-toggle {
+  border-color: rgba(44, 179, 156, 0.36);
+}
+
+.btn-small {
+  padding: 0.45rem 0.75rem;
+  font-size: 0.9rem;
+}
+
+.filter-button {
+  border: 1px solid var(--line);
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.filter-button.active {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
+.top-button {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  width: 44px;
+  height: 44px;
+  border: 1px solid var(--primary);
+  border-radius: 50%;
+  background: var(--primary);
+  color: #fff;
+  font-size: 1.2rem;
+  box-shadow: var(--shadow);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  transition: 0.2s ease;
+  cursor: pointer;
+}
+
+.top-button.visible {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.top-button:hover {
+  background: var(--primary-strong);
+  border-color: var(--primary-strong);
+  transform: translateY(-2px);
+}
+
+.reveal {
+  opacity: 0;
+  transform: translateY(20px);
+  transition: 0.45s ease;
+}
+
+.reveal.in-view {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@keyframes blink {
+  0%,
+  49% {
+    opacity: 1;
+  }
+  50%,
+  100% {
+    opacity: 0;
+  }
+}
