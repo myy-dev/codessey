@@ -1,0 +1,21 @@
+Query 20
+확인 목적: 보너스 - 핵심 지표 3개를 미니 리포트 형태로 확인한다.
+
+실행 SQL:
+SELECT COUNT(*) AS paid_or_shipped_order_count,
+       SUM(order_total) AS total_revenue,
+       ROUND(AVG(order_total), 2) AS avg_order_amount
+FROM (
+    SELECT o.order_id,
+           SUM(oi.quantity * oi.unit_price) AS order_total
+    FROM orders AS o
+    INNER JOIN order_items AS oi
+        ON o.order_id = oi.order_id
+    WHERE o.status IN ('PAID', 'SHIPPED')
+    GROUP BY o.order_id
+) AS paid_order_totals;
+
+실행 결과:
+paid_or_shipped_order_count | total_revenue | avg_order_amount
+----------------------------+---------------+-----------------
+9                           | 571000        | 63444.44        

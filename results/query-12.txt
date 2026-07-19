@@ -1,0 +1,32 @@
+Query 12
+확인 목적: 평균 고객 매출 이상 구매한 고객을 서브쿼리로 확인한다.
+
+실행 SQL:
+SELECT c.customer_id, c.name,
+       SUM(oi.quantity * oi.unit_price) AS total_spent
+FROM customers AS c
+INNER JOIN orders AS o
+    ON c.customer_id = o.customer_id
+INNER JOIN order_items AS oi
+    ON o.order_id = oi.order_id
+WHERE o.status IN ('PAID', 'SHIPPED')
+GROUP BY c.customer_id, c.name
+HAVING total_spent >= (
+    SELECT AVG(customer_total)
+    FROM (
+        SELECT SUM(oi2.quantity * oi2.unit_price) AS customer_total
+        FROM orders AS o2
+        INNER JOIN order_items AS oi2
+            ON o2.order_id = oi2.order_id
+        WHERE o2.status IN ('PAID', 'SHIPPED')
+        GROUP BY o2.customer_id
+    ) AS customer_totals
+)
+ORDER BY total_spent DESC;
+
+실행 결과:
+customer_id | name | total_spent
+------------+------+------------
+2           | 이서연  | 149000     
+1           | 김민준  | 128000     
+5           | 정도윤  | 90000      

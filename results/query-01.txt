@@ -1,0 +1,18 @@
+Query 01
+확인 목적: 2만원 이상 도서 중 높은 가격 순 상위 5권을 확인한다.
+
+실행 SQL:
+SELECT book_id, title, category, price, stock
+FROM books
+WHERE price >= 20000
+ORDER BY price DESC
+LIMIT 5;
+
+실행 결과:
+book_id | title      | category | price | stock
+--------+------------+----------+-------+------
+2       | 데이터 모델링 입문 | IT       | 32000 | 7    
+5       | 마케팅 데이터 분석 | Business | 30000 | 9    
+1       | SQL 첫걸음    | IT       | 28000 | 12   
+6       | 스타트업 회계    | Business | 27000 | 11   
+3       | 파이썬 업무 자동화 | IT       | 25000 | 15   

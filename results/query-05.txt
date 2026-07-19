@@ -1,0 +1,25 @@
+Query 05
+확인 목적: 주문과 고객 정보를 INNER JOIN으로 연결해 주문자를 확인한다.
+
+실행 SQL:
+SELECT o.order_id, c.name, c.city, o.order_date, o.status
+FROM orders AS o
+INNER JOIN customers AS c
+    ON o.customer_id = c.customer_id
+ORDER BY o.order_date ASC, o.order_id ASC;
+
+실행 결과:
+order_id | name | city | order_date | status   
+---------+------+------+------------+----------
+1        | 김민준  | 서울   | 2026-06-01 | PAID     
+3        | 이서연  | 부산   | 2026-06-02 | PAID     
+4        | 박지훈  | 인천   | 2026-06-03 | CANCELLED
+5        | 최하은  | 대구   | 2026-06-06 | SHIPPED  
+6        | 정도윤  | 서울   | 2026-06-10 | PAID     
+7        | 한지아  | 광주   | 2026-06-11 | PENDING  
+8        | 오현우  | 대전   | 2026-06-12 | SHIPPED  
+9        | 윤서준  | 수원   | 2026-06-14 | PAID     
+2        | 김민준  | 서울   | 2026-06-15 | SHIPPED  
+10       | 강다은  | 제주   | 2026-06-18 | SHIPPED  
+11       | 장유진  | 서울   | 2026-06-20 | PENDING  
+12       | 이서연  | 부산   | 2026-06-21 | PAID     

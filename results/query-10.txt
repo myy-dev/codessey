@@ -1,0 +1,28 @@
+Query 10
+확인 목적: 배송지 도시별 주문 수와 평균 주문 금액을 확인한다.
+
+실행 SQL:
+SELECT order_totals.shipping_city,
+       COUNT(order_totals.order_id) AS order_count,
+       ROUND(AVG(order_totals.order_total), 2) AS avg_order_amount
+FROM (
+    SELECT o.order_id, o.shipping_city,
+           SUM(oi.quantity * oi.unit_price) AS order_total
+    FROM orders AS o
+    INNER JOIN order_items AS oi
+        ON o.order_id = oi.order_id
+    WHERE o.status IN ('PAID', 'SHIPPED')
+    GROUP BY o.order_id, o.shipping_city
+) AS order_totals
+GROUP BY order_totals.shipping_city
+ORDER BY avg_order_amount DESC;
+
+실행 결과:
+shipping_city | order_count | avg_order_amount
+--------------+-------------+-----------------
+부산            | 2           | 74500.0         
+서울            | 3           | 72666.67        
+대구            | 1           | 62000.0         
+대전            | 1           | 61000.0         
+수원            | 1           | 46000.0         
+제주            | 1           | 35000.0         

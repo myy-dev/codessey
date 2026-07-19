@@ -1,0 +1,20 @@
+Query 03
+확인 목적: 2026-06-10 이후 결제 또는 배송 완료 주문을 확인한다.
+
+실행 SQL:
+SELECT order_id, customer_id, order_date, status, shipping_city
+FROM orders
+WHERE status IN ('PAID', 'SHIPPED')
+  AND order_date >= '2026-06-10'
+ORDER BY order_date ASC
+LIMIT 10;
+
+실행 결과:
+order_id | customer_id | order_date | status  | shipping_city
+---------+-------------+------------+---------+--------------
+6        | 5           | 2026-06-10 | PAID    | 서울           
+8        | 7           | 2026-06-12 | SHIPPED | 대전           
+9        | 8           | 2026-06-14 | PAID    | 수원           
+2        | 1           | 2026-06-15 | SHIPPED | 서울           
+10       | 9           | 2026-06-18 | SHIPPED | 제주           
+12       | 2           | 2026-06-21 | PAID    | 부산           

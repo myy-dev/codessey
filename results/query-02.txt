@@ -1,0 +1,15 @@
+Query 02
+확인 목적: 서울 고객을 가입일 순으로 확인한다.
+
+실행 SQL:
+SELECT customer_id, name, email, joined_at
+FROM customers
+WHERE city = '서울'
+ORDER BY joined_at ASC;
+
+실행 결과:
+customer_id | name | email              | joined_at 
+------------+------+--------------------+-----------
+1           | 김민준  | minjun@example.com | 2025-01-15
+5           | 정도윤  | doyoon@example.com | 2025-03-12
+10          | 장유진  | yujin@example.com  | 2025-06-01

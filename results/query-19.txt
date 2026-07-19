@@ -1,0 +1,9 @@
+Query 19
+확인 목적: 보너스 - 존재하지 않는 고객을 참조하는 주문 INSERT로 FK 오류를 확인한다.
+
+실행 SQL:
+INSERT INTO orders (customer_id, order_date, status, shipping_city)
+VALUES (9999, '2026-06-30', 'PENDING', '서울');
+
+실행 결과:
+IntegrityError: FOREIGN KEY constraint failed

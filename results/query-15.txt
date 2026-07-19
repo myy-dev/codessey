@@ -1,0 +1,13 @@
+Query 15
+확인 목적: 대기 중인 주문을 DELETE하고 삭제된 주문을 확인한다.
+
+실행 SQL:
+DELETE FROM orders
+WHERE order_id = 7
+  AND status = 'PENDING'
+RETURNING order_id, customer_id, status;
+
+실행 결과:
+order_id | customer_id | status 
+---------+-------------+--------
+7        | 6           | PENDING

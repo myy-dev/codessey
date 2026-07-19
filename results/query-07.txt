@@ -1,0 +1,26 @@
+Query 07
+확인 목적: 배송 완료 주문의 고객, 도서, 수량을 INNER JOIN으로 확인한다.
+
+실행 SQL:
+SELECT c.name, o.order_id, b.title, oi.quantity
+FROM orders AS o
+INNER JOIN customers AS c
+    ON o.customer_id = c.customer_id
+INNER JOIN order_items AS oi
+    ON o.order_id = oi.order_id
+INNER JOIN books AS b
+    ON oi.book_id = b.book_id
+WHERE o.status = 'SHIPPED'
+ORDER BY o.order_id ASC, b.title ASC;
+
+실행 결과:
+name | order_id | title      | quantity
+-----+----------+------------+---------
+김민준  | 2        | 데이터 모델링 입문 | 1       
+김민준  | 2        | 읽기 쉬운 글쓰기  | 1       
+최하은  | 5        | 도시와 건축     | 1       
+최하은  | 5        | 러닝 입문      | 2       
+오현우  | 8        | 읽기 쉬운 글쓰기  | 2       
+오현우  | 8        | 파이썬 업무 자동화 | 1       
+강다은  | 10       | 러닝 입문      | 1       
+강다은  | 10       | 커피 과학      | 1       

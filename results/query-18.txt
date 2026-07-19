@@ -1,0 +1,20 @@
+Query 18
+확인 목적: 보너스 - 고객별 구매 합계를 서브쿼리 방식으로 확인한다.
+
+실행 SQL:
+SELECT c.customer_id, c.name,
+       (
+           SELECT SUM(oi.quantity * oi.unit_price)
+           FROM orders AS o
+           INNER JOIN order_items AS oi
+               ON o.order_id = oi.order_id
+           WHERE o.customer_id = c.customer_id
+             AND o.status IN ('PAID', 'SHIPPED')
+       ) AS total_spent
+FROM customers AS c
+WHERE c.customer_id = 2;
+
+실행 결과:
+customer_id | name | total_spent
+------------+------+------------
+2           | 이서연  | 149000     
