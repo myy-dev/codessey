@@ -1,0 +1,1 @@
+"""Memo web application package."""

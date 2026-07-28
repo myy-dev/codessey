@@ -1,0 +1,40 @@
+{% if errors %}
+<div class="alert" role="alert">입력값을 확인해 주세요.</div>
+{% endif %}
+
+<div class="form-field">
+    <label for="title">제목 <span aria-hidden="true">*</span></label>
+    <input
+        id="title"
+        name="title"
+        type="text"
+        value="{{ form.title }}"
+        maxlength="120"
+        required
+        aria-describedby="{% if errors.title %}title-error{% else %}title-help{% endif %}"
+    >
+    {% if errors.title %}
+    <p class="field-error" id="title-error">{{ errors.title }}</p>
+    {% else %}
+    <p class="field-help" id="title-help">120자 이하로 입력해 주세요.</p>
+    {% endif %}
+</div>
+
+<div class="form-field">
+    <label for="content">내용 <span aria-hidden="true">*</span></label>
+    <textarea
+        id="content"
+        name="content"
+        rows="12"
+        required
+        aria-describedby="{% if errors.content %}content-error{% endif %}"
+    >{{ form.content }}</textarea>
+    {% if errors.content %}
+    <p class="field-error" id="content-error">{{ errors.content }}</p>
+    {% endif %}
+</div>
+
+<div class="actions">
+    <button class="button" type="submit">저장</button>
+    <a class="button button-ghost" href="{{ url_for('memo_list') }}">취소하고 목록으로</a>
+</div>

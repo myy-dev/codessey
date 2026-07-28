@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}메모 수정 | 나의 메모 앱{% endblock %}
+
+{% block content %}
+<div class="page-heading">
+    <p class="eyebrow">EDIT MEMO #{{ memo_id }}</p>
+    <h1>메모 수정</h1>
+    <p>제목이나 내용을 고친 뒤 저장해 주세요.</p>
+</div>
+
+<form class="memo-form" action="{{ url_for('memo_update', memo_id=memo_id) }}" method="post" novalidate>
+    {% include "memos/_form.html" %}
+</form>
+{% endblock %}

@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="ko">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="FastAPI와 SQLAlchemy로 만든 메모 관리 애플리케이션">
+    <title>{% block title %}나의 메모 앱{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', path='/favicon.svg') }}" type="image/svg+xml">
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <nav class="nav container" aria-label="주요 메뉴">
+            <a class="brand" href="{{ url_for('home') }}">나의 메모 앱</a>
+            <div class="nav-links">
+                <a href="{{ url_for('memo_list') }}">메모 목록</a>
+                <a class="button button-small" href="{{ url_for('memo_create_form') }}">새 메모</a>
+            </div>
+        </nav>
+    </header>
+
+    <main class="container page-content">
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">FastAPI · SQLAlchemy · Jinja2</div>
+    </footer>
+</body>
+</html>
