@@ -1,25 +1,23 @@
 Query 09
-확인 목적: 카테고리별 판매 수량과 매출 합계를 확인한다.
+요구 사항: 집계
+확인 목적: 고객별 주문 수를 COUNT로 확인한다.
 
 실행 SQL:
-SELECT b.category,
-       COUNT(oi.order_item_id) AS line_count,
-       SUM(oi.quantity) AS total_quantity,
-       SUM(oi.quantity * oi.unit_price) AS revenue
-FROM orders AS o
-INNER JOIN order_items AS oi
-    ON o.order_id = oi.order_id
-INNER JOIN books AS b
-    ON oi.book_id = b.book_id
-WHERE o.status IN ('PAID', 'SHIPPED')
-GROUP BY b.category
-ORDER BY revenue DESC;
+SELECT customer_id, COUNT(*) AS order_count
+FROM orders
+GROUP BY customer_id
+ORDER BY customer_id ASC;
 
 실행 결과:
-category   | line_count | total_quantity | revenue
------------+------------+----------------+--------
-IT         | 7          | 8              | 227000 
-Business   | 4          | 5              | 147000 
-Humanities | 4          | 5              | 102000 
-Life       | 3          | 4              | 73000  
-Design     | 1          | 1              | 22000  
+customer_id | order_count
+------------+------------
+1           | 2
+2           | 2
+3           | 1
+4           | 1
+5           | 1
+6           | 1
+7           | 1
+8           | 1
+9           | 1
+10          | 1

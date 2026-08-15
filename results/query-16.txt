@@ -1,11 +1,12 @@
 Query 16
-확인 목적: 주문일 조회 성능 개선을 위해 인덱스를 생성하고 등록 여부를 확인한다.
+요구 사항: 인덱스
+확인 목적: 주문 시각 조회 성능 개선을 위해 인덱스를 생성하고 등록 여부를 확인한다.
 
 실행 SQL:
-CREATE INDEX IF NOT EXISTS idx_orders_order_date ON orders (order_date);
+CREATE INDEX IF NOT EXISTS idx_orders_ordered_at ON orders (ordered_at);
 PRAGMA index_list('orders');
 
 실행 결과:
 seq | name                  | unique | origin | partial
 ----+-----------------------+--------+--------+--------
-0   | idx_orders_order_date | 0      | c      | 0      
+0   | idx_orders_ordered_at | 0      | c      | 0

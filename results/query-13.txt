@@ -1,12 +1,13 @@
 Query 13
+요구 사항: 데이터 추가
 확인 목적: 새 주문을 INSERT하고 생성된 주문 정보를 확인한다.
 
 실행 SQL:
-INSERT INTO orders (customer_id, order_date, status, shipping_city)
-VALUES (11, '2026-06-25', 'PENDING', '성남')
-RETURNING order_id, customer_id, order_date, status, shipping_city;
+INSERT INTO orders (customer_id, status, shipping_city)
+VALUES (11, 'PENDING', '성남')
+RETURNING order_id, customer_id, status, shipping_city;
 
 실행 결과:
-order_id | customer_id | order_date | status  | shipping_city
----------+-------------+------------+---------+--------------
-13       | 11          | 2026-06-25 | PENDING | 성남           
+order_id | customer_id | status  | shipping_city
+---------+-------------+---------+--------------
+13       | 11          | PENDING | 성남

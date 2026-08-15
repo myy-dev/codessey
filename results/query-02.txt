@@ -1,11 +1,13 @@
 Query 02
+요구 사항: 기본 조회
 확인 목적: 서울 고객을 가입일 순으로 확인한다.
 
 실행 SQL:
 SELECT customer_id, name, email, joined_at
 FROM customers
 WHERE city = '서울'
-ORDER BY joined_at ASC;
+ORDER BY joined_at ASC
+LIMIT 10;
 
 실행 결과:
 customer_id | name | email              | joined_at 

@@ -1,20 +1,18 @@
 Query 11
-확인 목적: 같은 카테고리 평균 가격보다 비싼 도서를 서브쿼리로 확인한다.
+요구 사항: 집계
+확인 목적: 카테고리별 전체 재고를 SUM으로 확인한다.
 
 실행 SQL:
-SELECT b.book_id, b.title, b.category, b.price
-FROM books AS b
-WHERE b.price > (
-    SELECT AVG(b2.price)
-    FROM books AS b2
-    WHERE b2.category = b.category
-)
-ORDER BY b.category ASC, b.price DESC;
+SELECT category, SUM(stock) AS total_stock
+FROM books
+GROUP BY category
+ORDER BY category ASC;
 
 실행 결과:
-book_id | title      | category   | price
---------+------------+------------+------
-5       | 마케팅 데이터 분석 | Business   | 30000
-8       | 도시와 건축     | Humanities | 24000
-2       | 데이터 모델링 입문 | IT         | 32000
-10      | 러닝 입문      | Life       | 19000
+category   | total_stock
+-----------+------------
+Business   | 20
+Design     | 5
+Humanities | 26
+IT         | 34
+Life       | 17

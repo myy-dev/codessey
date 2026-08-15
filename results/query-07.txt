@@ -1,26 +1,23 @@
 Query 07
-확인 목적: 배송 완료 주문의 고객, 도서, 수량을 INNER JOIN으로 확인한다.
+요구 사항: 조인
+확인 목적: 배송 완료 주문과 주문상세를 INNER JOIN으로 연결해 수량을 확인한다.
 
 실행 SQL:
-SELECT c.name, o.order_id, b.title, oi.quantity
+SELECT o.order_id, o.status, oi.book_id, oi.quantity
 FROM orders AS o
-INNER JOIN customers AS c
-    ON o.customer_id = c.customer_id
 INNER JOIN order_items AS oi
     ON o.order_id = oi.order_id
-INNER JOIN books AS b
-    ON oi.book_id = b.book_id
 WHERE o.status = 'SHIPPED'
-ORDER BY o.order_id ASC, b.title ASC;
+ORDER BY o.order_id ASC, oi.book_id ASC;
 
 실행 결과:
-name | order_id | title      | quantity
------+----------+------------+---------
-김민준  | 2        | 데이터 모델링 입문 | 1       
-김민준  | 2        | 읽기 쉬운 글쓰기  | 1       
-최하은  | 5        | 도시와 건축     | 1       
-최하은  | 5        | 러닝 입문      | 2       
-오현우  | 8        | 읽기 쉬운 글쓰기  | 2       
-오현우  | 8        | 파이썬 업무 자동화 | 1       
-강다은  | 10       | 러닝 입문      | 1       
-강다은  | 10       | 커피 과학      | 1       
+order_id | status  | book_id | quantity
+---------+---------+---------+---------
+2        | SHIPPED | 2       | 1
+2        | SHIPPED | 7       | 1
+5        | SHIPPED | 8       | 1
+5        | SHIPPED | 10      | 2
+8        | SHIPPED | 3       | 1
+8        | SHIPPED | 7       | 2
+10       | SHIPPED | 9       | 1
+10       | SHIPPED | 10      | 1
