@@ -53,6 +53,25 @@ B5-1/
 
 ## 실행 순서
 
+### SQLite CLI 실습용 실행
+
+프로젝트 폴더에서 SQLite CLI를 실행한다.
+
+```bash
+sqlite3 database.db
+```
+
+SQLite CLI에 접속한 뒤 출력 형식을 설정하고 스키마와 샘플 데이터를 불러온다.
+
+```sql
+.headers on
+.mode column
+.read schema.sql
+.read data.sql
+```
+
+준비가 끝나면 `queries.sql`의 Query 01부터 필요한 쿼리를 하나씩 실행한다.
+
 1. `schema.sql`로 테이블과 제약조건을 생성한다.
 2. `data.sql`로 샘플 데이터를 입력한다.
 3. `queries.sql`의 Query 01~20을 실행한다.
