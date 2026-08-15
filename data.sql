@@ -26,19 +26,19 @@ INSERT INTO books (book_id, title, author, category, price, stock, published_yea
 (9, '커피 과학', '강유리', 'Life', 16000, 13, 2021),
 (10, '러닝 입문', '장현수', 'Life', 19000, 4, 2023);
 
-INSERT INTO orders (order_id, customer_id, order_date, status, shipping_city) VALUES
-(1, 1, '2026-06-01', 'PAID', '서울'),
-(2, 1, '2026-06-15', 'SHIPPED', '서울'),
-(3, 2, '2026-06-02', 'PAID', '부산'),
-(4, 3, '2026-06-03', 'CANCELLED', '인천'),
-(5, 4, '2026-06-06', 'SHIPPED', '대구'),
-(6, 5, '2026-06-10', 'PAID', '서울'),
-(7, 6, '2026-06-11', 'PENDING', '광주'),
-(8, 7, '2026-06-12', 'SHIPPED', '대전'),
-(9, 8, '2026-06-14', 'PAID', '수원'),
-(10, 9, '2026-06-18', 'SHIPPED', '제주'),
-(11, 10, '2026-06-20', 'PENDING', '서울'),
-(12, 2, '2026-06-21', 'PAID', '부산');
+INSERT INTO orders (order_id, customer_id, ordered_at, status, shipping_city) VALUES
+(1, 1, '2026-06-01 09:15:00', 'PAID', '서울'),
+(2, 1, '2026-06-15 14:30:00', 'SHIPPED', '서울'),
+(3, 2, '2026-06-02 10:00:00', 'PAID', '부산'),
+(4, 3, '2026-06-03 16:20:00', 'CANCELLED', '인천'),
+(5, 4, '2026-06-06 11:45:00', 'SHIPPED', '대구'),
+(6, 5, '2026-06-10 13:10:00', 'PAID', '서울'),
+(7, 6, '2026-06-11 09:05:00', 'PENDING', '광주'),
+(8, 7, '2026-06-12 15:40:00', 'SHIPPED', '대전'),
+(9, 8, '2026-06-14 12:25:00', 'PAID', '수원'),
+(10, 9, '2026-06-18 17:50:00', 'SHIPPED', '제주'),
+(11, 10, '2026-06-20 08:30:00', 'PENDING', '서울'),
+(12, 2, '2026-06-21 18:15:00', 'PAID', '부산');
 
 INSERT INTO order_items (order_item_id, order_id, book_id, quantity, unit_price) VALUES
 (1, 1, 1, 1, 28000),

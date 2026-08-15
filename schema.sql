@@ -23,13 +23,14 @@ CREATE TABLE books (
     category TEXT NOT NULL,
     price INTEGER NOT NULL CHECK (price >= 0),
     stock INTEGER NOT NULL CHECK (stock >= 0),
-    published_year INTEGER NOT NULL CHECK (published_year >= 1900)
+    published_year INTEGER NOT NULL CHECK (published_year > 0)
 );
 
 CREATE TABLE orders (
     order_id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_id INTEGER NOT NULL,
-    order_date TEXT NOT NULL,
+    -- INSERT 시 값을 생략하면 현재 UTC 시각을 자동 입력한다.
+    ordered_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     status TEXT NOT NULL CHECK (status IN ('PENDING', 'PAID', 'SHIPPED', 'CANCELLED')),
     shipping_city TEXT NOT NULL,
     FOREIGN KEY (customer_id)
