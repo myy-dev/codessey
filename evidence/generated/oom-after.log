@@ -1,0 +1,13 @@
+[2026-08-18 06:36:41.378] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=memory
+[2026-08-18 06:36:41.378] [INFO] [MemoryGuard] START limit=128MB chunk=4MB interval=0.10s
+[2026-08-18 06:36:41.379] [INFO] [MemoryGuard] RSS=24.4MB LIMIT=128MB chunks=1
+[2026-08-18 06:36:41.480] [INFO] [MemoryGuard] RSS=28.4MB LIMIT=128MB chunks=2
+[2026-08-18 06:36:41.580] [INFO] [MemoryGuard] RSS=32.5MB LIMIT=128MB chunks=3
+[2026-08-18 06:36:41.685] [INFO] [MemoryGuard] RSS=36.5MB LIMIT=128MB chunks=4
+[2026-08-18 06:36:41.789] [INFO] [MemoryGuard] RSS=40.5MB LIMIT=128MB chunks=5
+[2026-08-18 06:36:41.892] [INFO] [MemoryGuard] RSS=44.5MB LIMIT=128MB chunks=6
+[2026-08-18 06:36:41.995] [INFO] [MemoryGuard] RSS=48.5MB LIMIT=128MB chunks=7
+[2026-08-18 06:36:42.099] [INFO] [MemoryGuard] RSS=52.5MB LIMIT=128MB chunks=8
+[2026-08-18 06:36:42.201] [INFO] [MemoryGuard] RSS=56.5MB LIMIT=128MB chunks=9
+[2026-08-18 06:36:42.303] [INFO] [MemoryGuard] RSS=60.5MB LIMIT=128MB chunks=10
+[2026-08-18 06:36:42.405] [INFO] [MemoryGuard] COMPLETED without termination elapsed=1.03s final_rss=60.5MB

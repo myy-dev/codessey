@@ -1,0 +1,198 @@
+{
+  "generated_at": "2026-08-18T06:36:47Z",
+  "platform": "Linux-6.12.76-linuxkit-aarch64-with-glibc2.41",
+  "python": "3.13.15",
+  "experiments": [
+    {
+      "name": "oom-before",
+      "scenario": "memory",
+      "exit_code": 137,
+      "timed_out_while_alive": false,
+      "elapsed_seconds": 1.05,
+      "settings": {
+        "MEMORY_LIMIT": "50",
+        "CPU_MAX_OCCUPY": "20",
+        "MULTI_THREAD_ENABLE": "true",
+        "AGENT_RUN_SECONDS": "2.0"
+      },
+      "monitor": {
+        "samples": 8,
+        "min_cpu_percent": 0.0,
+        "max_cpu_percent": 90.9,
+        "final_cpu_percent": 0.0,
+        "min_rss_mb": 6.0,
+        "max_rss_mb": 48.5,
+        "final_rss_mb": 48.5
+      },
+      "files": {
+        "application_log": "evidence/generated/oom-before.log",
+        "monitor_log": "evidence/generated/oom-before-monitor.log",
+        "process_snapshot": null
+      }
+    },
+    {
+      "name": "oom-after",
+      "scenario": "memory",
+      "exit_code": 0,
+      "timed_out_while_alive": false,
+      "elapsed_seconds": 1.373,
+      "settings": {
+        "MEMORY_LIMIT": "128",
+        "CPU_MAX_OCCUPY": "20",
+        "MULTI_THREAD_ENABLE": "true",
+        "AGENT_RUN_SECONDS": "1.0"
+      },
+      "monitor": {
+        "samples": 11,
+        "min_cpu_percent": 0.0,
+        "max_cpu_percent": 90.9,
+        "final_cpu_percent": 8.3,
+        "min_rss_mb": 6.2,
+        "max_rss_mb": 56.5,
+        "final_rss_mb": 20.4
+      },
+      "files": {
+        "application_log": "evidence/generated/oom-after.log",
+        "monitor_log": "evidence/generated/oom-after-monitor.log",
+        "process_snapshot": null
+      }
+    },
+    {
+      "name": "cpu-before",
+      "scenario": "cpu",
+      "exit_code": 143,
+      "timed_out_while_alive": false,
+      "elapsed_seconds": 0.59,
+      "settings": {
+        "MEMORY_LIMIT": "50",
+        "CPU_MAX_OCCUPY": "20",
+        "MULTI_THREAD_ENABLE": "true",
+        "CPU_LOAD_PERCENT": "75",
+        "AGENT_RUN_SECONDS": "2.0"
+      },
+      "monitor": {
+        "samples": 4,
+        "min_cpu_percent": 0.0,
+        "max_cpu_percent": 100.0,
+        "final_cpu_percent": 72.7,
+        "min_rss_mb": 6.1,
+        "max_rss_mb": 20.7,
+        "final_rss_mb": 20.7
+      },
+      "files": {
+        "application_log": "evidence/generated/cpu-before.log",
+        "monitor_log": "evidence/generated/cpu-before-monitor.log",
+        "process_snapshot": null
+      }
+    },
+    {
+      "name": "cpu-after",
+      "scenario": "cpu",
+      "exit_code": 0,
+      "timed_out_while_alive": false,
+      "elapsed_seconds": 1.877,
+      "settings": {
+        "MEMORY_LIMIT": "50",
+        "CPU_MAX_OCCUPY": "95",
+        "MULTI_THREAD_ENABLE": "true",
+        "CPU_LOAD_PERCENT": "75",
+        "AGENT_RUN_SECONDS": "1.5"
+      },
+      "monitor": {
+        "samples": 16,
+        "min_cpu_percent": 0.0,
+        "max_cpu_percent": 91.7,
+        "final_cpu_percent": 72.7,
+        "min_rss_mb": 6.0,
+        "max_rss_mb": 20.7,
+        "final_rss_mb": 20.7
+      },
+      "files": {
+        "application_log": "evidence/generated/cpu-after.log",
+        "monitor_log": "evidence/generated/cpu-after-monitor.log",
+        "process_snapshot": null
+      }
+    },
+    {
+      "name": "deadlock-before",
+      "scenario": "deadlock",
+      "exit_code": -15,
+      "timed_out_while_alive": true,
+      "elapsed_seconds": 1.669,
+      "settings": {
+        "MEMORY_LIMIT": "50",
+        "CPU_MAX_OCCUPY": "20",
+        "MULTI_THREAD_ENABLE": "true",
+        "AGENT_RUN_SECONDS": "3.0"
+      },
+      "monitor": {
+        "samples": 13,
+        "min_cpu_percent": 0.0,
+        "max_cpu_percent": 90.9,
+        "final_cpu_percent": 0.0,
+        "min_rss_mb": 6.0,
+        "max_rss_mb": 20.5,
+        "final_rss_mb": 20.5
+      },
+      "files": {
+        "application_log": "evidence/generated/deadlock-before.log",
+        "monitor_log": "evidence/generated/deadlock-before-monitor.log",
+        "process_snapshot": "evidence/generated/deadlock-before-ps.txt"
+      }
+    },
+    {
+      "name": "deadlock-after",
+      "scenario": "deadlock",
+      "exit_code": 0,
+      "timed_out_while_alive": false,
+      "elapsed_seconds": 0.329,
+      "settings": {
+        "MEMORY_LIMIT": "50",
+        "CPU_MAX_OCCUPY": "20",
+        "MULTI_THREAD_ENABLE": "false",
+        "AGENT_RUN_SECONDS": "1.0"
+      },
+      "monitor": {
+        "samples": 2,
+        "min_cpu_percent": 0.0,
+        "max_cpu_percent": 100.0,
+        "final_cpu_percent": 100.0,
+        "min_rss_mb": 6.1,
+        "max_rss_mb": 19.2,
+        "final_rss_mb": 19.2
+      },
+      "files": {
+        "application_log": "evidence/generated/deadlock-after.log",
+        "monitor_log": "evidence/generated/deadlock-after-monitor.log",
+        "process_snapshot": null
+      }
+    },
+    {
+      "name": "scheduling-round-robin",
+      "scenario": "normal",
+      "exit_code": 0,
+      "timed_out_while_alive": false,
+      "elapsed_seconds": 0.741,
+      "settings": {
+        "MEMORY_LIMIT": "50",
+        "CPU_MAX_OCCUPY": "20",
+        "MULTI_THREAD_ENABLE": "true",
+        "AGENT_RUN_SECONDS": "1.0"
+      },
+      "monitor": {
+        "samples": 6,
+        "min_cpu_percent": 0.0,
+        "max_cpu_percent": 100.0,
+        "final_cpu_percent": 8.3,
+        "min_rss_mb": 0.0,
+        "max_rss_mb": 20.5,
+        "final_rss_mb": 0.0
+      },
+      "files": {
+        "application_log": "evidence/generated/scheduling-round-robin.log",
+        "monitor_log": "evidence/generated/scheduling-round-robin-monitor.log",
+        "process_snapshot": null
+      }
+    }
+  ]
+}

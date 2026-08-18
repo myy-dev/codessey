@@ -1,0 +1,10 @@
+$ ps -ef
+UID        PID  PPID  C STIME TTY          TIME CMD
+501       1277     1 10 06:36 ?        00:00:00 /usr/local/bin/python3 -m agent_leak_app
+501       1278     1  1 06:36 ?        00:00:00 sh /workspace/scripts/monitor.sh 1277 /workspace/evidence/generated/deadlock-before-monitor.log 0.10
+
+$ ps -L -p 1277 -o pid,tid,pcpu,pmem,stat,comm
+  PID   TID %CPU %MEM STAT COMMAND
+ 1277  1277 10.5  0.2 Sl   python3
+ 1277  1346  0.0  0.2 Sl   python3
+ 1277  1347  0.0  0.2 Sl   python3

@@ -1,0 +1,7 @@
+[2026-08-18 06:36:45.259] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=deadlock
+[2026-08-18 06:36:45.259] [INFO] [DeadlockLab] START MULTI_THREAD_ENABLE=true
+[2026-08-18 06:36:45.259] [INFO] [Thread-A] acquired Resource-A
+[2026-08-18 06:36:45.260] [INFO] [Thread-B] acquired Resource-B
+[2026-08-18 06:36:45.260] [WARNING] [Thread-B] WAITING for Resource-A; state=BLOCKED
+[2026-08-18 06:36:45.260] [WARNING] [Thread-A] WAITING for Resource-B; state=BLOCKED
+[2026-08-18 06:36:45.514] [ERROR] [DeadlockLab] DEADLOCK DETECTED: PID=1277 threads remain BLOCKED; log output stops here

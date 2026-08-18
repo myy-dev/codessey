@@ -1,0 +1,13 @@
+[2026-08-18 06:36:40.298] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=memory
+[2026-08-18 06:36:40.299] [INFO] [MemoryGuard] START limit=50MB chunk=4MB interval=0.10s
+[2026-08-18 06:36:40.299] [INFO] [MemoryGuard] RSS=24.4MB LIMIT=50MB chunks=1
+[2026-08-18 06:36:40.400] [INFO] [MemoryGuard] RSS=28.4MB LIMIT=50MB chunks=2
+[2026-08-18 06:36:40.502] [INFO] [MemoryGuard] RSS=32.4MB LIMIT=50MB chunks=3
+[2026-08-18 06:36:40.606] [INFO] [MemoryGuard] RSS=36.4MB LIMIT=50MB chunks=4
+[2026-08-18 06:36:40.711] [INFO] [MemoryGuard] RSS=40.4MB LIMIT=50MB chunks=5
+[2026-08-18 06:36:40.817] [INFO] [MemoryGuard] RSS=44.5MB LIMIT=50MB chunks=6
+[2026-08-18 06:36:40.922] [INFO] [MemoryGuard] RSS=48.5MB LIMIT=50MB chunks=7
+[2026-08-18 06:36:41.024] [INFO] [MemoryGuard] RSS=52.5MB LIMIT=50MB chunks=8
+[2026-08-18 06:36:41.024] [CRITICAL] [MemoryGuard] Memory limit exceeded (52.5MB >= 50MB)
+[2026-08-18 06:36:41.024] [CRITICAL] [MemoryGuard] Self-terminating process 7 to prevent system instability.
+[2026-08-18 06:36:41.024] [CRITICAL] >>> [SYSTEM] SELF-TERMINATED (Memory Limit Exceeded) <<<

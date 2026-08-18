@@ -1,0 +1,35 @@
+name: test
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  linux-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Run unit and integration tests
+        run: make test
+      - name: Verify README requirement evidence
+        run: make verify
+      - name: Verify generated evidence manifest
+        run: |
+          python3 - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          root = Path.cwd()
+          manifest_path = root / "evidence/generated/manifest.sha256.json"
+          manifest = json.loads(manifest_path.read_text())
+          for relative_path, expected in manifest.items():
+              actual = hashlib.sha256((root / relative_path).read_bytes()).hexdigest()
+              if actual != expected:
+                  raise SystemExit(f"checksum mismatch: {relative_path}")
+          print(f"verified {len(manifest)} evidence files")
+          PY

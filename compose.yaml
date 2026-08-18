@@ -1,0 +1,11 @@
+services:
+  agent-lab:
+    build: .
+    environment:
+      AGENT_SCENARIO: ${AGENT_SCENARIO:-normal}
+      MEMORY_LIMIT: ${MEMORY_LIMIT:-50}
+      CPU_MAX_OCCUPY: ${CPU_MAX_OCCUPY:-20}
+      MULTI_THREAD_ENABLE: ${MULTI_THREAD_ENABLE:-true}
+      AGENT_RUN_SECONDS: ${AGENT_RUN_SECONDS:-2}
+    ports:
+      - "15034:15034"

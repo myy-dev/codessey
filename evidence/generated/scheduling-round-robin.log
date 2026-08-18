@@ -1,0 +1,15 @@
+[2026-08-18 06:36:47.235] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=normal
+[2026-08-18 06:36:47.235] [INFO] [Scheduler] START policy=round-robin quantum=0.03s
+[2026-08-18 06:36:47.235] [INFO] [Thread-A] Task Started. Calculating... (25%)
+[2026-08-18 06:36:47.265] [INFO] [Thread-B] Task Started. Calculating... (25%)
+[2026-08-18 06:36:47.301] [INFO] [Thread-C] Task Started. Calculating... (25%)
+[2026-08-18 06:36:47.331] [INFO] [Thread-A] Resumed. Calculating... (50%)
+[2026-08-18 06:36:47.363] [INFO] [Thread-B] Resumed. Calculating... (50%)
+[2026-08-18 06:36:47.398] [INFO] [Thread-C] Resumed. Calculating... (50%)
+[2026-08-18 06:36:47.434] [INFO] [Thread-A] Resumed. Calculating... (75%)
+[2026-08-18 06:36:47.465] [INFO] [Thread-B] Resumed. Calculating... (75%)
+[2026-08-18 06:36:47.497] [INFO] [Thread-C] Resumed. Calculating... (75%)
+[2026-08-18 06:36:47.532] [INFO] [Thread-A] Resumed. Calculating... (100%)
+[2026-08-18 06:36:47.563] [INFO] [Thread-B] Resumed. Calculating... (100%)
+[2026-08-18 06:36:47.593] [INFO] [Thread-C] Resumed. Calculating... (100%)
+[2026-08-18 06:36:47.627] [INFO] [Scheduler] COMPLETED order=A,B,C,A,B,C,A,B,C,A,B,C

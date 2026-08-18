@@ -1,0 +1,8 @@
+[2026-08-18 06:36:43.356] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=cpu
+[2026-08-18 06:36:43.356] [INFO] [Watchdog] START limit=95% target_load=75%
+[2026-08-18 06:36:43.614] [INFO] [Watchdog] CPU=79.9% LIMIT=95%
+[2026-08-18 06:36:43.882] [INFO] [Watchdog] CPU=66.2% LIMIT=95%
+[2026-08-18 06:36:44.150] [INFO] [Watchdog] CPU=77.5% LIMIT=95%
+[2026-08-18 06:36:44.413] [INFO] [Watchdog] CPU=69.4% LIMIT=95%
+[2026-08-18 06:36:44.674] [INFO] [Watchdog] CPU=76.6% LIMIT=95%
+[2026-08-18 06:36:44.895] [INFO] [Watchdog] COMPLETED without termination elapsed=1.54s

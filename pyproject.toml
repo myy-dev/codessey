@@ -1,0 +1,8 @@
+[project]
+name = "agent-leak-lab"
+version = "1.0.0"
+description = "Reproducible Linux troubleshooting lab for memory, CPU, and deadlock incidents"
+requires-python = ">=3.11"
+
+[tool.ruff]
+line-length = 100
