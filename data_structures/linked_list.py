@@ -5,6 +5,7 @@ class LinkedListNode:
         self.prev = None
         self.next = None
         self.data = data
+        self._owner = None
 
 
 class DoublyLinkedList:
@@ -17,6 +18,7 @@ class DoublyLinkedList:
 
     def insert_front(self, data):
         node = LinkedListNode(data)
+        node._owner = self
         if self.head is None:
             self.head = node
             self.tail = node
@@ -29,6 +31,7 @@ class DoublyLinkedList:
 
     def insert_back(self, data):
         node = LinkedListNode(data)
+        node._owner = self
         if self.tail is None:
             self.head = node
             self.tail = node
@@ -50,7 +53,7 @@ class DoublyLinkedList:
         return self.remove_node(self.tail)
 
     def remove_node(self, node):
-        if node is None:
+        if node is None or node._owner is not self:
             return None
 
         if node.prev is None:
@@ -65,11 +68,14 @@ class DoublyLinkedList:
 
         node.prev = None
         node.next = None
+        node._owner = None
         self._size -= 1
         return node.data
 
     def move_to_front(self, node):
-        if node is None or node is self.head:
+        if node is None or node._owner is not self:
+            return None
+        if node is self.head:
             return node
 
         if node.prev is not None:

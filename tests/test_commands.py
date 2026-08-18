@@ -26,6 +26,12 @@ class ParserTests(unittest.TestCase):
         with self.assertRaises(ParseError):
             parse_command('SET a "broken')
 
+    def test_parse_escaped_quote(self):
+        self.assertEqual(
+            parse_command(r'SET greeting "say \"hello\""'),
+            ["SET", "greeting", 'say "hello"'],
+        )
+
 
 class StringCommandTests(unittest.TestCase):
     def setUp(self):
@@ -55,6 +61,14 @@ class StringCommandTests(unittest.TestCase):
         self.assertEqual(
             self.store.execute(["NOPE"]),
             "(error) ERR unknown command 'NOPE'",
+        )
+
+    def test_get_escapes_quotes_backslashes_and_control_characters(self):
+        value = 'say "hello"\\next\nline'
+        self.store.execute(["SET", "message", value])
+        self.assertEqual(
+            self.store.execute(["GET", "message"]),
+            '"say \\"hello\\"\\\\next\\nline"',
         )
 
 
@@ -122,6 +136,39 @@ class MemoryAndLRUTests(unittest.TestCase):
             self.store.execute(["CONFIG", "SET", "maxmemory", "-1"]),
             "(error) ERR value is not an integer or out of range",
         )
+
+
+class ExpirationAndLRUIntegrationTests(unittest.TestCase):
+    def setUp(self):
+        self.clock = Clock()
+        self.store = MiniRedisStore(time_provider=self.clock.now)
+
+    def test_expired_mru_key_does_not_evict_live_lru_key(self):
+        self.store.execute(["CONFIG", "SET", "maxmemory", "6"])
+        self.store.execute(["SET", "b", "11"])
+        self.store.execute(["SET", "a", "22"])
+        self.store.execute(["EXPIRE", "a", "1"])
+
+        self.clock.advance(2)
+        self.assertEqual(self.store.execute(["SET", "c", "33"]), "OK")
+
+        self.assertEqual(self.store.execute(["GET", "b"]), '"11"')
+        self.assertEqual(self.store.execute(["GET", "a"]), "(nil)")
+        self.assertIn("evicted_keys:0", self.store.execute(["INFO", "memory"]))
+
+    def test_config_shrink_purges_expired_keys_before_eviction(self):
+        self.store.execute(["SET", "live", "1"])
+        self.store.execute(["SET", "old", "22"])
+        self.store.execute(["EXPIRE", "old", "1"])
+
+        self.clock.advance(2)
+        self.assertEqual(
+            self.store.execute(["CONFIG", "SET", "maxmemory", "5"]),
+            "OK",
+        )
+
+        self.assertEqual(self.store.execute(["GET", "live"]), '"1"')
+        self.assertIn("evicted_keys:0", self.store.execute(["INFO", "memory"]))
 
 
 if __name__ == "__main__":

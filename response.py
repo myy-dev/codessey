@@ -1,3 +1,12 @@
+import json
+
+
+def _quoted(value):
+    """Quote and escape a value for the human-readable CLI response."""
+
+    return json.dumps(str(value), ensure_ascii=False)
+
+
 def simple_string(value):
     return value
 
@@ -15,7 +24,7 @@ def error(message):
 
 
 def bulk_string(value):
-    return f'"{value}"'
+    return _quoted(value)
 
 
 def array(values):
@@ -24,7 +33,7 @@ def array(values):
 
     lines = []
     for index, value in enumerate(values, start=1):
-        lines.append(f'{index}) "{value}"')
+        lines.append(f"{index}) {_quoted(value)}")
     return "\n".join(lines)
 
 

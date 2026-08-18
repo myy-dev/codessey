@@ -1,6 +1,6 @@
 import unittest
 
-from data_structures import DoublyLinkedList, DynamicArray, HashMap, MinHeap
+from data_structures import DoublyLinkedList, DynamicArray, HashMap, LinkedListNode, MinHeap
 
 
 class DynamicArrayTests(unittest.TestCase):
@@ -45,6 +45,17 @@ class DoublyLinkedListTests(unittest.TestCase):
         self.assertEqual(linked_list.remove_front(), "c")
         self.assertEqual(linked_list.remove_back(), "b")
         self.assertTrue(linked_list.is_empty())
+
+    def test_rejects_removed_or_foreign_nodes_without_corrupting_list(self):
+        linked_list = DoublyLinkedList()
+        first = linked_list.insert_back("a")
+        linked_list.insert_back("b")
+
+        self.assertEqual(linked_list.remove_node(first), "a")
+        self.assertIsNone(linked_list.remove_node(first))
+        self.assertIsNone(linked_list.remove_node(LinkedListNode("foreign")))
+        self.assertEqual(linked_list.to_list(), ["b"])
+        self.assertEqual(linked_list.size(), 1)
 
 
 class HashMapTests(unittest.TestCase):

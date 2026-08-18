@@ -9,6 +9,8 @@ INTEGER_ERROR = "ERR value is not an integer or out of range"
 
 
 class MiniRedisStore:
+    """Execute Mini Redis commands and coordinate all storage policies."""
+
     def __init__(self, time_provider=None):
         self._data = HashMap()
         self._lru_list = DoublyLinkedList()
@@ -17,6 +19,8 @@ class MiniRedisStore:
         self._memory = MemoryManager()
 
     def execute(self, parts):
+        """Execute one tokenized command and return its Redis-style response."""
+
         if len(parts) == 0:
             return None
 
@@ -209,6 +213,9 @@ class MiniRedisStore:
             key = self._ttl.pop_expired_key()
 
     def _evict_until_within_limit(self):
+        # Expired keys are logically absent and must never cause a live key to
+        # be counted as evicted. The expiration heap lets us clear them first.
+        self._purge_expired()
         while self._memory.over_limit() and not self._lru_list.is_empty():
             key = self._lru_list.tail.data
             self._delete_key(key)
