@@ -99,9 +99,19 @@ def main() -> int:
     require(experiments["oom-before"]["exit_code"] == 137, "OOM before did not self-terminate")
     require(experiments["oom-after"]["exit_code"] == 0, "OOM after did not survive")
     oom_rss = monitor_values("oom-before-monitor.log", "RSS", "MB")
-    require(len(oom_rss) >= 4 and max(oom_rss) - min(oom_rss) >= 30, "OOM RSS rise is not proven")
-    require("Memory limit exceeded" in text("evidence/generated/oom-before.log"), "OOM threshold log missing")
-    require("SELF-TERMINATED" in text("evidence/generated/oom-before.log"), "OOM termination log missing")
+    monitor_increases = sum(current > previous for previous, current in zip(oom_rss, oom_rss[1:]))
+    require(
+        len(oom_rss) >= 3 and monitor_increases >= 2 and max(oom_rss) - min(oom_rss) >= 8,
+        "OOM monitor does not prove a rising RSS pattern",
+    )
+    oom_before_log = text("evidence/generated/oom-before.log")
+    app_rss = [float(value) for value in re.findall(r"RSS=([0-9.]+)MB", oom_before_log)]
+    require(
+        len(app_rss) >= 6 and app_rss[-1] - app_rss[0] >= 20,
+        "OOM application log does not prove sustained allocation growth",
+    )
+    require("Memory limit exceeded" in oom_before_log, "OOM threshold log missing")
+    require("SELF-TERMINATED" in oom_before_log, "OOM termination log missing")
 
     require(experiments["cpu-before"]["exit_code"] == 143, "CPU before was not SIGTERM-protected")
     require(experiments["cpu-after"]["exit_code"] == 0, "CPU after did not survive")
