@@ -1,5 +1,6 @@
 from data_structures import DoublyLinkedList, HashMap
 from memory import MemoryManager
+from pubsub import PubSubManager
 import response
 from ttl import TTLManager
 
@@ -11,12 +12,21 @@ INTEGER_ERROR = "ERR value is not an integer or out of range"
 class MiniRedisStore:
     """Execute Mini Redis commands and coordinate all storage policies."""
 
-    def __init__(self, time_provider=None):
+    def __init__(
+        self,
+        time_provider=None,
+        pubsub_manager=None,
+        subscriber_id=None,
+    ):
         self._data = HashMap()
         self._lru_list = DoublyLinkedList()
         self._lru_nodes = HashMap()
         self._ttl = TTLManager(time_provider=time_provider)
         self._memory = MemoryManager()
+        self._pubsub = (
+            pubsub_manager if pubsub_manager is not None else PubSubManager()
+        )
+        self._subscriber_id = subscriber_id if subscriber_id is not None else object()
 
     def execute(self, parts):
         """Execute one tokenized command and return its Redis-style response."""
@@ -46,6 +56,10 @@ class MiniRedisStore:
             return self._execute_expire(parts)
         if command == "TTL":
             return self._execute_ttl(parts)
+        if command == "PUBLISH":
+            return self._execute_publish(parts)
+        if command == "SUBSCRIBE":
+            return self._execute_subscribe(parts)
 
         return response.error(f"ERR unknown command '{parts[0]}'")
 
@@ -175,6 +189,26 @@ class MiniRedisStore:
         if not self._ttl.has_expire(key):
             return response.integer(-1)
         return response.integer(self._ttl.ttl(key))
+
+    def _execute_publish(self, parts):
+        if len(parts) != 3:
+            return self._wrong_args("publish")
+
+        receiver_count = self._pubsub.publish(parts[1], parts[2])
+        return response.integer(receiver_count)
+
+    def _execute_subscribe(self, parts):
+        if len(parts) != 2:
+            return self._wrong_args("subscribe")
+
+        channel = parts[1]
+        subscription_count = self._pubsub.subscribe(self._subscriber_id, channel)
+        return response.subscription(channel, subscription_count)
+
+    def read_messages(self, channel):
+        """Drain this client's buffered messages for a subscribed channel."""
+
+        return self._pubsub.read_messages(self._subscriber_id, channel)
 
     def _touch_lru(self, key):
         node = self._lru_nodes.get(key)

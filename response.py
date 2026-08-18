@@ -37,6 +37,18 @@ def array(values):
     return "\n".join(lines)
 
 
+def subscription(channel, subscription_count):
+    """Return a Redis-style SUBSCRIBE confirmation array."""
+
+    return "\n".join(
+        [
+            f"1) {_quoted('subscribe')}",
+            f"2) {_quoted(channel)}",
+            f"3) {integer(subscription_count)}",
+        ]
+    )
+
+
 def memory_info(used_memory, maxmemory, evicted_keys):
     return "\n".join(
         [
