@@ -3,6 +3,7 @@
 ## 프로젝트 개요 (Project Overview)
 
 - Redis의 핵심 동작을 학습하기 위해 순수 Python으로 구현한 CLI 기반 Mini Redis입니다.
+- String 저장소 외에 학습용 이진 트리, BST, 단일 프로세스 Pub/Sub를 포함합니다.
 
 ## 실행 환경 (Environment)
 
@@ -31,18 +32,22 @@ CLI에서 `exit` 또는 `quit`을 입력하면 종료됩니다.
 ├── store.py                # 명령 실행 및 저장소 정책 조정
 ├── memory.py               # 메모리 사용량과 eviction 통계
 ├── ttl.py                  # TTL 해시맵과 최소 힙 관리
+├── pubsub.py               # 채널과 구독자별 메시지 버퍼
 ├── data_structures/
+│   ├── binary_tree.py      # 일반 이진 트리와 4종 순회
+│   ├── binary_search_tree.py # BST 삽입, 검색, 삭제, 정렬 순회
 │   ├── dynamic_array.py    # 동적 배열
 │   ├── hash_map.py         # 체이닝 해시맵
 │   ├── linked_list.py      # 이중 연결 리스트
 │   └── min_heap.py         # TTL용 최소 힙
+├── STACK_QUEUE_DEQUE.md    # 스택, 큐, 덱 학습 정리
 ├── tests/                  # 단위 및 통합 회귀 테스트
 └── docs/                   # 단계별 학습 노트와 구현 계획
 ```
 
 ## 수행 항목 체크리스트
 
-완료된 항목은 `[x]`, 아직 구현하지 않은 선택 보너스는 `[ ]`로 표시합니다.
+모든 기본 및 보너스 항목의 구현과 문서화를 완료했습니다.
 
 ### 기본 자료구조 직접 구현
 
@@ -203,21 +208,21 @@ CLI에서 `exit` 또는 `quit`을 입력하면 종료됩니다.
 
 ##### 개념 조사
 
-- [ ] 스택, 큐, 덱 개념 조사
+- [x] 스택, 큐, 덱 개념 조사
 
 ##### 문서화
 
-- [ ] `STACK_QUEUE_DEQUE.md` 문서 작성
+- [x] `STACK_QUEUE_DEQUE.md` 문서 작성
 
 #### 이진 트리와 순회 알고리즘
 
 ##### 트리 구현
 
-- [ ] 이진 트리 구현
+- [x] 이진 트리 구현
 
 ##### 순회 알고리즘
 
-- [ ] 전위, 중위, 후위, 레벨 순회 구현
+- [x] 전위, 중위, 후위, 레벨 순회 구현
 
 ##### 힙 연계 학습
 
@@ -227,22 +232,22 @@ CLI에서 `exit` 또는 `quit`을 입력하면 종료됩니다.
 
 ##### BST 기본 연산
 
-- [ ] 삽입, 탐색, 삭제 구현
+- [x] 삽입, 탐색, 삭제 구현
 
 ##### 정렬 결과
 
-- [ ] 중위 순회 정렬 결과 구현
+- [x] 중위 순회 정렬 결과 구현
 
 #### Pub/Sub 기능 구현
 
 ##### 명령어
 
-- [ ] `PUBLISH`, `SUBSCRIBE` 명령어 구현
+- [x] `PUBLISH`, `SUBSCRIBE` 명령어 구현
 
 ##### 메시징 구조
 
-- [ ] 채널 기반 메시징 구현
-- [ ] 연결 리스트를 메시지 큐 또는 구독자별 버퍼로 재활용
+- [x] 채널 기반 메시징 구현
+- [x] 연결 리스트를 메시지 큐 또는 구독자별 버퍼로 재활용
 
 ### 제약 사항 (Constraints)
 
@@ -277,3 +282,24 @@ CLI에서 `exit` 또는 `quit`을 입력하면 종료됩니다.
 | `INFO memory`                | 메모리 정보 조회      | `used_memory`, `maxmemory`, `evicted_keys`    |
 | `EXPIRE key seconds`         | TTL 설정              | `(integer) 1` 또는 `(integer) 0`              |
 | `TTL key`                    | 남은 TTL 조회         | `(integer) N`, `(integer) -1`, `(integer) -2` |
+| `SUBSCRIBE channel`          | 채널 구독             | 구독 확인 배열                                |
+| `PUBLISH channel message`    | 메시지 발행           | 메시지를 받은 구독자 수                       |
+
+### 단일 프로세스 Pub/Sub 사용
+
+네트워크 통신 없이 여러 저장소 인스턴스가 하나의 `PubSubManager`를 공유합니다. `PUBLISH`는 각 구독자의 연결 리스트 버퍼에 메시지를 넣고, `read_messages`는 발행 순서대로 버퍼를 비웁니다.
+
+```python
+from pubsub import PubSubManager
+from store import MiniRedisStore
+
+bus = PubSubManager()
+subscriber = MiniRedisStore(pubsub_manager=bus, subscriber_id="client-1")
+publisher = MiniRedisStore(pubsub_manager=bus)
+
+subscriber.execute(["SUBSCRIBE", "news"])
+publisher.execute(["PUBLISH", "news", "hello"])
+assert subscriber.read_messages("news") == ["hello"]
+```
+
+Pub/Sub 버퍼는 키-값 데이터가 아니므로 `used_memory`와 LRU 정책의 대상에 포함하지 않습니다.

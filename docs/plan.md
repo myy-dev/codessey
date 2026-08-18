@@ -10,12 +10,13 @@
 - String 타입 중심의 Redis 명령어를 지원한다.
 - TTL, LRU eviction, maxmemory 제한을 직접 설계한다.
 - Redis 스타일 응답 형식과 CLI REPL 흐름을 구현한다.
+- 일반 이진 트리, BST, 단일 프로세스 Pub/Sub 보너스를 독립 모듈로 구현한다.
 
 ## 2. 프로젝트 구조
 
 ### 2.1 현재 구조
 
-현재 저장소는 1~7단계 핵심 구현과 단계별 학습 문서를 포함한다.
+현재 저장소는 기본 기능과 보너스 확장, 단계별 학습 문서를 포함한다.
 
 ```text
 .
@@ -25,15 +26,22 @@
 ├── store.py
 ├── memory.py
 ├── ttl.py
+├── pubsub.py
+├── STACK_QUEUE_DEQUE.md
 ├── data_structures/
 │   ├── __init__.py
+│   ├── binary_tree.py
+│   ├── binary_search_tree.py
 │   ├── dynamic_array.py
 │   ├── linked_list.py
 │   ├── hash_map.py
 │   └── min_heap.py
 ├── tests/
+│   ├── __init__.py
 │   ├── test_data_structures.py
-│   └── test_commands.py
+│   ├── test_commands.py
+│   ├── test_trees.py
+│   └── test_pubsub.py
 ├── docs/
 │   ├── plan.md
 │   ├── STEP1_STUDY_NOTES.md
@@ -49,13 +57,15 @@
 ```
 
 - `README.md`: 프로젝트 요구사항과 체크리스트
-- `.gitignore`: macOS `.DS_Store` 제외 설정
+- `.gitignore`: 운영체제 및 Python 실행 산출물 제외 설정
 - `main.py`: CLI REPL 진입점
 - `parser.py`: 사용자 입력 파싱
 - `response.py`: Redis 스타일 응답 생성
 - `store.py`: 명령어 실행과 저장소 상태 관리
 - `memory.py`: 메모리 제한과 eviction 통계 관리
 - `ttl.py`: TTL 만료 시간과 만료 후보 관리
+- `pubsub.py`: 채널, 구독자, 연결 리스트 메시지 버퍼 관리
+- `STACK_QUEUE_DEQUE.md`: 선형 자료구조 개념과 프로젝트 활용 사례
 - `data_structures/`: 직접 구현 자료구조
 - `tests/`: 자료구조와 명령어 단위 테스트
 - `docs/plan.md`: 구현 계획 문서
@@ -73,7 +83,11 @@
 ├── store.py
 ├── memory.py
 ├── ttl.py
+├── pubsub.py
+├── STACK_QUEUE_DEQUE.md
 ├── data_structures/
+│   ├── binary_tree.py
+│   ├── binary_search_tree.py
 │   ├── dynamic_array.py
 │   ├── linked_list.py
 │   ├── hash_map.py
@@ -81,8 +95,8 @@
 ├── tests/
 │   ├── test_data_structures.py
 │   ├── test_commands.py
-│   ├── test_ttl.py
-│   └── test_memory_lru.py
+│   ├── test_trees.py
+│   └── test_pubsub.py
 ├── docs/
 │   ├── plan.md
 │   ├── STEP1_STUDY_NOTES.md
@@ -103,6 +117,7 @@
 - `store.py`: 명령어 실행, 데이터 저장소, LRU, TTL, 메모리 정책 연결
 - `memory.py`: `used_memory`, `maxmemory`, `evicted_keys` 관리
 - `ttl.py`: 만료 시간 저장, 만료 검사, lazy deletion 처리
+- `pubsub.py`: 공유 인메모리 채널과 구독자별 FIFO 버퍼
 - `data_structures/`: 직접 구현 자료구조
 - `tests/`: 자료구조와 명령어 단위 테스트
 
@@ -115,7 +130,7 @@
 5. TTL 명령어와 만료 정책을 구현한다.
 6. maxmemory와 LRU eviction을 구현한다.
 7. CLI REPL과 에러 처리를 통합한다.
-8. 보너스 과제 중 기본 구현에 적용 가능한 부분을 통합하고, 나머지는 확장 단계로 분리한다.
+8. 스택·큐·덱 문서, 일반 이진 트리, BST, 단일 프로세스 Pub/Sub 보너스를 구현한다.
 
 ## 4. 자료구조 구현 계획
 
@@ -360,24 +375,23 @@ used_memory = sum(len(key.encode("utf-8")) + len(value.encode("utf-8")))
 - 이진 트리 학습은 최소 힙을 완전 이진 트리의 배열 표현으로 설명해 반영한다.
 - 연결 리스트는 LRU뿐 아니라 확장 Pub/Sub의 메시지 큐 또는 구독자 버퍼에도 재사용 가능하도록 설계한다.
 
-### 10.2 확장 단계로 분리할 항목
+### 10.2 독립 확장 모듈로 구현한 항목
 
 #### 스택/큐/덱 문서화
 
-- `STACK_QUEUE_DEQUE.md`를 별도 작성한다.
-- 스택, 큐, 덱의 개념과 Redis 구현에서 연결 가능한 사례를 정리한다.
+- `STACK_QUEUE_DEQUE.md`를 별도 작성했다.
+- 스택, 큐, 덱의 개념과 Redis 구현에서 연결 가능한 사례를 정리했다.
 
 #### 이진 트리와 BST
 
 - 일반 이진 트리 순회와 BST는 핵심 Redis String 기능에 직접 필요하지 않다.
-- 기본 구현 완료 후 학습용 모듈로 분리한다.
-- `KEYS` 정렬 출력 요구사항이 추가되면 BST 활용을 검토한다.
+- 기본 저장소와 분리된 학습용 모듈로 구현했다.
+- 일반 트리 4종 순회와 BST 삽입, 검색, 삭제, 정렬 순회를 제공한다.
 
 #### Pub/Sub
 
-- 기본 저장소 구현 완료 후 확장 기능으로 구현한다.
-- `PUBLISH channel message`, `SUBSCRIBE channel` 명령어를 추가한다.
-- 채널별 구독자 목록 또는 메시지 버퍼에 연결 리스트를 재활용한다.
+- `PUBLISH channel message`, `SUBSCRIBE channel` 명령어를 추가했다.
+- 채널별 구독자 메시지 버퍼에 연결 리스트를 재활용했다.
 - 네트워크 통신은 제외되어 있으므로 CLI 단일 프로세스 안에서 동작하는 학습용 모델로 제한한다.
 
 ## 11. 테스트 계획
@@ -419,6 +433,13 @@ used_memory = sum(len(key.encode("utf-8")) + len(value.encode("utf-8")))
 - `exit`, `quit` 종료
 - 잘못된 입력에 대한 에러 출력
 
+### 11.6 트리와 Pub/Sub 테스트
+
+- 일반 이진 트리의 전위, 중위, 후위, 레벨 순회
+- BST 삽입, 검색, 중복 삽입, 삭제 세 경우, 정렬 순회
+- 채널 중복 구독, 다중 구독자 발행 수, 구독자별 FIFO 메시지 소비
+- `PUBLISH`, `SUBSCRIBE` 인자 오류
+
 ## 12. 제약 사항
 
 - `dict`, `set`, `collections`로 해시맵, 캐시, 저장소를 대체하지 않는다.
@@ -435,5 +456,6 @@ used_memory = sum(len(key.encode("utf-8")) + len(value.encode("utf-8")))
 - 기본 자료구조가 직접 구현되어 있다.
 - String 명령어, TTL, 메모리 제한, LRU eviction이 동작한다.
 - CLI에서 Redis 스타일 응답을 확인할 수 있다.
-- 보너스 과제 중 동적 배열과 힙의 이진 트리 설명은 기본 구현에 통합되어 있다.
-- 나머지 보너스 과제는 기본 구현 이후 확장 계획으로 분리되어 있다.
+- 동적 배열과 힙의 이진 트리 설명이 기본 구현에 통합되어 있다.
+- 스택, 큐, 덱 문서와 일반 이진 트리, BST, Pub/Sub 확장이 구현되어 있다.
+- README의 모든 체크리스트 항목에 구현 또는 문서 근거가 있다.
