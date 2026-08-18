@@ -1,9 +1,13 @@
+"""Command-line entry point for Mini Redis."""
+
 from parser import ParseError, parse_command
 from store import MiniRedisStore
 import response
 
 
 def main():
+    """Run the interactive Mini Redis REPL until EOF, exit, or quit."""
+
     store = MiniRedisStore()
 
     while True:

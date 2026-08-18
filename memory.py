@@ -1,4 +1,6 @@
 class MemoryManager:
+    """Track payload memory, configured limits, and LRU eviction totals."""
+
     def __init__(self):
         self.used_memory = 0
         self.maxmemory = 0

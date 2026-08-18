@@ -1,11 +1,15 @@
+"""Parse one CLI input line into Mini Redis command tokens."""
+
 import shlex
 
 
 class ParseError(Exception):
-    pass
+    """Raised when a CLI command line cannot be tokenized."""
 
 
 def parse_command(line):
+    """Split a command line while preserving quoted values with spaces."""
+
     stripped = line.strip()
     if stripped == "":
         return []

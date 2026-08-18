@@ -4,6 +4,8 @@ from data_structures import HashMap, MinHeap
 
 
 class TTLManager:
+    """Track current expirations in a hash map and ordered expiration heap."""
+
     def __init__(self, time_provider=None):
         self._expires = HashMap()
         self._heap = MinHeap()
