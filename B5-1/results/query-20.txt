@@ -1,0 +1,13 @@
+Query 20
+요구 사항: 보너스
+확인 목적: 보너스 - 고객 수, 도서 수, 평균 도서 가격을 미니 리포트로 확인한다.
+
+실행 SQL:
+SELECT (SELECT COUNT(*) FROM customers) AS customer_count,
+       (SELECT COUNT(*) FROM books) AS book_count,
+       (SELECT ROUND(AVG(price), 2) FROM books) AS average_book_price;
+
+실행 결과:
+customer_count | book_count | average_book_price
+---------------+------------+-------------------
+11             | 10         | 24100.0

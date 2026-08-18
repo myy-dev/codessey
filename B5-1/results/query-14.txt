@@ -1,0 +1,15 @@
+Query 14
+요구 사항: 데이터 수정 및 삭제
+확인 목적: 도서 재고를 UPDATE하고 변경된 값을 확인한다.
+
+실행 SQL:
+UPDATE books
+SET stock = stock - 2
+WHERE book_id = 10
+  AND stock >= 2
+RETURNING book_id, title, stock AS updated_stock;
+
+실행 결과:
+book_id | title | updated_stock
+--------+-------+--------------
+10      | 러닝 입문 | 2            

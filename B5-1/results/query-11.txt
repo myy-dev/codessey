@@ -1,0 +1,18 @@
+Query 11
+요구 사항: 집계
+확인 목적: 카테고리별 전체 재고를 SUM으로 확인한다.
+
+실행 SQL:
+SELECT category, SUM(stock) AS total_stock
+FROM books
+GROUP BY category
+ORDER BY category ASC;
+
+실행 결과:
+category   | total_stock
+-----------+------------
+Business   | 20
+Design     | 5
+Humanities | 26
+IT         | 34
+Life       | 17

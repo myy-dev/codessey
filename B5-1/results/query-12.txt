@@ -1,0 +1,21 @@
+Query 12
+요구 사항: 서브쿼리
+확인 목적: 전체 평균 가격보다 비싼 도서를 서브쿼리로 확인한다.
+
+실행 SQL:
+SELECT book_id, title, price
+FROM books
+WHERE price > (
+    SELECT AVG(price)
+    FROM books
+)
+ORDER BY price DESC;
+
+실행 결과:
+book_id | title         | price
+--------+---------------+------
+2       | 데이터 모델링 입문    | 32000
+5       | 마케팅 데이터 분석    | 30000
+1       | SQL 첫걸음       | 28000
+6       | 스타트업 회계       | 27000
+3       | 파이썬 업무 자동화    | 25000

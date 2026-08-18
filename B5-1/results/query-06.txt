@@ -1,0 +1,36 @@
+Query 06
+요구 사항: 조인
+확인 목적: 주문상세와 도서를 INNER JOIN으로 연결해 주문 도서를 확인한다.
+
+실행 SQL:
+SELECT oi.order_id, b.title, oi.quantity
+FROM order_items AS oi
+INNER JOIN books AS b
+    ON oi.book_id = b.book_id
+ORDER BY oi.order_id ASC, b.title ASC;
+
+실행 결과:
+order_id | title         | quantity
+---------+---------------+---------
+1        | SQL 첫걸음       | 1
+1        | 파이썬 업무 자동화    | 2
+2        | 데이터 모델링 입문    | 1
+2        | 읽기 쉬운 글쓰기     | 1
+3        | 마케팅 데이터 분석    | 1
+3        | 스타트업 회계       | 1
+4        | UX 리서치 노트     | 1
+5        | 도시와 건축        | 1
+5        | 러닝 입문         | 2
+6        | SQL 첫걸음       | 1
+6        | 데이터 모델링 입문    | 1
+6        | 마케팅 데이터 분석    | 1
+7        | 커피 과학         | 2
+8        | 읽기 쉬운 글쓰기     | 2
+8        | 파이썬 업무 자동화    | 1
+9        | UX 리서치 노트     | 1
+9        | 도시와 건축        | 1
+10       | 러닝 입문         | 1
+10       | 커피 과학         | 1
+11       | SQL 첫걸음       | 1
+12       | 데이터 모델링 입문    | 1
+12       | 마케팅 데이터 분석    | 2

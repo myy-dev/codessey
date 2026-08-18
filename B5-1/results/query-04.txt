@@ -1,0 +1,18 @@
+Query 04
+요구 사항: 기본 조회
+확인 목적: 재고가 7권 이하인 도서를 재고 적은 순으로 확인한다.
+
+실행 SQL:
+SELECT book_id, title, category, stock
+FROM books
+WHERE stock <= 7
+ORDER BY stock ASC, title ASC
+LIMIT 10;
+
+실행 결과:
+book_id | title      | category   | stock
+--------+------------+------------+------
+10      | 러닝 입문      | Life       | 4    
+4       | UX 리서치 노트  | Design     | 5    
+8       | 도시와 건축     | Humanities | 6    
+2       | 데이터 모델링 입문 | IT         | 7    

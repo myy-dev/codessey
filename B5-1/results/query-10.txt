@@ -1,0 +1,18 @@
+Query 10
+요구 사항: 집계
+확인 목적: 카테고리별 평균 도서 가격을 AVG로 확인한다.
+
+실행 SQL:
+SELECT category, ROUND(AVG(price), 2) AS average_price
+FROM books
+GROUP BY category
+ORDER BY category ASC;
+
+실행 결과:
+category   | average_price
+-----------+--------------
+Business   | 28500.0
+Design     | 22000.0
+Humanities | 21000.0
+IT         | 28333.33
+Life       | 17500.0

@@ -1,0 +1,23 @@
+Query 07
+요구 사항: 조인
+확인 목적: 배송 완료 주문과 주문상세를 INNER JOIN으로 연결해 수량을 확인한다.
+
+실행 SQL:
+SELECT o.order_id, o.status, oi.book_id, oi.quantity
+FROM orders AS o
+INNER JOIN order_items AS oi
+    ON o.order_id = oi.order_id
+WHERE o.status = 'SHIPPED'
+ORDER BY o.order_id ASC, oi.book_id ASC;
+
+실행 결과:
+order_id | status  | book_id | quantity
+---------+---------+---------+---------
+2        | SHIPPED | 2       | 1
+2        | SHIPPED | 7       | 1
+5        | SHIPPED | 8       | 1
+5        | SHIPPED | 10      | 2
+8        | SHIPPED | 3       | 1
+8        | SHIPPED | 7       | 2
+10       | SHIPPED | 9       | 1
+10       | SHIPPED | 10      | 1

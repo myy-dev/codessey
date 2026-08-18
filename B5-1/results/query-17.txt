@@ -1,0 +1,16 @@
+Query 17
+요구 사항: 보너스
+확인 목적: 보너스 - 2번 고객의 주문 수를 JOIN 방식으로 확인한다.
+
+실행 SQL:
+SELECT c.customer_id, c.name, COUNT(o.order_id) AS order_count
+FROM customers AS c
+INNER JOIN orders AS o
+    ON c.customer_id = o.customer_id
+WHERE c.customer_id = 2
+GROUP BY c.customer_id, c.name;
+
+실행 결과:
+customer_id | name | order_count
+------------+------+------------
+2           | 이서연  | 2

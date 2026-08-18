@@ -1,0 +1,26 @@
+Query 05
+요구 사항: 조인
+확인 목적: 주문과 고객 정보를 INNER JOIN으로 연결해 주문자를 확인한다.
+
+실행 SQL:
+SELECT o.order_id, c.name, c.city, o.ordered_at, o.status
+FROM orders AS o
+INNER JOIN customers AS c
+    ON o.customer_id = c.customer_id
+ORDER BY o.ordered_at ASC, o.order_id ASC;
+
+실행 결과:
+order_id | name | city | ordered_at          | status
+---------+------+------+---------------------+----------
+1        | 김민준  | 서울   | 2026-06-01 09:15:00 | PAID
+3        | 이서연  | 부산   | 2026-06-02 10:00:00 | PAID
+4        | 박지훈  | 인천   | 2026-06-03 16:20:00 | CANCELLED
+5        | 최하은  | 대구   | 2026-06-06 11:45:00 | SHIPPED
+6        | 정도윤  | 서울   | 2026-06-10 13:10:00 | PAID
+7        | 한지아  | 광주   | 2026-06-11 09:05:00 | PENDING
+8        | 오현우  | 대전   | 2026-06-12 15:40:00 | SHIPPED
+9        | 윤서준  | 수원   | 2026-06-14 12:25:00 | PAID
+2        | 김민준  | 서울   | 2026-06-15 14:30:00 | SHIPPED
+10       | 강다은  | 제주   | 2026-06-18 17:50:00 | SHIPPED
+11       | 장유진  | 서울   | 2026-06-20 08:30:00 | PENDING
+12       | 이서연  | 부산   | 2026-06-21 18:15:00 | PAID
