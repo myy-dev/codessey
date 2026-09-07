@@ -77,6 +77,12 @@ def test_real_sdk_serializes_options_and_exactly_one_request(context, install_tr
     assert payload["max_completion_tokens"] == 1200
     assert payload["model"] == "gpt-4.1-mini"
     assert payload["response_format"]["json_schema"]["strict"] is True
+    schema = payload["response_format"]["json_schema"]["schema"]
+    fields = {"title", "summary"} | (
+        {"body"} if command == "commit" else {"why", "what", "how_to_test"}
+    )
+    assert set(schema["properties"]) == set(schema["required"]) == fields
+    assert schema["additionalProperties"] is False
     assert payload["store"] is False
     assert "new behavior" in payload["messages"][1]["content"]
     assert "신뢰하지" in payload["messages"][0]["content"]
@@ -219,6 +225,15 @@ def test_validator_rejects_bad_titles_sections_and_body():
         Draft("commit", "title", ["summary"], "not bullets", []),
     ):
         assert validate(draft)
+    sections = ("Why", "What", "How to Test")
+    for invalid_section in sections:
+        for invalid_body in ("", f"## {invalid_section}\n불릿 없는 본문"):
+            body = "\n\n".join(
+                invalid_body if section == invalid_section else f"## {section}\n- 내용"
+                for section in sections
+            )
+            draft = Draft("pr", "유효한 제목", ["요약"], body, [])
+            assert validate(draft) == [f"{invalid_section} 섹션에 불릿이 없습니다."]
 
 
 def test_convention_before_and_after(context):
@@ -243,6 +258,7 @@ def test_output_masks_secret_and_terminal_escape(context):
         api_key=secret,
         safe=True,
     )
-    assert secret not in str(draft.as_dict())
-    assert "a@example.test" not in str(draft.as_dict())
+    output = "\n".join([draft.title, *draft.summary, draft.body])
+    assert secret not in output
+    assert "a@example.test" not in output
     assert "\x1b" not in draft.title

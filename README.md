@@ -18,37 +18,13 @@
 ├── ai_gitgen/            # Git 수집, API 호출, 검증, 안전 정책
 ├── tests/                # 임시 Git 저장소 및 모의 API 자동 테스트
 ├── scripts/              # API 없이 재현하는 안전 모드 시연
-├── docs/                 # 검증 기록, 컨벤션, 안전 정책, PR 검토 초안
-├── requirements.txt      # 실행 의존성
-├── requirements-dev.txt  # 테스트·린트 의존성
-├── .env.example          # 빈 키 설정 예시
+├── docs/                 # 팀 컨벤션, PR 수정 내역, 시연 결과
+├── requirements.txt      # 실행·테스트 의존성
 ├── README.md             # 프로젝트 개요 및 개발 체크리스트
 └── SETUP.md              # 설치·실행 방법 및 프로젝트 시현
 ```
 
-## 빠른 실행
-
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -r requirements.txt
-# .env.example을 .env.local로 복사하고 AI_API_KEY에 본인 키 입력
-python main.py commit --safe-mode
-python main.py pr --safe-mode
-# 키와 API 호출 없이 전송 컨텍스트 확인
-python main.py pr --preview
-```
-
-설치와 Windows 안내는 [SETUP.md](SETUP.md), 안전 정책은 [docs/SAFETY.md](docs/SAFETY.md),
-컨벤션은 [docs/CONVENTION.md](docs/CONVENTION.md)를 참고한다.
-
 ## 수행 항목 체크리스트
-
-`[x]`는 구현과 로컬 자동 테스트로 검증한 항목이다. 실제 OpenAI 초안 생성도
-커밋 컨벤션 전·후와 PR에 각각 1회씩 총 3회 성공했다. 요청별 제목·본문 규칙과
-입력 동일성을 검증했다. 사용자 검토 후 [실제 PR #1](https://github.com/myy-dev/B3-2/pull/1)을 게시했고,
-AI 초안 대비 수정 내역 8줄과 게시된 본문의 섹션·불릿도 확인했다.
-자세한 근거는 [docs/VERIFICATION.md](docs/VERIFICATION.md)에 기록한다.
 
 ### Git 변경 사항 수집
 
@@ -122,54 +98,29 @@ AI 초안 대비 수정 내역 8줄과 게시된 본문의 섹션·불릿도 확
 
 ### 커스텀 설정값 명세
 
-| 항목 | 기준값 | 비고 |
-| --- | --- | --- |
-| Python 버전 | 3.10 이상 | 필수 |
-| 1회 실행당 API 요청 | 1~2회 이내 | 비용 방지 권장값 |
-| 커밋 제목 | 50자 이내 권장, 최대 72자 | 검증 후 재생성 또는 후처리 |
-| PR 제목 | 최대 80자 | 초과 불가 |
-| PR 본문 | 필수 섹션 3개 | `Why`, `What`, `How to Test` |
-| PR 섹션별 내용 | 불릿 1개 이상 | 각 섹션 공통 |
-| 안전 모드 파일 제한 | 최대 10개 | 구현 시 변경 가능 |
-| 안전 모드 diff 제한 | 최대 200줄 | 구현 시 변경 가능 |
+| 항목                | 기준값                    | 비고                         |
+| ------------------- | ------------------------- | ---------------------------- |
+| Python 버전         | 3.10 이상                 | 필수                         |
+| 1회 실행당 API 요청 | 1~2회 이내                | 비용 방지 권장값             |
+| 커밋 제목           | 50자 이내 권장, 최대 72자 | 검증 후 재생성 또는 후처리   |
+| PR 제목             | 최대 80자                 | 초과 불가                    |
+| PR 본문             | 필수 섹션 3개             | `Why`, `What`, `How to Test` |
+| PR 섹션별 내용      | 불릿 1개 이상             | 각 섹션 공통                 |
+| 안전 모드 파일 제한 | 최대 10개                 | 구현 시 변경 가능            |
+| 안전 모드 diff 제한 | 최대 200줄                | 구현 시 변경 가능            |
 
 ### CLI 옵션
 
-| 옵션 | 기본값 | 설명 |
-| --- | --- | --- |
-| `--model` | `gpt-4.1-mini` | Chat Completions + JSON schema를 지원하는 모델 |
-| `--temperature` | `0.2` | 0~2 범위의 생성 다양성 |
-| `--max-tokens` | `1200` | 64~32768, API의 `max_completion_tokens`로 전달 |
-| `--safe-mode` | ON | 마스킹 및 최대 10파일/200줄/20,000자 제한 |
-| `--no-safe-mode` | OFF | 패턴 마스킹·안전 모드 전용 상한 해제 |
-| `--convention` | `team` | `team` 또는 `none` |
-| `--staged` | OFF | 스테이징된 변경만 수집 |
-| `--base REF` | 없음 | 공통 조상 이후 커밋 변경도 포함, `--staged`와 동시 사용 불가 |
-| `--preview` | OFF | 전송할 메시지만 출력, API 요청 0회 |
-| `--json` | OFF | 초안·요약·메타데이터를 JSON으로 출력 |
-
-### OpenAI 연결 명세
-
-- 공급자: OpenAI, 엔드포인트: `POST https://api.openai.com/v1/chat/completions`
-- 기본 모델: `gpt-4.1-mini`, 출력: JSON schema 기반 Structured Outputs
-- 인증: `AI_API_KEY` 환경변수 우선, 없으면 Git 루트의 `.env.local`에서 같은 항목 로드
-- 요청: 명령별 최대 1회, SDK 자동 재시도 0회, 타임아웃 30초
-- API 키 발급: [OpenAI Platform API keys](https://platform.openai.com/api-keys)
-- 공식 문서: [모델 지원 기능](https://developers.openai.com/api/docs/models/gpt-4.1-mini),
-  [요청 옵션](https://developers.openai.com/api/reference/resources/chat/subresources/completions/methods/create)
-
-다른 모델은 temperature/JSON schema 등의 지원 범위가 다를 수 있다. 지원하지 않는
-옵션의 API 오류는 안내하고 자동으로 재요청하지 않는다. 제목과 섹션 규칙 위반은 로컬에서
-보정하되, 잘린 응답·거절·잘못된 JSON은 실패로 안내한다.
-
-### 검증 명령
-
-```bash
-python -m pip install -r requirements-dev.txt
-python -m pytest -q
-ruff check .
-python -m scripts.demo_safety
-```
+| 옵션             | 기본값         | 설명                                                         |
+| ---------------- | -------------- | ------------------------------------------------------------ |
+| `--model`        | `gpt-4.1-mini` | Chat Completions + JSON schema를 지원하는 모델               |
+| `--temperature`  | `0.2`          | 0~2 범위의 생성 다양성                                       |
+| `--max-tokens`   | `1200`         | 64~32768, API의 `max_completion_tokens`로 전달               |
+| `--safe-mode`    | ON             | 마스킹 및 최대 10파일/200줄/20,000자 제한                    |
+| `--no-safe-mode` | OFF            | 패턴 마스킹·안전 모드 전용 상한 해제                         |
+| `--convention`   | `team`         | `team` 또는 `none`                                           |
+| `--base REF`     | 없음           | 공통 조상 이후 커밋 변경도 포함 (예: `HEAD~1`)              |
+| `--preview`      | OFF            | 전송할 메시지만 출력, API 요청 0회                           |
 
 ## 결과물 (Deliverables)
 

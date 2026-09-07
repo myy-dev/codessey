@@ -7,12 +7,13 @@ from ai_gitgen.errors import GitgenError
 from ai_gitgen.generation import Generator
 
 
-def test_no_changes_requires_no_key_and_no_api(repo, monkeypatch, capsys):
+@pytest.mark.parametrize("command", ["commit", "pr"])
+def test_no_changes_requires_no_key_and_no_api(repo, monkeypatch, capsys, command):
     monkeypatch.setattr(Generator, "generate", lambda *a, **kw: pytest.fail("Unexpected API call"))
-    assert main.main(["commit"]) == 0
-    assert "변경 사항이 없습니다" in capsys.readouterr().out
-    assert main.main(["pr", "--json"]) == 0
-    assert json.loads(capsys.readouterr().out)["metadata"]["api_calls"] == 0
+    assert main.main([command]) == 0
+    output = capsys.readouterr().out
+    assert "변경 사항이 없습니다" in output
+    assert "API 요청 횟수: 0" in output
 
 
 def test_missing_key_actionable_error(repo, capsys):
@@ -65,8 +66,7 @@ def test_preview_matches_request_and_preserves_nested_json(repo, capsys):
 
 
 @pytest.mark.parametrize("command", ["commit", "pr"])
-@pytest.mark.parametrize("as_json", [False, True])
-def test_cli_success_one_call_and_copyable_output(repo, monkeypatch, capsys, command, as_json):
+def test_cli_success_one_call_and_copyable_output(repo, monkeypatch, capsys, command):
     (repo / "app.py").write_text("changed\n")
     monkeypatch.setenv("AI_API_KEY", "synthetic-local-key")
     calls = []
@@ -76,32 +76,34 @@ def test_cli_success_one_call_and_copyable_output(repo, monkeypatch, capsys, com
         calls.append((args, kwargs))
         return {
             "title": "feat: 동작 개선",
-            "summary": ["app.py 변경"],
-            "body": ["동작 개선"],
+            "summary": ["app.py 변경 synthetic-local-key"],
+            "body": ['동작 개선 api_key="test-secret"'],
             "why": ["개선 배경 확인 필요"],
-            "what": ["동작 개선"],
+            "what": ['동작 개선 api_key="test-secret"'],
             "how_to_test": ["변경된 함수를 호출하여 출력 확인"],
         }
 
     monkeypatch.setattr(Generator, "generate", generate)
     args = [command, "--model", "custom-model", "--temperature", "0.4", "--max-tokens", "900"]
-    if as_json:
-        args.append("--json")
     assert main.main(args) == 0
     output = capsys.readouterr().out
     assert len(calls) == 1
     assert calls[0][1] == {"model": "custom-model", "temperature": 0.4, "max_tokens": 900}
     assert "synthetic-local-key" not in output
+    assert "test-secret" not in output
+    assert "[REDACTED]" in output
     assert "반드시 검토" in output
-    if as_json:
-        data = json.loads(output)
-        assert data["metadata"]["api_calls"] == 1
-        assert data["title"] == "feat: 동작 개선"
+    assert "feat: 동작 개선" in output
+    assert "=" * 60 in output
+    assert "변경 요약" in output
+    assert "API 요청 횟수: 1" in output
+    if command == "commit":
+        assert "커밋 메시지 (아래 내용 복사)" in output
+        assert "feat: 동작 개선\n\n- 동작 개선" in output
     else:
-        assert "=" * 60 in output
-        assert "변경 요약" in output
-        assert "API 요청 횟수: 1" in output
-        assert ("커밋 메시지" if command == "commit" else "PR 제목") in output
+        assert output.index("PR 제목") < output.index("feat: 동작 개선") < output.index("PR 본문")
+        for heading in ("Why", "What", "How to Test"):
+            assert f"## {heading}\n- " in output
 
 
 def test_cli_api_error_counts_attempt_without_leaking_secret(repo, monkeypatch, capsys):
@@ -113,10 +115,12 @@ def test_cli_api_error_counts_attempt_without_leaking_secret(repo, monkeypatch, 
         raise GitgenError("failure synthetic-private-key")
 
     monkeypatch.setattr(Generator, "generate", fail)
-    assert main.main(["pr", "--json"]) == 1
-    output = capsys.readouterr().out
-    assert json.loads(output)["api_calls"] == 1
-    assert "synthetic-private-key" not in output
+    assert main.main(["pr"]) == 1
+    captured = capsys.readouterr()
+    assert captured.out == ""
+    assert "오류: failure" in captured.err
+    assert "API 요청 횟수: 1" in captured.err
+    assert "synthetic-private-key" not in captured.err
 
 
 @pytest.mark.parametrize(
@@ -130,17 +134,9 @@ def test_cli_api_error_counts_attempt_without_leaking_secret(repo, monkeypatch, 
         ["--max-tokens", "0"],
         ["--max-tokens", "32769"],
         ["--max-tokens", "1.5"],
-        ["--staged", "--base", "main"],
     ],
 )
 def test_invalid_options_exit_before_api(repo, arguments):
     with pytest.raises(SystemExit) as error:
         main.main(["commit", *arguments])
     assert error.value.code == 2
-
-
-def test_json_remains_parseable_with_assignment_text(capsys):
-    main.print_json({"body": 'api_key="test-secret"\n- password=other-secret'}, "", True)
-    data = json.loads(capsys.readouterr().out)
-    assert "test-secret" not in data["body"]
-    assert "other-secret" not in data["body"]

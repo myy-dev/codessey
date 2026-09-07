@@ -39,7 +39,7 @@ def run_git(root: Path, *args: str, allowed: tuple[int, ...] = (0,)) -> bytes:
         raise GitgenError(f"git {args[0]} 실패 (종료 코드 {result.returncode}): {reason}")
     if len(result.stdout) > MAX_DIFF_BYTES:
         raise GitgenError(
-            f"git {args[0]} 결과가 2MB를 초과했습니다. 변경을 나누거나 --staged를 사용하세요."
+            f"git {args[0]} 결과가 2MB를 초과했습니다. 수집할 변경의 크기를 줄이세요."
         )
     return result.stdout
 
@@ -63,7 +63,7 @@ class Change:
         return (self.previous_path, self.path) if self.previous_path else (self.path,)
 
 
-def parse_status(raw: bytes, staged_only: bool = False) -> list[Change]:
+def parse_status(raw: bytes) -> list[Change]:
     fields = raw.split(b"\0")
     changes = []
     i = 0
@@ -78,8 +78,7 @@ def parse_status(raw: bytes, staged_only: bool = False) -> list[Change]:
             if i >= len(fields) or not fields[i]:
                 raise GitgenError("git status의 이름 변경 경로가 누락되었습니다.")
             previous = os.fsdecode(fields[i])
-        if not staged_only or status[0] not in {" ", "?", "!"}:
-            changes.append(Change(path, status, previous))
+        changes.append(Change(path, status, previous))
         i += 1
     return changes
 
@@ -117,13 +116,13 @@ DIFF_OPTIONS = (
 
 
 def collect_changes(
-    root: Path, *, safe: bool, api_key: str = "", staged: bool = False, base: str | None = None
+    root: Path, *, safe: bool, api_key: str = "", base: str | None = None
 ) -> Context:
     changes = parse_status(
-        run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all"), staged
+        run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     )
     merge_base = None
-    scope = "staged" if staged else "staged + unstaged + untracked"
+    scope = "staged + unstaged + untracked"
     if base:
         # Resolve to an object ID before using a user-supplied revision in other commands.
         ref = run_git(root, "rev-parse", "--verify", "--end-of-options", f"{base}^{{commit}}")
@@ -196,10 +195,9 @@ def collect_changes(
             pieces.append(
                 ("STAGED", run_git(root, "diff", "--cached", *DIFF_OPTIONS, "--", *change.paths))
             )
-            if not staged:
-                pieces.append(
-                    ("UNSTAGED", run_git(root, "diff", *DIFF_OPTIONS, "--", *change.paths))
-                )
+            pieces.append(
+                ("UNSTAGED", run_git(root, "diff", *DIFF_OPTIONS, "--", *change.paths))
+            )
         nonempty = [(label, raw) for label, raw in pieces if raw]
         raw_text = (
             "\n".join(

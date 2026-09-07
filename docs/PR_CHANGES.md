@@ -2,8 +2,7 @@
 
 기준 초안: [실제 OpenAI PR 결과](examples/live-pr-draft.json).
 최종 PR: [myy-dev/B3-2 #1](https://github.com/myy-dev/B3-2/pull/1).
-수정 본문: [PR_DRAFT.md](PR_DRAFT.md). 사용자가 조건 확인 후 게시하도록 승인했으며,
-GitHub의 실제 본문이 검토 본문과 일치함을 확인했다.
+아래 내용은 실제 생성 초안을 검토하여 GitHub에 게시할 때 수정한 내역이다.
 
 1. 제목의 `docs:`를 `feat:`로 바꾸고, README/SETUP 개선에서 실행 가능한 Git 초안 CLI 구현으로 주목적을 명확히 했다.
 2. Why에 문서만 있던 저장소에서 동작하는 CLI가 필요했다는 배경과 비용·민감정보 전송 범위 제한 목적을 추가했다.

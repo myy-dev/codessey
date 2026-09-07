@@ -38,11 +38,6 @@ def test_staged_unstaged_untracked_and_no_mutations(repo):
     }
     assert git(repo, "status", "--porcelain=v1", "-z") == before
     assert (repo / ".git" / "index").read_bytes() == index
-    staged = collect_changes(repo, safe=True, staged=True)
-    assert len(staged.files) == 1
-    assert "staged_change" in staged.diff
-    assert "unstaged_change" not in staged.diff
-    assert "new_content" not in staged.diff
 
 
 def test_renamed_deleted_empty_and_binary(repo):
@@ -73,13 +68,12 @@ def test_initial_repository_without_head(tmp_path, monkeypatch):
 
 
 def test_base_includes_committed_and_current_changes(repo):
-    git(repo, "switch", "-c", "feature")
     (repo / "app.py").write_text("committed = True\n")
     git(repo, "add", "app.py")
     git(repo, "commit", "-m", "feat: 변경")
     assert collect_changes(repo, safe=True).files == []
     (repo / "new.py").write_text("untracked = True\n")
-    context = collect_changes(repo, safe=True, base="main")
+    context = collect_changes(repo, safe=True, base="HEAD~1")
     assert "committed = True" in context.diff
     assert "untracked = True" in context.diff
     assert len(context.files) == 2

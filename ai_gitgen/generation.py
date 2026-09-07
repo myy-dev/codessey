@@ -23,6 +23,7 @@ DEFAULT_MODEL = "gpt-4.1-mini"
 DEFAULT_TEMPERATURE = 0.2
 DEFAULT_MAX_TOKENS = 1200
 API_BASE_URL = "https://api.openai.com/v1"
+PR_SECTIONS = (("why", "Why"), ("what", "What"), ("how_to_test", "How to Test"))
 CONVENTIONS = {
     "none": "한국어로 명확한 변경 제목을 작성한다. 접두사 형식을 강제하지 않는다.",
     "team": (
@@ -52,7 +53,7 @@ def response_schema(command: str) -> dict:
     if command == "commit":
         properties["body"] = array
     else:
-        properties.update({name: array for name in ("why", "what", "how_to_test")})
+        properties.update({key: array for key, _ in PR_SECTIONS})
     return {
         "type": "json_schema",
         "json_schema": {
@@ -182,15 +183,6 @@ class Draft:
     body: str
     repairs: list[str]
 
-    def as_dict(self) -> dict:
-        return {
-            "command": self.command,
-            "title": self.title,
-            "summary": self.summary,
-            "body": self.body,
-            "repairs": self.repairs,
-        }
-
 
 def validate(draft: Draft) -> list[str]:
     issues = []
@@ -202,7 +194,7 @@ def validate(draft: Draft) -> list[str]:
     if not draft.summary:
         issues.append("변경 요약이 없습니다.")
     if draft.command == "pr":
-        for section in ("Why", "What", "How to Test"):
+        for _, section in PR_SECTIONS:
             match = re.search(
                 rf"^## {section}\n(.*?)(?=^## |\Z)", draft.body, re.MULTILINE | re.DOTALL
             )
@@ -250,7 +242,7 @@ def normalize(
             "how_to_test": ["변경 파일을 검토하고 관련 테스트를 실행하세요."],
         }
         sections = []
-        for key, heading in (("why", "Why"), ("what", "What"), ("how_to_test", "How to Test")):
+        for key, heading in PR_SECTIONS:
             bullets = items(data.get(key))
             if not bullets:
                 bullets = defaults[key]
