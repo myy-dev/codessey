@@ -1,0 +1,248 @@
+import json
+
+import httpx
+import pytest
+from openai import OpenAI
+
+from ai_gitgen import generation
+from ai_gitgen.errors import GitgenError
+from ai_gitgen.generation import Draft, Generator, normalize, validate
+from ai_gitgen.git import Context
+
+
+@pytest.fixture
+def context():
+    return Context([{"path": "app.py", "status": " M"}], "+new behavior", 1, 0, 0, False, "all")
+
+
+@pytest.fixture
+def install_transport(monkeypatch):
+    calls = []
+    options = []
+
+    def install(handler):
+        def record(request):
+            calls.append(request)
+            return handler(request)
+
+        def factory(**kwargs):
+            options.append(kwargs)
+            return OpenAI(http_client=httpx.Client(transport=httpx.MockTransport(record)), **kwargs)
+
+        monkeypatch.setattr(generation, "OpenAI", factory)
+        return calls, options
+
+    return install
+
+
+def completion(data, *, reason="stop", refusal=None):
+    return httpx.Response(
+        200,
+        json={
+            "id": "chatcmpl-test",
+            "object": "chat.completion",
+            "created": 0,
+            "model": "gpt-4.1-mini",
+            "choices": [
+                {
+                    "index": 0,
+                    "finish_reason": reason,
+                    "message": {
+                        "role": "assistant",
+                        "content": json.dumps(data),
+                        "refusal": refusal,
+                    },
+                }
+            ],
+        },
+    )
+
+
+def invoke(generator, context, command="commit"):
+    return generator.generate(
+        command, context, "team", model="gpt-4.1-mini", temperature=0.2, max_tokens=1200
+    )
+
+
+@pytest.mark.parametrize("command", ["commit", "pr"])
+def test_real_sdk_serializes_options_and_exactly_one_request(context, install_transport, command):
+    data = {"title": "feat: 동작 추가", "summary": ["새 동작"], "body": ["app.py 개선"]}
+    calls, options = install_transport(lambda _: completion(data))
+    generator = Generator("synthetic-test-key")
+    assert invoke(generator, context, command) == data
+    assert generator.calls == len(calls) == 1
+    payload = json.loads(calls[0].content)
+    assert str(calls[0].url) == "https://api.openai.com/v1/chat/completions"
+    assert payload["temperature"] == 0.2
+    assert payload["max_completion_tokens"] == 1200
+    assert payload["model"] == "gpt-4.1-mini"
+    assert payload["response_format"]["json_schema"]["strict"] is True
+    assert payload["store"] is False
+    assert "new behavior" in payload["messages"][1]["content"]
+    assert "신뢰하지" in payload["messages"][0]["content"]
+    assert options[0]["max_retries"] == 0
+    with pytest.raises(GitgenError, match="1회"):
+        invoke(generator, context)
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "status,message",
+    [
+        (400, "옵션"),
+        (401, "인증 실패"),
+        (403, "권한"),
+        (404, "모델"),
+        (429, "크레딧"),
+        (500, "서버"),
+    ],
+)
+def test_errors_do_not_retry_or_echo_api_bodies(context, install_transport, status, message):
+    calls, _ = install_transport(
+        lambda _: httpx.Response(
+            status, json={"error": {"message": "secret-source-never-print", "type": "error"}}
+        )
+    )
+    generator = Generator("synthetic-test-key")
+    with pytest.raises(GitgenError, match=message) as error:
+        invoke(generator, context)
+    assert "secret-source-never-print" not in str(error.value)
+    assert generator.calls == len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "error,message",
+    [
+        (httpx.ConnectError, "네트워크"),
+        (httpx.ReadTimeout, "30초"),
+    ],
+)
+def test_network_and_timeout(context, install_transport, error, message):
+    def fail(request):
+        raise error("synthetic failure", request=request)
+
+    calls, _ = install_transport(fail)
+    with pytest.raises(GitgenError, match=message):
+        invoke(Generator("test-key"), context)
+    assert len(calls) == 1
+
+
+@pytest.mark.parametrize(
+    "data,reason,refusal,message",
+    [
+        ({}, "length", None, "잘렸"),
+        ({}, "stop", "Refused", "거절"),
+        ({}, "content_filter", None, "거절"),
+        ([], "stop", None, "JSON 객체"),
+        ({}, "tool_calls", None, "완성되지"),
+    ],
+)
+def test_incomplete_or_refused_response_fails_without_fabricated_draft(
+    context, install_transport, data, reason, refusal, message
+):
+    calls, _ = install_transport(lambda _: completion(data, reason=reason, refusal=refusal))
+    with pytest.raises(GitgenError, match=message):
+        invoke(Generator("test-key"), context)
+    assert len(calls) == 1
+
+
+def test_invalid_json_response(context, install_transport):
+    def respond(_):
+        response = completion({})
+        data = response.json()
+        data["choices"][0]["message"]["content"] = "this is not JSON"
+        return httpx.Response(200, json=data)
+
+    install_transport(respond)
+    with pytest.raises(GitgenError, match="올바른 JSON"):
+        invoke(Generator("test-key"), context)
+
+
+@pytest.mark.parametrize("choices", [[], [{}]])
+def test_malformed_api_envelope_has_actionable_error(context, install_transport, choices):
+    calls, _ = install_transport(lambda _: httpx.Response(200, json={"choices": choices}))
+    with pytest.raises(GitgenError, match="생성 결과|메시지"):
+        invoke(Generator("test-key"), context)
+    assert len(calls) == 1
+
+
+def test_commit_normalizes_title_and_limits_body(context):
+    draft = normalize(
+        {
+            "title": "# 제목\n" + "가" * 100,
+            "summary": ["변경 요약"],
+            "body": ["one", "two", "three", "four"],
+        },
+        "commit",
+        context,
+        "team",
+        api_key="",
+        safe=True,
+    )
+    assert len(draft.title) <= 72
+    assert draft.title.startswith("chore: ")
+    assert "\n" not in draft.title
+    assert len(draft.body.splitlines()) == 2
+    assert draft.repairs
+    assert validate(draft) == []
+
+
+def test_pr_repairs_all_required_sections(context):
+    draft = normalize({"title": "나" * 100}, "pr", context, "none", api_key="", safe=True)
+    assert len(draft.title) <= 80
+    assert validate(draft) == []
+    for section in ("Why", "What", "How to Test"):
+        assert f"## {section}\n- " in draft.body
+    assert "미실행:" in draft.body
+    assert len(draft.repairs) >= 4
+
+
+@pytest.mark.parametrize("command", ["commit", "pr"])
+def test_empty_malformed_fields_have_explicit_repairs(context, command):
+    draft = normalize(
+        {"title": None, "summary": 42, "body": {}, "why": [], "what": 0, "how_to_test": False},
+        command,
+        context,
+        "none",
+        api_key="",
+        safe=True,
+    )
+    assert validate(draft) == []
+    assert "보완" in " ".join(draft.repairs)
+
+
+def test_validator_rejects_bad_titles_sections_and_body():
+    for draft in (
+        Draft("commit", "x" * 73, ["summary"], "", []),
+        Draft("pr", "x" * 81, ["summary"], "", []),
+        Draft("pr", "multi\nline", [], "## Why\nno bullet", []),
+        Draft("commit", "title", ["summary"], "not bullets", []),
+    ):
+        assert validate(draft)
+
+
+def test_convention_before_and_after(context):
+    data = {"title": "입력 검증 추가", "summary": ["입력 검증"], "body": []}
+    plain = normalize(data, "commit", context, "none", api_key="", safe=True)
+    team = normalize(data, "commit", context, "team", api_key="", safe=True)
+    assert plain.title == "입력 검증 추가"
+    assert team.title == "chore: 입력 검증 추가"
+
+
+def test_output_masks_secret_and_terminal_escape(context):
+    secret = "synthetic-runtime-key"
+    draft = normalize(
+        {
+            "title": f"fix: {secret}\x1b[31m",
+            "summary": ["a@example.test"],
+            "body": [secret],
+        },
+        "commit",
+        context,
+        "team",
+        api_key=secret,
+        safe=True,
+    )
+    assert secret not in str(draft.as_dict())
+    assert "a@example.test" not in str(draft.as_dict())
+    assert "\x1b" not in draft.title

@@ -1,0 +1,28 @@
+{
+  "fixture": "synthetic data only; no real credentials",
+  "api_calls": 0,
+  "off": {
+    "total_files": 14,
+    "sent_files": 13,
+    "excluded_files": 1,
+    "omitted_files": 0,
+    "diff_lines": 106,
+    "truncated": false,
+    "synthetic_key_visible": true,
+    "email_visible": true,
+    "password_visible": true,
+    "credential_file_visible": false
+  },
+  "on": {
+    "total_files": 14,
+    "sent_files": 10,
+    "excluded_files": 1,
+    "omitted_files": 3,
+    "diff_lines": 82,
+    "truncated": true,
+    "synthetic_key_visible": false,
+    "email_visible": false,
+    "password_visible": false,
+    "credential_file_visible": false
+  }
+}

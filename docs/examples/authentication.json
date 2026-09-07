@@ -1,0 +1,11 @@
+{
+  "checked_at": "2026-09-05T20:13:55.763313+00:00",
+  "endpoint": "GET https://api.openai.com/v1/models/gpt-4.1-mini",
+  "http_status": 200,
+  "authentication": "success",
+  "model_lookup": "success",
+  "model_lookup_requests": 1,
+  "generation_requests": 0,
+  "repository_content_sent": false,
+  "credential_recorded": false
+}

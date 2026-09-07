@@ -1,0 +1,41 @@
+{
+  "recorded_at": "2026-09-05T20:23:22.131238+00:00",
+  "provider": "OpenAI",
+  "endpoint": "https://api.openai.com/v1/chat/completions",
+  "model": "gpt-4.1-mini",
+  "temperature": 0.2,
+  "max_completion_tokens": 1200,
+  "safe_mode": true,
+  "generation_requests": 3,
+  "requests_per_command": 1,
+  "sdk_max_retries": 0,
+  "same_context_verified": true,
+  "context_sha256": "ff85ab97adb9caf850c9d11fe1ba7a41eff0ceecbf1f5242033ff9a8df67d2d8",
+  "context_files": [
+    {
+      "path": "README.md",
+      "status": " M"
+    },
+    {
+      "path": "SETUP.md",
+      "status": " M"
+    }
+  ],
+  "diff_lines": 200,
+  "truncated": true,
+  "scope_note": "200-line limit included README.md and SETUP.md only; omitted source changes require reviewer supplementation.",
+  "runs": [
+    {
+      "command": "commit --safe-mode --convention none --json",
+      "artifact": "live-commit-before.json"
+    },
+    {
+      "command": "commit --safe-mode --convention team --json",
+      "artifact": "live-commit-after.json"
+    },
+    {
+      "command": "pr --safe-mode --convention team --json",
+      "artifact": "live-pr-draft.json"
+    }
+  ]
+}
