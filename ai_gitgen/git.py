@@ -91,11 +91,10 @@ class Context:
     excluded_files: int
     omitted_files: int
     truncated: bool
-    scope: str
 
     def as_dict(self) -> dict:
         return {
-            "scope": self.scope,
+            "scope": "staged + unstaged + untracked",
             "files": self.files,
             "diff": self.diff,
             "total_files": self.total_files,
@@ -115,29 +114,10 @@ DIFF_OPTIONS = (
 )
 
 
-def collect_changes(
-    root: Path, *, safe: bool, api_key: str = "", base: str | None = None
-) -> Context:
+def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
     changes = parse_status(
         run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     )
-    merge_base = None
-    scope = "staged + unstaged + untracked"
-    if base:
-        # Resolve to an object ID before using a user-supplied revision in other commands.
-        ref = run_git(root, "rev-parse", "--verify", "--end-of-options", f"{base}^{{commit}}")
-        merge_base = run_git(root, "merge-base", ref.decode().strip(), "HEAD").decode().strip()
-        raw_paths = run_git(
-            root, "diff", *DIFF_OPTIONS, "--name-only", "-z", merge_base, "HEAD", "--"
-        )
-        existing = {change.path for change in changes}
-        changes.extend(
-            Change(os.fsdecode(path), "B ")
-            for path in raw_paths.split(b"\0")
-            if path and os.fsdecode(path) not in existing
-        )
-        scope = f"merge-base({base}, HEAD)..HEAD + staged + unstaged + untracked"
-
     excluded = 0
     eligible = []
     for change in changes:
@@ -168,13 +148,6 @@ def collect_changes(
             }
         )
         pieces = []
-        if merge_base:
-            pieces.append(
-                (
-                    "COMMITTED",
-                    run_git(root, "diff", *DIFF_OPTIONS, merge_base, "HEAD", "--", *change.paths),
-                )
-            )
         if change.status == "??":
             pieces.append(
                 (
@@ -226,5 +199,4 @@ def collect_changes(
         excluded,
         len(eligible) - len(files),
         truncated,
-        mask(scope, api_key, patterns=safe),
     )

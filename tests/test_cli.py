@@ -1,4 +1,4 @@
-import json
+import os
 
 import pytest
 
@@ -25,8 +25,10 @@ def test_missing_key_actionable_error(repo, capsys):
 
 
 def test_environment_wins_and_dotenv_does_not_expand_or_execute(repo, monkeypatch):
-    (repo / ".env.local").write_text('AI_API_KEY="synthetic-${HOME}-$(touch hacked)"\n')
+    monkeypatch.setattr(os, "environ", os.environ.copy())
+    (repo / ".env").write_text('AI_API_KEY="synthetic-${HOME}-$(touch hacked)"\n')
     assert main.load_api_key(repo) == "synthetic-${HOME}-$(touch hacked)"
+    assert os.getenv("AI_API_KEY") == "synthetic-${HOME}-$(touch hacked)"
     assert not (repo / "hacked").exists()
     monkeypatch.setenv("AI_API_KEY", "synthetic-environment-key")
     assert main.load_api_key(repo) == "synthetic-environment-key"
@@ -35,34 +37,37 @@ def test_environment_wins_and_dotenv_does_not_expand_or_execute(repo, monkeypatc
 def test_dotenv_symlink_refused(repo, tmp_path_factory):
     outside = tmp_path_factory.mktemp("secret") / "env"
     outside.write_text("AI_API_KEY=synthetic\n")
-    (repo / ".env.local").symlink_to(outside)
+    (repo / ".env").symlink_to(outside)
     with pytest.raises(GitgenError, match="일반 파일"):
         main.load_api_key(repo)
 
 
-def test_preview_is_api_free_and_has_masked_context(repo, monkeypatch, capsys):
-    (repo / "app.py").write_text('email = "alice@example.test"\n')
-    monkeypatch.setattr(Generator, "generate", lambda *a, **kw: pytest.fail("Unexpected API call"))
-    assert main.main(["pr", "--preview", "--safe-mode"]) == 0
-    preview = json.loads(capsys.readouterr().out)
-    assert preview["metadata"]["api_calls"] == 0
-    assert "alice@example.test" not in str(preview)
-    assert "[REDACTED]" in str(preview)
-    assert main.main(["pr", "--preview", "--no-safe-mode"]) == 0
-    assert "alice@example.test" in capsys.readouterr().out
+def test_legacy_dotenv_file_is_not_loaded(repo):
+    (repo / ".env.local").write_text("AI_API_KEY=synthetic-legacy-key\n")
+    assert main.load_api_key(repo) == ""
 
 
-def test_preview_matches_request_and_preserves_nested_json(repo, capsys):
-    from ai_gitgen.generation import build_messages
-    from ai_gitgen.git import collect_changes
+@pytest.mark.parametrize("safe", [True, False])
+def test_cli_masks_context_before_generation(repo, monkeypatch, capsys, safe):
+    key = "synthetic-runtime-key"
+    monkeypatch.setenv("AI_API_KEY", key)
+    (repo / "app.py").write_text(f'api_key = "{key}"\nemail = "alice@example.test"\n')
+    contexts = []
 
-    (repo / "app.py").write_text('api_key = "synthetic-source-secret"\n')
-    context = collect_changes(repo, safe=True)
-    assert main.main(["commit", "--preview"]) == 0
-    preview = json.loads(capsys.readouterr().out)
-    assert preview["messages"] == build_messages("commit", context, "team")
-    inner = json.loads(preview["messages"][1]["content"])
-    assert "synthetic-source-secret" not in inner["context"]["diff"]
+    def generate(self, command, context, convention, **kwargs):
+        self.calls += 1
+        contexts.append(context)
+        return {"title": "fix: 설정 변경", "summary": ["설정 변경"]}
+
+    monkeypatch.setattr(Generator, "generate", generate)
+    assert main.main(["commit", "--safe-mode" if safe else "--no-safe-mode"]) == 0
+    assert len(contexts) == 1
+    assert key not in contexts[0].diff
+    assert ("alice@example.test" in contexts[0].diff) is not safe
+    assert "[REDACTED]" in contexts[0].diff
+    output = capsys.readouterr().out
+    assert "API 요청 횟수: 1" in output
+    assert key not in output
 
 
 @pytest.mark.parametrize("command", ["commit", "pr"])

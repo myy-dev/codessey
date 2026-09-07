@@ -10,28 +10,22 @@ source .venv/bin/activate
 python -m pip install -r requirements.txt
 ```
 
-프로젝트 루트의 `.env.local`에 본인 키를 입력한다. 이미 설정했다면 그대로 사용한다.
-이 파일은 Git에서 제외된다.
+프로젝트 루트의 `.env`에 본인 키를 입력한다. 이 파일은 Git에서 제외된다.
+프로그램은 `load_dotenv()`로 설정을 환경변수에 로드한다.
 
 ```dotenv
 AI_API_KEY=본인의_OpenAI_API_키
 ```
 
 키 발급처: [OpenAI Platform](https://platform.openai.com/api-keys).
-셸에 `AI_API_KEY` 환경변수가 있으면 `.env.local`보다 우선한다.
+셸에 `AI_API_KEY` 환경변수가 있으면 `.env`보다 우선한다.
 
 ## 커밋·PR 생성 시연
 
-설명할 Git 변경이 있는 상태에서 실행한다. 커밋을 마친 뒤에는 파일을 조금 수정하거나
-`--base`로 비교할 기준 커밋을 지정한다. 기본 범위는 staged + unstaged + untracked다.
+아직 커밋하지 않은 Git 변경이 있는 상태에서 실행한다.
+수집 범위는 staged + unstaged + untracked다. 변경이 없으면 안내 후 API 호출 없이 종료한다.
 
 ```bash
-# 전송할 내용 확인: API 호출 없음
-python main.py pr --safe-mode --preview
-
-# main에 커밋한 직후, 직전 커밋의 변경 확인: API 호출 없음
-python main.py pr --base HEAD~1 --preview
-
 # 실제 생성: 명령당 API 1회
 python main.py commit --safe-mode
 python main.py pr --safe-mode
@@ -50,7 +44,7 @@ PR 제목은 최대 80자다. PR 본문에는 `Why`, `What`, `How to Test`와 �
 최대 10파일·200줄·20,000자만 전송한다. 내용이 잘리면 생략 안내를 출력한다.
 `--no-safe-mode`로 패턴 마스킹과 안전 모드 전용 상한을 해제할 수 있다.
 실제 실행 키, 자격증명 파일과 심볼릭 링크는 두 모드 모두 보호한다.
-패턴에 없는 비밀은 남을 수 있으므로 `--preview`로 내용을 확인한다.
+패턴에 없는 비밀은 남을 수 있으므로 실행 전에 변경 파일의 내용을 확인한다.
 
 ```bash
 # 가짜 키·이메일·비밀번호를 사용한 비교: API 호출 없음
@@ -71,7 +65,7 @@ python -m scripts.demo_safety
 python -m pytest -q
 ```
 
-- 자동 테스트: 86개 통과. Git 수집, 출력 형식, 안전 모드, API 오류·호출 횟수 검증.
+- 자동 테스트: 85개 통과. Git 수집, 출력 형식, 안전 모드, API 오류·호출 횟수 검증.
 - [팀 컨벤션 및 실제 생성 전·후 비교](docs/CONVENTION.md)
 - [안전 모드 비교 결과](docs/examples/safety-comparison.json)
 - [실제 OpenAI 생성 3회 기록](docs/examples/live-run.json)

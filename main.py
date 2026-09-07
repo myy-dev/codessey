@@ -4,13 +4,12 @@
 from __future__ import annotations
 
 import argparse
-import json
 import math
 import os
 import sys
 from pathlib import Path
 
-from dotenv import dotenv_values
+from dotenv import load_dotenv
 
 from ai_gitgen.errors import GitgenError
 from ai_gitgen.generation import (
@@ -19,7 +18,6 @@ from ai_gitgen.generation import (
     DEFAULT_MODEL,
     DEFAULT_TEMPERATURE,
     Generator,
-    build_messages,
     normalize,
 )
 from ai_gitgen.git import collect_changes, repository_root
@@ -71,32 +69,27 @@ def parser() -> argparse.ArgumentParser:
             help="마스킹 + 최대 10파일/200줄/20,000자 전송 (기본 ON)",
         )
         command.add_argument("--convention", choices=CONVENTIONS, default="team")
-        command.add_argument(
-            "--base", help="기준 커밋과의 공통 조상 이후 변경도 포함 (예: HEAD~1)"
-        )
-        command.add_argument(
-            "--preview", action="store_true", help="전송할 컨텍스트만 출력, API 0회"
-        )
     return cli
 
 
 def load_api_key(root: Path) -> str:
-    """Environment first; the explicitly documented local file is optional."""
+    """Load the root .env into the environment without replacing existing values."""
     key = os.environ.get("AI_API_KEY", "").strip()
     if key:
         return key
-    path = root / ".env.local"
+    path = root / ".env"
     if not path.exists():
         return ""
     if path.is_symlink() or not path.is_file():
-        raise GitgenError(".env.local은 프로젝트 루트의 일반 파일이어야 합니다.")
+        raise GitgenError(".env는 프로젝트 루트의 일반 파일이어야 합니다.")
     try:
         if path.stat().st_size > 65_536:
-            raise GitgenError(".env.local이 너무 큽니다. AI_API_KEY 설정만 저장하세요.")
-        return (dotenv_values(path, interpolate=False).get("AI_API_KEY") or "").strip()
+            raise GitgenError(".env가 너무 큽니다. AI_API_KEY 설정만 저장하세요.")
+        load_dotenv(path, override=False, interpolate=False)
+        return os.getenv("AI_API_KEY", "").strip()
     except (OSError, UnicodeError) as exc:
         raise GitgenError(
-            ".env.local을 읽을 수 없습니다. 파일 권한과 UTF-8 인코딩을 확인하세요."
+            ".env를 읽을 수 없습니다. 파일 권한과 UTF-8 인코딩을 확인하세요."
         ) from exc
 
 
@@ -107,7 +100,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         root = repository_root(Path.cwd())
         key = load_api_key(root)
-        context = collect_changes(root, safe=args.safe_mode, api_key=key, base=args.base)
+        context = collect_changes(root, safe=args.safe_mode, api_key=key)
         if not context.files:
             message = (
                 "변경 사항이 없습니다."
@@ -116,35 +109,9 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(message + "\nAPI 요청 횟수: 0")
             return 0
-        if args.preview:
-            # Context is already sanitized. Preserve the exact outgoing messages;
-            # masking serialized inner JSON again could corrupt its quoting.
-            print(
-                json.dumps(
-                    {
-                        "preview": True,
-                        "messages": build_messages(args.command, context, args.convention),
-                        "metadata": {
-                            "api_calls": 0,
-                            "safe_mode": args.safe_mode,
-                            "convention": args.convention,
-                            "scope": context.scope,
-                            "total_files": context.total_files,
-                            "sent_files": len(context.files),
-                            "excluded_files": context.excluded_files,
-                            "omitted_files": context.omitted_files,
-                            "diff_lines": len(context.diff.splitlines()),
-                            "truncated": context.truncated,
-                        },
-                    },
-                    ensure_ascii=False,
-                    indent=2,
-                )
-            )
-            return 0
         if not key:
             raise GitgenError(
-                "AI_API_KEY가 없습니다. 환경변수 또는 프로젝트 루트 .env.local에 설정하세요."
+                "AI_API_KEY가 없습니다. 환경변수 또는 프로젝트 루트 .env에 설정하세요."
             )
         if not args.model.strip():
             raise GitgenError("--model은 비어 있을 수 없습니다.")

@@ -67,24 +67,6 @@ def test_initial_repository_without_head(tmp_path, monkeypatch):
     assert "initial = True" in collect_changes(tmp_path, safe=True).diff
 
 
-def test_base_includes_committed_and_current_changes(repo):
-    (repo / "app.py").write_text("committed = True\n")
-    git(repo, "add", "app.py")
-    git(repo, "commit", "-m", "feat: 변경")
-    assert collect_changes(repo, safe=True).files == []
-    (repo / "new.py").write_text("untracked = True\n")
-    context = collect_changes(repo, safe=True, base="HEAD~1")
-    assert "committed = True" in context.diff
-    assert "untracked = True" in context.diff
-    assert len(context.files) == 2
-
-
-def test_invalid_base_and_option_injection(repo):
-    for ref in ("missing-ref", "--help", "--output=/tmp/should-not-exist"):
-        with pytest.raises(GitgenError, match="git rev-parse 실패"):
-            collect_changes(repo, safe=True, base=ref)
-
-
 def test_literal_pathspec_filename(repo):
     (repo / "[abc].txt").write_text("literal_only\n")
     (repo / "a.txt").write_text("another\n")

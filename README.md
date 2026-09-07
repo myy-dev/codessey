@@ -119,8 +119,6 @@
 | `--safe-mode`    | ON             | 마스킹 및 최대 10파일/200줄/20,000자 제한                    |
 | `--no-safe-mode` | OFF            | 패턴 마스킹·안전 모드 전용 상한 해제                         |
 | `--convention`   | `team`         | `team` 또는 `none`                                           |
-| `--base REF`     | 없음           | 공통 조상 이후 커밋 변경도 포함 (예: `HEAD~1`)              |
-| `--preview`      | OFF            | 전송할 메시지만 출력, API 요청 0회                           |
 
 ## 결과물 (Deliverables)
 

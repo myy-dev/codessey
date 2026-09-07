@@ -12,7 +12,7 @@ from ai_gitgen.git import Context
 
 @pytest.fixture
 def context():
-    return Context([{"path": "app.py", "status": " M"}], "+new behavior", 1, 0, 0, False, "all")
+    return Context([{"path": "app.py", "status": " M"}], "+new behavior", 1, 0, 0, False)
 
 
 @pytest.fixture
@@ -66,6 +66,7 @@ def invoke(generator, context, command="commit"):
 
 @pytest.mark.parametrize("command", ["commit", "pr"])
 def test_real_sdk_serializes_options_and_exactly_one_request(context, install_transport, command):
+    context.diff += '\n+api_key = "[REDACTED]"'
     data = {"title": "feat: 동작 추가", "summary": ["새 동작"], "body": ["app.py 개선"]}
     calls, options = install_transport(lambda _: completion(data))
     generator = Generator("synthetic-test-key")
@@ -85,6 +86,8 @@ def test_real_sdk_serializes_options_and_exactly_one_request(context, install_tr
     assert schema["additionalProperties"] is False
     assert payload["store"] is False
     assert "new behavior" in payload["messages"][1]["content"]
+    request_context = json.loads(payload["messages"][1]["content"])["context"]
+    assert request_context["diff"] == context.diff
     assert "신뢰하지" in payload["messages"][0]["content"]
     assert options[0]["max_retries"] == 0
     with pytest.raises(GitgenError, match="1회"):
