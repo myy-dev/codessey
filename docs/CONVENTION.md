@@ -25,10 +25,6 @@ python main.py pr --convention team
 python main.py commit --convention none
 ```
 
-프롬프트 및 후처리의 컨벤션 적용
-모델 유형 누락 시 후처리의 `chore:` 보완 및 검토 안내 출력
-후처리의 변경 유형 추측 제외
-
 ## 실제 OpenAI 생성 비교
 
 2026-09-06, `gpt-4.1-mini`, temperature 0.2, 최대 출력 1200토큰 실행 조건
