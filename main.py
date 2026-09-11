@@ -107,7 +107,7 @@ def main(argv: list[str] | None = None) -> int:
                 if not context.total_files
                 else "전송 가능한 변경 사항이 없습니다. 자격증명 파일/심볼릭 링크는 제외됩니다."
             )
-            print(message + "\nAPI 요청 횟수: 0")
+            print(message)
             return 0
         if not key:
             raise GitgenError(
@@ -167,17 +167,14 @@ def main(argv: list[str] | None = None) -> int:
             divider,
             *(f"안내: {w}" for w in warnings),
             review,
-            f"API 요청 횟수: {generator.calls}",
         ]
         print(mask("\n".join(lines), key, patterns=args.safe_mode))
         return 0
     except GitgenError as exc:
-        calls = generator.calls if generator else 0
-        print(f"오류: {mask(str(exc), key)}\nAPI 요청 횟수: {calls}", file=sys.stderr)
+        print(f"오류: {mask(str(exc), key)}", file=sys.stderr)
         return 1
     except KeyboardInterrupt:
-        calls = generator.calls if generator else 0
-        print(f"사용자가 실행을 취소했습니다. API 요청 횟수: {calls}", file=sys.stderr)
+        print("사용자가 실행을 취소했습니다.", file=sys.stderr)
         return 130
 
 

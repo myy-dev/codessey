@@ -13,7 +13,6 @@ def test_no_changes_requires_no_key_and_no_api(repo, monkeypatch, capsys, comman
     assert main.main([command]) == 0
     output = capsys.readouterr().out
     assert "변경 사항이 없습니다" in output
-    assert "API 요청 횟수: 0" in output
 
 
 def test_safe_mode_is_on_by_default():
@@ -27,7 +26,6 @@ def test_missing_key_actionable_error(repo, capsys):
     assert main.main(["commit"]) == 1
     error = capsys.readouterr().err
     assert "AI_API_KEY가 없습니다" in error
-    assert "API 요청 횟수: 0" in error
 
 
 def test_environment_wins_and_dotenv_does_not_expand_or_execute(repo, monkeypatch):
@@ -72,7 +70,6 @@ def test_cli_masks_context_before_generation(repo, monkeypatch, capsys, safe):
     assert ("alice@example.test" in contexts[0].diff) is not safe
     assert "[REDACTED]" in contexts[0].diff
     output = capsys.readouterr().out
-    assert "API 요청 횟수: 1" in output
     assert key not in output
 
 
@@ -116,7 +113,6 @@ def test_cli_success_one_call_and_copyable_output(repo, monkeypatch, capsys, com
     assert "feat: 동작 개선" in output
     assert "=" * 60 in output
     assert "변경 요약" in output
-    assert "API 요청 횟수: 1" in output
     if command == "commit":
         assert "커밋 메시지 (아래 내용 복사)" in output
         assert "feat: 동작 개선\n\n- 동작 개선" in output
@@ -126,7 +122,7 @@ def test_cli_success_one_call_and_copyable_output(repo, monkeypatch, capsys, com
             assert f"## {heading}\n- " in output
 
 
-def test_cli_api_error_counts_attempt_without_leaking_secret(repo, monkeypatch, capsys):
+def test_cli_api_error_does_not_leak_secret(repo, monkeypatch, capsys):
     (repo / "app.py").write_text("changed\n")
     monkeypatch.setenv("AI_API_KEY", "synthetic-private-key")
 
@@ -139,7 +135,6 @@ def test_cli_api_error_counts_attempt_without_leaking_secret(repo, monkeypatch, 
     captured = capsys.readouterr()
     assert captured.out == ""
     assert "오류: failure" in captured.err
-    assert "API 요청 횟수: 1" in captured.err
     assert "synthetic-private-key" not in captured.err
 
 
