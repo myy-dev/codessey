@@ -65,8 +65,8 @@ def parser() -> argparse.ArgumentParser:
         command.add_argument(
             "--safe-mode",
             action=argparse.BooleanOptionalAction,
-            default=False,
-            help="마스킹 + 최대 10파일/200줄/20,000자 전송 (기본 OFF)",
+            default=True,
+            help="마스킹 + 최대 10파일/200줄/20,000자 전송 (기본 ON)",
         )
         command.add_argument("--convention", choices=CONVENTIONS, default="team")
     return cli

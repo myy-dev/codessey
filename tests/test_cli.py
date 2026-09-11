@@ -16,9 +16,10 @@ def test_no_changes_requires_no_key_and_no_api(repo, monkeypatch, capsys, comman
     assert "API 요청 횟수: 0" in output
 
 
-def test_safe_mode_is_opt_in():
+def test_safe_mode_is_on_by_default():
     args = main.parser().parse_args(["commit"])
-    assert args.safe_mode is False
+    assert args.safe_mode is True
+    assert main.parser().parse_args(["commit", "--no-safe-mode"]).safe_mode is False
 
 
 def test_missing_key_actionable_error(repo, capsys):

@@ -79,8 +79,8 @@
 
 ### 보너스 과제
 
-- [ ] 기존 프로젝트에 의미 있는 변경을 적용하고 실제 PR 1건 완성
-- [ ] AI 초안과 최종 PR의 변경점을 5~10줄로 정리
+- [x] 기존 프로젝트에 의미 있는 변경을 적용하고 실제 PR 1건 완성
+- [x] AI 초안과 최종 PR의 변경점을 5~10줄로 정리
 - [ ] 기존 커밋/PR 스타일을 분석해 팀 컨벤션 정의
 - [ ] `.ai-gitgen.yml`, `--convention`, 프롬프트 템플릿 중 하나로 컨벤션 적용
 - [ ] 컨벤션 적용 전·후 생성 결과 비교
@@ -117,7 +117,7 @@
 | `--model`        | `gpt-4.1-mini` | Chat Completions + JSON schema를 지원하는 모델               |
 | `--temperature`  | `0.2`          | 0~2 범위의 생성 다양성                                       |
 | `--max-tokens`   | `1200`         | 64~32768, API의 `max_completion_tokens`로 전달               |
-| `--safe-mode`    | OFF            | 지정 시 마스킹 및 최대 10파일/200줄/20,000자 제한 적용       |
+| `--safe-mode`    | ON             | 마스킹 및 최대 10파일/200줄/20,000자 제한 적용               |
 | `--no-safe-mode` | OFF            | 안전 모드 비활성화 명시                                     |
 | `--convention`   | `team`         | `team` 또는 `none`                                           |
 

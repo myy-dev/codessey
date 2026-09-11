@@ -85,7 +85,7 @@ python main.py pr --safe-mode
 | `--model` | `gpt-4.1-mini` | 사용할 OpenAI 모델 |
 | `--temperature` | `0.2` | 생성 다양성, `0`~`2` |
 | `--max-tokens` | `1200` | 최대 출력 토큰, `64`~`32768` |
-| `--safe-mode` | OFF | 지정 시 민감정보 마스킹 및 전송량 제한 적용 |
+| `--safe-mode` | ON | 민감정보 마스킹 및 전송량 제한 적용 |
 | `--no-safe-mode` | OFF | 안전 모드 비활성화 명시 |
 | `--convention` | `team` | `team` 또는 `none` 컨벤션 적용 |
 
