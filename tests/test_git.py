@@ -21,7 +21,7 @@ def test_non_repository(tmp_path):
         repository_root(tmp_path)
 
 
-def test_staged_unstaged_untracked_and_no_mutations(repo):
+def test_git_changes_and_no_mutations(repo):
     (repo / "app.py").write_text("staged_change\n")
     git(repo, "add", "app.py")
     (repo / "app.py").write_text("staged_change\nunstaged_change\n")
@@ -33,9 +33,8 @@ def test_staged_unstaged_untracked_and_no_mutations(repo):
     assert "staged_change" in context.diff
     assert "unstaged_change" in context.diff
     assert "new_content" in context.diff
-    assert {"STAGED", "UNSTAGED", "UNTRACKED"} <= {
-        part.strip("[]") for part in context.diff.splitlines() if part.startswith("[")
-    }
+    assert context.as_dict()["scope"] == "Git 변경 사항"
+    assert all("status" not in file for file in context.files)
     assert git(repo, "status", "--porcelain=v1", "-z") == before
     assert (repo / ".git" / "index").read_bytes() == index
 
@@ -55,7 +54,7 @@ def test_renamed_deleted_empty_and_binary(repo):
 def test_deleted_file(repo):
     (repo / "app.py").unlink()
     context = collect_changes(repo, safe=True)
-    assert context.files[0]["status"] == " D"
+    assert context.files[0]["path"] == "app.py"
     assert "deleted file mode" in context.diff
 
 

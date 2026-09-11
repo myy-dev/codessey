@@ -65,8 +65,8 @@ def parser() -> argparse.ArgumentParser:
         command.add_argument(
             "--safe-mode",
             action=argparse.BooleanOptionalAction,
-            default=True,
-            help="마스킹 + 최대 10파일/200줄/20,000자 전송 (기본 ON)",
+            default=False,
+            help="마스킹 + 최대 10파일/200줄/20,000자 전송 (기본 OFF)",
         )
         command.add_argument("--convention", choices=CONVENTIONS, default="team")
     return cli
@@ -144,7 +144,7 @@ def main(argv: list[str] | None = None) -> int:
         lines += [
             f"수집 {context.total_files}개 / 전송 {len(context.files)}개 / "
             f"제외 {context.excluded_files}개 / 생략 {context.omitted_files}개",
-            *(f"  {f['status']} {f['path']}" for f in context.files),
+            *(f"  {f['path']}" for f in context.files),
             "",
         ]
         if args.command == "commit":

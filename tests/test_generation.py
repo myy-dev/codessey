@@ -12,7 +12,7 @@ from ai_gitgen.git import Context
 
 @pytest.fixture
 def context():
-    return Context([{"path": "app.py", "status": " M"}], "+new behavior", 1, 0, 0, False)
+    return Context([{"path": "app.py"}], "+new behavior", 1, 0, 0, False)
 
 
 @pytest.fixture

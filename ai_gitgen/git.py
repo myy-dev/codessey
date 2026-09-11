@@ -94,7 +94,7 @@ class Context:
 
     def as_dict(self) -> dict:
         return {
-            "scope": "staged + unstaged + untracked",
+            "scope": "Git 변경 사항",
             "files": self.files,
             "diff": self.diff,
             "total_files": self.total_files,
@@ -118,6 +118,7 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
     changes = parse_status(
         run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     )
+    has_head = bool(run_git(root, "rev-parse", "--verify", "HEAD", allowed=(0, 128)).strip())
     excluded = 0
     eligible = []
     for change in changes:
@@ -138,7 +139,6 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
             break
         files.append(
             {
-                "status": change.status,
                 "path": mask(change.path, api_key, patterns=safe),
                 **(
                     {"previous_path": mask(change.previous_path, api_key, patterns=safe)}
@@ -147,36 +147,24 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
                 ),
             }
         )
-        pieces = []
-        if change.status == "??":
-            pieces.append(
-                (
-                    "UNTRACKED",
-                    run_git(
-                        root,
-                        "diff",
-                        "--no-index",
-                        *DIFF_OPTIONS,
-                        "--",
-                        os.devnull,
-                        change.path,
-                        allowed=(0, 1),
-                    ),
+        if change.status == "??" or not has_head:
+            if (root / change.path).exists():
+                raw = run_git(
+                    root,
+                    "diff",
+                    "--no-index",
+                    *DIFF_OPTIONS,
+                    "--",
+                    os.devnull,
+                    change.path,
+                    allowed=(0, 1),
                 )
-            )
+            else:
+                raw = b""
         else:
-            pieces.append(
-                ("STAGED", run_git(root, "diff", "--cached", *DIFF_OPTIONS, "--", *change.paths))
-            )
-            pieces.append(
-                ("UNSTAGED", run_git(root, "diff", *DIFF_OPTIONS, "--", *change.paths))
-            )
-        nonempty = [(label, raw) for label, raw in pieces if raw]
-        raw_text = (
-            "\n".join(
-                f"[{label}]\n{raw.decode('utf-8', 'replace').rstrip()}" for label, raw in nonempty
-            )
-            or "[내용 diff 없음: 빈 파일, 파일 모드 또는 서브모듈 상태 변경을 확인하세요.]"
+            raw = run_git(root, "diff", "HEAD", *DIFF_OPTIONS, "--", *change.paths)
+        raw_text = raw.decode("utf-8", "replace").rstrip() or (
+            "[내용 diff 없음: 빈 파일, 파일 모드 또는 서브모듈 상태 변경을 확인하세요.]"
         )
         # Mask complete text BEFORE truncation, so cut private key blocks cannot escape.
         cleaned = mask(raw_text, api_key, patterns=safe)

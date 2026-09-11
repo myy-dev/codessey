@@ -16,6 +16,11 @@ def test_no_changes_requires_no_key_and_no_api(repo, monkeypatch, capsys, comman
     assert "API 요청 횟수: 0" in output
 
 
+def test_safe_mode_is_opt_in():
+    args = main.parser().parse_args(["commit"])
+    assert args.safe_mode is False
+
+
 def test_missing_key_actionable_error(repo, capsys):
     (repo / "app.py").write_text("changed\n")
     assert main.main(["commit"]) == 1
@@ -89,7 +94,16 @@ def test_cli_success_one_call_and_copyable_output(repo, monkeypatch, capsys, com
         }
 
     monkeypatch.setattr(Generator, "generate", generate)
-    args = [command, "--model", "custom-model", "--temperature", "0.4", "--max-tokens", "900"]
+    args = [
+        command,
+        "--safe-mode",
+        "--model",
+        "custom-model",
+        "--temperature",
+        "0.4",
+        "--max-tokens",
+        "900",
+    ]
     assert main.main(args) == 0
     output = capsys.readouterr().out
     assert len(calls) == 1

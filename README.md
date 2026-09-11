@@ -21,14 +21,9 @@
 ├── docs/                 # 팀 컨벤션, PR 수정 내역, 시연 결과
 ├── requirements.txt      # 실행·테스트 의존성
 ├── README.md             # 프로젝트 개요 및 개발 체크리스트
-├── USER_GUIDE.md         # 설치·실행 및 사용 가이드
-└── SETUP.md              # 프로젝트 시연 시나리오
+├── USER_GUIDE.md         # 설치·실행 및 사용자 가이드
+└── USER_DEMO.md          # 사용자 시연 예시
 ```
-
-## 문서
-
-- [사용 가이드](USER_GUIDE.md)
-- [프로젝트 시연 시나리오](SETUP.md)
 
 ## 수행 항목 체크리스트
 
@@ -122,10 +117,13 @@
 | `--model`        | `gpt-4.1-mini` | Chat Completions + JSON schema를 지원하는 모델               |
 | `--temperature`  | `0.2`          | 0~2 범위의 생성 다양성                                       |
 | `--max-tokens`   | `1200`         | 64~32768, API의 `max_completion_tokens`로 전달               |
-| `--safe-mode`    | ON             | 마스킹 및 최대 10파일/200줄/20,000자 제한                    |
-| `--no-safe-mode` | OFF            | 패턴 마스킹·안전 모드 전용 상한 해제                         |
+| `--safe-mode`    | OFF            | 지정 시 마스킹 및 최대 10파일/200줄/20,000자 제한 적용       |
+| `--no-safe-mode` | OFF            | 안전 모드 비활성화 명시                                     |
 | `--convention`   | `team`         | `team` 또는 `none`                                           |
 
 ## 결과물 (Deliverables)
 
-- AI API 연동 및 커밋/PR 초안 생성 흐름을 구현할 Python CLI
+### 사용자 가이드
+
+- [사용자 가이드](USER_GUIDE.md)
+- [사용자 시연 예시](USER_DEMO.md)
