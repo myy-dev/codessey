@@ -27,21 +27,7 @@ python main.py commit --convention none
 
 ## 실제 OpenAI 생성 비교
 
-2026-09-06, `gpt-4.1-mini`, temperature 0.2, 최대 출력 1200토큰 실행 조건
-API 요청 실행당 1회, 컨벤션 비교 총 2회
-두 요청의 변경 컨텍스트 SHA-256 일치 확인
-설정 변경 프롬프트 외 입력 동일
-
 | 옵션                | 실제 생성 제목                                        | 길이 |
 | ------------------- | ----------------------------------------------------- | ---- |
 | `--convention none` | README 및 SETUP 문서에 프로젝트 구조와 실행 안내 추가 | 36자 |
 | `--convention team` | docs: README 및 SETUP 문서 개선과 실행 안내 추가      | 36자 |
-
-팀 컨벤션 적용 결과의 `docs:` 접두사 및 한국어 설명 규칙 충족
-두 결과의 권장 길이 50자 이내
-재실행 시 모델 특성에 따른 생성 결과 변경 가능성
-
-원문 [적용 전](examples/live-commit-before.json), [적용 후](examples/live-commit-after.json),
-[동일 입력 및 실행 기록](examples/live-run.json)
-안전 모드 200줄 제한에 따른 README와 SETUP 변경 입력
-전체 프로젝트 변경 설명 시 생략 코드 변경의 작성자 보완
