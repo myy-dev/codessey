@@ -7,12 +7,6 @@
 | `a58c899` | `docs: README 정리 및 설치·시현 가이드 추가` | 영문 유형 접두사, 한국어 설명 |
 | `c8fc01d` | `Initial commit`                             | 초기 생성 커밋                |
 
-구현 PR 게시 전 `gh pr list --repo myy-dev/B3-2 --state all --limit 10` 조회
-조회 결과 빈 배열
-기존 PR 본문 관례 추정 제외
-확인된 `docs:` 형태를 확장한 프로젝트 명시적 제안 컨벤션
-이력 전체 및 작성자 개인정보 API 미전달
-
 ## 적용 규칙
 
 - 제목 `type: 한국어 설명`, 유형 `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
