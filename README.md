@@ -17,12 +17,12 @@
 ├── main.py               # CLI, 환경 설정, 출력
 ├── ai_gitgen/            # Git 수집, API 호출, 검증, 안전 정책
 ├── tests/                # 임시 Git 저장소 및 모의 API 자동 테스트
-├── scripts/              # API 없이 재현하는 안전 모드 시연
-├── docs/                 # 팀 컨벤션, PR 수정 내역, 시연 결과
+├── docs/
+│   ├── guide/            # 설치·실행 및 사용자 시연
+│   ├── safety/           # 안전 정책, 비교 결과, 전송 diff
+│   └── development/      # 팀 컨벤션 및 PR 검토 기록
 ├── requirements.txt      # 실행·테스트 의존성
-├── README.md             # 프로젝트 개요 및 개발 체크리스트
-├── USER_GUIDE.md         # 설치·실행 및 사용자 가이드
-└── USER_DEMO.md          # 사용자 시연 예시
+└── README.md             # 프로젝트 개요 및 개발 체크리스트
 ```
 
 ## 수행 항목 체크리스트
@@ -84,8 +84,8 @@
 - [ ] 기존 커밋/PR 스타일을 분석해 팀 컨벤션 정의
 - [ ] `.ai-gitgen.yml`, `--convention`, 프롬프트 템플릿 중 하나로 컨벤션 적용
 - [ ] 컨벤션 적용 전·후 생성 결과 비교
-- [ ] 정규표현식 기반 마스킹 또는 diff 전송 제한 정책 고도화
-- [ ] 안전 모드 ON/OFF 결과 비교
+- [x] 정규표현식 기반 마스킹 또는 diff 전송 제한 정책 고도화
+- [x] 안전 모드 ON/OFF 결과 비교
 
 ### 제약 사항 (Constraints)
 
@@ -125,5 +125,16 @@
 
 ### 사용자 가이드
 
-- [사용자 가이드](USER_GUIDE.md)
-- [사용자 시연 예시](USER_DEMO.md)
+- [사용자 가이드](docs/guide/USER_GUIDE.md)
+- [사용자 시연 예시](docs/guide/USER_DEMO.md)
+
+### 안전 모드 가이드
+
+- [안전 정책](docs/safety/SAFETY.md)
+- [안전 모드 마스킹 비교](docs/safety/SAFETY_COMPARISON.md)
+- [ON/OFF 전송 diff 원문](docs/safety/SAFETY_DIFF.md)
+
+### 개발 기록
+
+- [팀 커밋·PR 컨벤션](docs/development/CONVENTION.md)
+- [AI 초안과 PR 검토 변경 내역](docs/development/PR_CHANGES.md)
