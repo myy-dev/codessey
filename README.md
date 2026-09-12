@@ -20,7 +20,7 @@
 ├── docs/
 │   ├── guide/            # 설치·실행 및 사용자 시연
 │   ├── safety/           # 안전 정책, 비교 결과, 전송 diff
-│   └── development/      # 팀 컨벤션 및 PR 검토 기록
+│   └── convention/       # 팀 컨벤션 및 PR 검토 기록
 ├── requirements.txt      # 실행·테스트 의존성
 └── README.md             # 프로젝트 개요 및 개발 체크리스트
 ```
@@ -130,8 +130,8 @@
 
 ### 컨벤션
 
-- [팀 커밋·PR 컨벤션](docs/development/CONVENTION.md)
-- [AI 초안과 PR 검토 변경 내역](docs/development/PR_CHANGES.md)
+- [팀 커밋·PR 컨벤션](docs/convention/CONVENTION.md)
+- [AI 초안과 PR 검토 변경 내역](docs/convention/PR_CHANGES.md)
 
 ### 안전 모드
 
