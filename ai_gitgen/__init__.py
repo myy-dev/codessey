@@ -1,1 +1,1 @@
-"""Read-only Git changes to reviewable AI commit and PR drafts."""
+"""Git 변경 사항 기반 검토용 AI 커밋·PR 초안 생성."""

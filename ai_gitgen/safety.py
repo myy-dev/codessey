@@ -1,4 +1,4 @@
-"""Sanitize both source context and terminal output without logging originals."""
+"""원문 기록 없는 입력·터미널 출력 보호 처리."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from pathlib import PurePosixPath
 
 REDACTED = "[REDACTED]"
 PATTERNS = (
-    # Include Git diff prefixes when masking multiline private keys.
+    # 여러 줄 개인 키 마스킹 시 Git diff 접두사 포함
     re.compile(
         r"-----BEGIN [A-Z ]*PRIVATE KEY-----[\s\S]*?"
         r"-----END [A-Z ]*PRIVATE KEY-----"
@@ -33,7 +33,7 @@ ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\))"
 
 
 def terminal_safe(text: str) -> str:
-    """Retain newlines/tabs, remove ANSI escapes, controls and bidi overrides."""
+    """줄바꿈·탭 유지, ANSI·제어 문자·양방향 제어 문자 제거."""
     text = ESCAPE.sub("", text)
     return "".join(
         c for c in text if c in "\n\t" or unicodedata.category(c) not in {"Cc", "Cf", "Cs"}
@@ -41,7 +41,7 @@ def terminal_safe(text: str) -> str:
 
 
 def mask(text: str, api_key: str = "", *, patterns: bool = True) -> str:
-    # The actual credential is never exposed, even with --no-safe-mode.
+    # 안전 모드 OFF에서도 실제 API 키 제거
     if api_key:
         text = text.replace(api_key, REDACTED)
     if patterns:

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Terminal-only, read-only commit and PR draft generator. Python >= 3.10."""
+"""터미널 전용 커밋·PR 초안 생성기. Git 읽기 전용, Python 3.10 이상."""
 
 from __future__ import annotations
 
@@ -73,7 +73,7 @@ def parser() -> argparse.ArgumentParser:
 
 
 def load_api_key(root: Path) -> str:
-    """Load the root .env into the environment without replacing existing values."""
+    """기존 환경변수 우선, 저장소 루트 .env 로딩."""
     key = os.environ.get("AI_API_KEY", "").strip()
     if key:
         return key

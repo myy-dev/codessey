@@ -1,4 +1,4 @@
-"""One API request, followed by deterministic local validation and repair."""
+"""API 1회 호출 후 로컬 규칙 기반 검증·보정."""
 
 from __future__ import annotations
 
@@ -82,7 +82,7 @@ def build_messages(command: str, context: Context, convention: str) -> list[dict
 
 
 def api_error_message(exc: OpenAIError) -> str:
-    # Do not echo server bodies/URLs: they can contain source or credentials.
+    # 소스·인증정보 노출 방지를 위한 서버 응답 본문·URL 출력 제외
     if isinstance(exc, APITimeoutError):
         return "API 응답 시간이 30초를 초과했습니다. 네트워크 상태를 확인하세요."
     if isinstance(exc, APIConnectionError):
@@ -118,7 +118,7 @@ class Generator:
     ) -> dict:
         if self.calls:
             raise GitgenError("명령별 API 요청은 1회로 제한됩니다.")
-        # Explicit URL prevents OPENAI_BASE_URL from redirecting this credential.
+        # OPENAI_BASE_URL을 통한 API 키 우회 전송 방지용 주소 고정
         with OpenAI(
             api_key=self.api_key, base_url=API_BASE_URL, timeout=30.0, max_retries=0
         ) as client:

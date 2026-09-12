@@ -1,4 +1,4 @@
-"""Read Git status/diffs only; never stage, commit, push or create a PR."""
+"""Git 상태·diff 읽기 전용 수집."""
 
 from __future__ import annotations
 
@@ -122,7 +122,7 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
     excluded = 0
     eligible = []
     for change in changes:
-        # Reject credentials and links in BOTH modes. Do not read targets outside the repo.
+        # ON/OFF 공통 민감 파일·링크 제외, 저장소 외부 읽기 방지
         if any(sensitive_path(p) or (root / p).is_symlink() for p in change.paths):
             excluded += 1
         else:
@@ -166,7 +166,7 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
         raw_text = raw.decode("utf-8", "replace").rstrip() or (
             "[내용 diff 없음: 빈 파일, 파일 모드 또는 서브모듈 상태 변경을 확인하세요.]"
         )
-        # Mask complete text BEFORE truncation, so cut private key blocks cannot escape.
+        # 잘린 개인 키 노출 방지를 위한 전체 원문 마스킹 후 길이 제한
         cleaned = mask(raw_text, api_key, patterns=safe)
         lines = cleaned.splitlines()
         if remaining_lines is not None and len(lines) > remaining_lines:

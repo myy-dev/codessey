@@ -1,2 +1,2 @@
 class GitgenError(Exception):
-    """An expected failure with a user-facing explanation."""
+    """사용자 안내 대상 오류."""
