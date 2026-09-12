@@ -1,4 +1,4 @@
-"""API 1회 호출 후 로컬 규칙 기반 검증·보정."""
+# API 1회 호출 후 로컬 규칙 기반 검증·보정.
 
 from __future__ import annotations
 
@@ -48,6 +48,7 @@ JSON schema에 맞는 JSON만 반환한다. 외부 도구는 사용하지 않는
 
 
 def response_schema(command: str) -> dict:
+    # 커밋·PR 응답 JSON 스키마 구성.
     array = {"type": "array", "items": {"type": "string"}}
     properties = {"title": {"type": "string"}, "summary": array}
     if command == "commit":
@@ -70,6 +71,7 @@ def response_schema(command: str) -> dict:
 
 
 def build_messages(command: str, context: Context, convention: str) -> list[dict[str, str]]:
+    # 컨벤션과 변경 정보를 포함한 요청 메시지 구성.
     return [
         {"role": "system", "content": SYSTEM_PROMPT + "\n컨벤션: " + CONVENTIONS[convention]},
         {
@@ -83,6 +85,7 @@ def build_messages(command: str, context: Context, convention: str) -> list[dict
 
 def api_error_message(exc: OpenAIError) -> str:
     # 소스·인증정보 노출 방지를 위한 서버 응답 본문·URL 출력 제외
+    # API 오류 유형별 사용자 안내 생성.
     if isinstance(exc, APITimeoutError):
         return "API 응답 시간이 30초를 초과했습니다. 네트워크 상태를 확인하세요."
     if isinstance(exc, APIConnectionError):
@@ -103,6 +106,7 @@ def api_error_message(exc: OpenAIError) -> str:
 
 class Generator:
     def __init__(self, api_key: str):
+        # API 키 저장 및 호출 횟수 초기화.
         self.api_key = api_key
         self.calls = 0
 
@@ -116,6 +120,7 @@ class Generator:
         temperature: float,
         max_tokens: int,
     ) -> dict:
+        # API 1회 호출 및 응답 JSON 확인.
         if self.calls:
             raise GitgenError("명령별 API 요청은 1회로 제한됩니다.")
         # OPENAI_BASE_URL을 통한 API 키 우회 전송 방지용 주소 고정
@@ -161,12 +166,14 @@ class Generator:
 
 
 def one_line(value: Any) -> str:
+    # 문자열의 제어 문자·장식 제거 및 한 줄 정리.
     if not isinstance(value, str):
         return ""
     return " ".join(terminal_safe(value).split()).strip("`# \t")
 
 
 def items(value: Any, limit: int = 3) -> list[str]:
+    # 불릿 항목 정리 및 개수·길이 제한.
     if isinstance(value, str):
         value = value.splitlines()
     if not isinstance(value, list):
@@ -185,6 +192,7 @@ class Draft:
 
 
 def validate(draft: Draft) -> list[str]:
+    # 초안 제목·요약·본문 형식 검증.
     issues = []
     limit = 72 if draft.command == "commit" else 80
     if not draft.title.strip() or "\n" in draft.title or "\r" in draft.title:
@@ -210,6 +218,7 @@ def validate(draft: Draft) -> list[str]:
 def normalize(
     data: dict, command: str, context: Context, convention: str, *, api_key: str, safe: bool
 ) -> Draft:
+    # 초안 형식·컨벤션 보정 및 민감정보 마스킹.
     repairs = []
     title = one_line(data.get("title"))
     title = re.sub(r"^(?:커밋 제목|PR 제목|title)\s*:\s*", "", title, flags=re.I)

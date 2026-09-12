@@ -18,6 +18,7 @@ from ai_gitgen.safety import mask, sensitive_path
     ],
 )
 def test_known_patterns(secret):
+    # 주요 인증정보·이메일 패턴 마스킹 검증.
     assert secret not in mask(f"before {secret} after")
     assert "[REDACTED]" in mask(secret)
 
@@ -34,10 +35,12 @@ def test_known_patterns(secret):
     ],
 )
 def test_assignments(assignment):
+    # 민감 변수 할당값 마스킹 검증.
     assert "fake-sensitive" not in mask(assignment)
 
 
 def test_url_credentials_and_multiline_private_key():
+    # URL 인증정보·여러 줄 개인 키 마스킹 검증.
     assert "hunter2" not in mask("postgres://user:hunter2@host/db")
     assert "secretdata" not in mask(
         "+-----BEGIN PRIVATE KEY-----\n+secretdata\n+-----END PRIVATE KEY-----"
@@ -45,6 +48,7 @@ def test_url_credentials_and_multiline_private_key():
 
 
 def test_terminal_controls_and_actual_key_always_removed():
+    # 패턴 마스킹 OFF에서도 제어 문자·실제 키 제거 검증.
     value = "hi\x1b[31mred\x1b[0m\x1b]52;c;payload\x07\u202esecret\x00\nend"
     cleaned = mask(value, "secret", patterns=False)
     assert "\x1b" not in cleaned
@@ -69,8 +73,10 @@ def test_terminal_controls_and_actual_key_always_removed():
     ],
 )
 def test_sensitive_paths(path):
+    # 민감 파일 경로 판별 검증.
     assert sensitive_path(path)
 
 
 def test_safe_source_path():
+    # 일반 소스 파일의 제외 대상 여부 검증.
     assert not sensitive_path("ai_gitgen/safety.py")

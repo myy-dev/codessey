@@ -9,6 +9,7 @@ from ai_gitgen.generation import Generator
 
 @pytest.mark.parametrize("command", ["commit", "pr"])
 def test_no_changes_requires_no_key_and_no_api(repo, monkeypatch, capsys, command):
+    # 변경 없는 경우 키·API 호출 없이 종료 검증.
     monkeypatch.setattr(Generator, "generate", lambda *a, **kw: pytest.fail("Unexpected API call"))
     assert main.main([command]) == 0
     output = capsys.readouterr().out
@@ -16,12 +17,14 @@ def test_no_changes_requires_no_key_and_no_api(repo, monkeypatch, capsys, comman
 
 
 def test_safe_mode_is_on_by_default():
+    # 안전 모드 기본값 및 OFF 옵션 검증.
     args = main.parser().parse_args(["commit"])
     assert args.safe_mode is True
     assert main.parser().parse_args(["commit", "--no-safe-mode"]).safe_mode is False
 
 
 def test_missing_key_actionable_error(repo, capsys):
+    # API 키 누락 안내 검증.
     (repo / "app.py").write_text("changed\n")
     assert main.main(["commit"]) == 1
     error = capsys.readouterr().err
@@ -29,6 +32,7 @@ def test_missing_key_actionable_error(repo, capsys):
 
 
 def test_environment_wins_and_dotenv_does_not_expand_or_execute(repo, monkeypatch):
+    # 환경변수 우선 및 .env 값 확장·실행 방지 검증.
     monkeypatch.setattr(os, "environ", os.environ.copy())
     (repo / ".env").write_text('AI_API_KEY="synthetic-${HOME}-$(touch hacked)"\n')
     assert main.load_api_key(repo) == "synthetic-${HOME}-$(touch hacked)"
@@ -39,6 +43,7 @@ def test_environment_wins_and_dotenv_does_not_expand_or_execute(repo, monkeypatc
 
 
 def test_dotenv_symlink_refused(repo, tmp_path_factory):
+    # .env 심볼릭 링크 거부 검증.
     outside = tmp_path_factory.mktemp("secret") / "env"
     outside.write_text("AI_API_KEY=synthetic\n")
     (repo / ".env").symlink_to(outside)
@@ -47,18 +52,21 @@ def test_dotenv_symlink_refused(repo, tmp_path_factory):
 
 
 def test_legacy_dotenv_file_is_not_loaded(repo):
+    # .env.local 미사용 검증.
     (repo / ".env.local").write_text("AI_API_KEY=synthetic-legacy-key\n")
     assert main.load_api_key(repo) == ""
 
 
 @pytest.mark.parametrize("safe", [True, False])
 def test_cli_masks_context_before_generation(repo, monkeypatch, capsys, safe):
+    # 초안 생성 전 안전 모드별 입력 마스킹 검증.
     key = "synthetic-runtime-key"
     monkeypatch.setenv("AI_API_KEY", key)
     (repo / "app.py").write_text(f'api_key = "{key}"\nemail = "alice@example.test"\n')
     contexts = []
 
     def generate(self, command, context, convention, **kwargs):
+        # 호출 정보 기록 및 테스트 초안 반환.
         self.calls += 1
         contexts.append(context)
         return {"title": "fix: 설정 변경", "summary": ["설정 변경"]}
@@ -75,11 +83,13 @@ def test_cli_masks_context_before_generation(repo, monkeypatch, capsys, safe):
 
 @pytest.mark.parametrize("command", ["commit", "pr"])
 def test_cli_success_one_call_and_copyable_output(repo, monkeypatch, capsys, command):
+    # API 1회 호출·옵션 전달·복사용 출력 검증.
     (repo / "app.py").write_text("changed\n")
     monkeypatch.setenv("AI_API_KEY", "synthetic-local-key")
     calls = []
 
     def generate(self, *args, **kwargs):
+        # 호출 정보 기록 및 테스트 초안 반환.
         self.calls += 1
         calls.append((args, kwargs))
         return {
@@ -123,10 +133,12 @@ def test_cli_success_one_call_and_copyable_output(repo, monkeypatch, capsys, com
 
 
 def test_cli_api_error_does_not_leak_secret(repo, monkeypatch, capsys):
+    # CLI 오류 출력의 API 키 제거 검증.
     (repo / "app.py").write_text("changed\n")
     monkeypatch.setenv("AI_API_KEY", "synthetic-private-key")
 
     def fail(self, *a, **kw):
+        # API 키 포함 오류 재현.
         self.calls += 1
         raise GitgenError("failure synthetic-private-key")
 
@@ -152,6 +164,7 @@ def test_cli_api_error_does_not_leak_secret(repo, monkeypatch, capsys):
     ],
 )
 def test_invalid_options_exit_before_api(repo, arguments):
+    # 잘못된 옵션의 API 호출 전 거부 검증.
     with pytest.raises(SystemExit) as error:
         main.main(["commit", *arguments])
     assert error.value.code == 2

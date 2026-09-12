@@ -12,20 +12,25 @@ from ai_gitgen.git import Context
 
 @pytest.fixture
 def context():
+    # 테스트용 변경 정보 생성.
     return Context([{"path": "app.py"}], "+new behavior", 1, 0, 0, False)
 
 
 @pytest.fixture
 def install_transport(monkeypatch):
+    # API 모의 응답 및 호출 기록 도구 준비.
     calls = []
     options = []
 
     def install(handler):
+        # 응답 처리기 연결 및 호출 기록 반환.
         def record(request):
+            # HTTP 요청 기록 후 응답 처리기 호출.
             calls.append(request)
             return handler(request)
 
         def factory(**kwargs):
+            # 생성 옵션 기록 및 모의 통신 클라이언트 생성.
             options.append(kwargs)
             return OpenAI(http_client=httpx.Client(transport=httpx.MockTransport(record)), **kwargs)
 
@@ -36,6 +41,7 @@ def install_transport(monkeypatch):
 
 
 def completion(data, *, reason="stop", refusal=None):
+    # 테스트용 API 응답 생성.
     return httpx.Response(
         200,
         json={
@@ -59,6 +65,7 @@ def completion(data, *, reason="stop", refusal=None):
 
 
 def invoke(generator, context, command="commit"):
+    # 기본 테스트 옵션으로 초안 생성 호출.
     return generator.generate(
         command, context, "team", model="gpt-4.1-mini", temperature=0.2, max_tokens=1200
     )
@@ -66,6 +73,7 @@ def invoke(generator, context, command="commit"):
 
 @pytest.mark.parametrize("command", ["commit", "pr"])
 def test_real_sdk_serializes_options_and_exactly_one_request(context, install_transport, command):
+    # 실제 SDK 요청 구성 및 1회 호출 제한 검증.
     context.diff += '\n+api_key = "[REDACTED]"'
     data = {"title": "feat: 동작 추가", "summary": ["새 동작"], "body": ["app.py 개선"]}
     calls, options = install_transport(lambda _: completion(data))
@@ -107,6 +115,7 @@ def test_real_sdk_serializes_options_and_exactly_one_request(context, install_tr
     ],
 )
 def test_errors_do_not_retry_or_echo_api_bodies(context, install_transport, status, message):
+    # API 오류의 재시도·응답 본문 노출 방지 검증.
     calls, _ = install_transport(
         lambda _: httpx.Response(
             status, json={"error": {"message": "secret-source-never-print", "type": "error"}}
@@ -127,7 +136,9 @@ def test_errors_do_not_retry_or_echo_api_bodies(context, install_transport, stat
     ],
 )
 def test_network_and_timeout(context, install_transport, error, message):
+    # 네트워크·시간 초과 오류 안내 검증.
     def fail(request):
+        # HTTP 통신 오류 재현.
         raise error("synthetic failure", request=request)
 
     calls, _ = install_transport(fail)
@@ -149,6 +160,7 @@ def test_network_and_timeout(context, install_transport, error, message):
 def test_incomplete_or_refused_response_fails_without_fabricated_draft(
     context, install_transport, data, reason, refusal, message
 ):
+    # 불완전·거절 응답의 초안 생성 실패 검증.
     calls, _ = install_transport(lambda _: completion(data, reason=reason, refusal=refusal))
     with pytest.raises(GitgenError, match=message):
         invoke(Generator("test-key"), context)
@@ -156,7 +168,9 @@ def test_incomplete_or_refused_response_fails_without_fabricated_draft(
 
 
 def test_invalid_json_response(context, install_transport):
+    # 잘못된 JSON 응답 거부 검증.
     def respond(_):
+        # JSON 형식 위반 응답 생성.
         response = completion({})
         data = response.json()
         data["choices"][0]["message"]["content"] = "this is not JSON"
@@ -169,6 +183,7 @@ def test_invalid_json_response(context, install_transport):
 
 @pytest.mark.parametrize("choices", [[], [{}]])
 def test_malformed_api_envelope_has_actionable_error(context, install_transport, choices):
+    # 생성 결과·메시지 누락 안내 검증.
     calls, _ = install_transport(lambda _: httpx.Response(200, json={"choices": choices}))
     with pytest.raises(GitgenError, match="생성 결과|메시지"):
         invoke(Generator("test-key"), context)
@@ -176,6 +191,7 @@ def test_malformed_api_envelope_has_actionable_error(context, install_transport,
 
 
 def test_commit_normalizes_title_and_limits_body(context):
+    # 커밋 제목 보정 및 본문 불릿 제한 검증.
     draft = normalize(
         {
             "title": "# 제목\n" + "가" * 100,
@@ -197,6 +213,7 @@ def test_commit_normalizes_title_and_limits_body(context):
 
 
 def test_pr_repairs_all_required_sections(context):
+    # PR 제목 길이 및 필수 섹션 보정 검증.
     draft = normalize({"title": "나" * 100}, "pr", context, "none", api_key="", safe=True)
     assert len(draft.title) <= 80
     assert validate(draft) == []
@@ -208,6 +225,7 @@ def test_pr_repairs_all_required_sections(context):
 
 @pytest.mark.parametrize("command", ["commit", "pr"])
 def test_empty_malformed_fields_have_explicit_repairs(context, command):
+    # 누락·형식 오류 필드 보완 및 보정 기록 검증.
     draft = normalize(
         {"title": None, "summary": 42, "body": {}, "why": [], "what": 0, "how_to_test": False},
         command,
@@ -221,6 +239,7 @@ def test_empty_malformed_fields_have_explicit_repairs(context, command):
 
 
 def test_validator_rejects_bad_titles_sections_and_body():
+    # 제목·섹션·본문 규칙 위반 검출 검증.
     for draft in (
         Draft("commit", "x" * 73, ["summary"], "", []),
         Draft("pr", "x" * 81, ["summary"], "", []),
@@ -240,6 +259,7 @@ def test_validator_rejects_bad_titles_sections_and_body():
 
 
 def test_convention_before_and_after(context):
+    # 컨벤션 적용 전·후 제목 비교.
     data = {"title": "입력 검증 추가", "summary": ["입력 검증"], "body": []}
     plain = normalize(data, "commit", context, "none", api_key="", safe=True)
     team = normalize(data, "commit", context, "team", api_key="", safe=True)
@@ -248,6 +268,7 @@ def test_convention_before_and_after(context):
 
 
 def test_output_masks_secret_and_terminal_escape(context):
+    # 초안 출력의 민감정보·터미널 제어 문자 제거 검증.
     secret = "synthetic-runtime-key"
     draft = normalize(
         {

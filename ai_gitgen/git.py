@@ -1,4 +1,4 @@
-"""Git 상태·diff 읽기 전용 수집."""
+# Git 상태·diff 읽기 전용 수집.
 
 from __future__ import annotations
 
@@ -18,6 +18,7 @@ MAX_CONTEXT_CHARS = 200_000
 
 
 def run_git(root: Path, *args: str, allowed: tuple[int, ...] = (0,)) -> bytes:
+    # Git 명령 실행 및 오류·출력 크기 확인.
     env = dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_LITERAL_PATHSPECS="1", LC_ALL="C")
     try:
         result = subprocess.run(
@@ -45,6 +46,7 @@ def run_git(root: Path, *args: str, allowed: tuple[int, ...] = (0,)) -> bytes:
 
 
 def repository_root(cwd: Path) -> Path:
+    # 저장소 루트 조회 및 실행 위치 검증.
     raw = run_git(cwd, "rev-parse", "--show-toplevel")
     root = Path(os.fsdecode(raw).rstrip("\n")).resolve()
     if root != cwd.resolve():
@@ -60,10 +62,12 @@ class Change:
 
     @property
     def paths(self) -> tuple[str, ...]:
+        # 현재 경로와 이름 변경 전 경로 반환.
         return (self.previous_path, self.path) if self.previous_path else (self.path,)
 
 
 def parse_status(raw: bytes) -> list[Change]:
+    # Git 상태 출력의 파일 경로·변경 상태 해석.
     fields = raw.split(b"\0")
     changes = []
     i = 0
@@ -93,6 +97,7 @@ class Context:
     truncated: bool
 
     def as_dict(self) -> dict:
+        # 전송용 변경 정보 딕셔너리 구성.
         return {
             "scope": "Git 변경 사항",
             "files": self.files,
@@ -115,6 +120,7 @@ DIFF_OPTIONS = (
 
 
 def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
+    # 미커밋 변경 수집 및 안전 정책 적용.
     changes = parse_status(
         run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     )

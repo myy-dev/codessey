@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""터미널 전용 커밋·PR 초안 생성기. Git 읽기 전용, Python 3.10 이상."""
+# 터미널 전용 커밋·PR 초안 생성기. Git 읽기 전용, Python 3.10 이상.
 
 from __future__ import annotations
 
@@ -28,7 +28,9 @@ def temperature_value(value: str) -> float:
     try:
         number = float(value)
     except ValueError as exc:
-        raise argparse.ArgumentTypeError("temperature는 0~2 사이 숫자여야 합니다.") from exc
+        raise argparse.ArgumentTypeError(
+            "temperature는 0~2 사이 숫자여야 합니다."
+        ) from exc
     if not math.isfinite(number) or not 0 <= number <= 2:
         raise argparse.ArgumentTypeError("temperature는 0~2 사이 숫자여야 합니다.")
     return number
@@ -38,18 +40,27 @@ def tokens_value(value: str) -> int:
     try:
         number = int(value)
     except ValueError as exc:
-        raise argparse.ArgumentTypeError("max-tokens는 64~32768 사이 정수여야 합니다.") from exc
+        raise argparse.ArgumentTypeError(
+            "max-tokens는 64~32768 사이 정수여야 합니다."
+        ) from exc
     if not 64 <= number <= 32768:
         raise argparse.ArgumentTypeError("max-tokens는 64~32768 사이 정수여야 합니다.")
     return number
 
 
 def parser() -> argparse.ArgumentParser:
-    cli = argparse.ArgumentParser(description="Git 변경 사항으로 검토용 커밋/PR 초안을 생성합니다.")
+    cli = argparse.ArgumentParser(
+        description="Git 변경 사항으로 검토용 커밋/PR 초안을 생성합니다."
+    )
     commands = cli.add_subparsers(dest="command", required=True)
-    for name, help_text in (("commit", "커밋 메시지 생성"), ("pr", "PR 제목/본문 초안 생성")):
+    for name, help_text in (
+        ("commit", "커밋 메시지 생성"),
+        ("pr", "PR 제목/본문 초안 생성"),
+    ):
         command = commands.add_parser(name, help=help_text)
-        command.add_argument("--model", default=DEFAULT_MODEL, help=f"기본값: {DEFAULT_MODEL}")
+        command.add_argument(
+            "--model", default=DEFAULT_MODEL, help=f"기본값: {DEFAULT_MODEL}"
+        )
         command.add_argument(
             "--temperature",
             type=temperature_value,
@@ -73,7 +84,7 @@ def parser() -> argparse.ArgumentParser:
 
 
 def load_api_key(root: Path) -> str:
-    """기존 환경변수 우선, 저장소 루트 .env 로딩."""
+    # 기존 환경변수 우선, 저장소 루트 .env 로딩.
     key = os.environ.get("AI_API_KEY", "").strip()
     if key:
         return key
@@ -125,20 +136,27 @@ def main(argv: list[str] | None = None) -> int:
             max_tokens=args.max_tokens,
         )
         draft = normalize(
-            data, args.command, context, args.convention, api_key=key, safe=args.safe_mode
+            data,
+            args.command,
+            context,
+            args.convention,
+            api_key=key,
+            safe=args.safe_mode,
         )
         warnings = list(draft.repairs)
         if context.excluded_files:
-            warnings.append(f"자격증명 파일/심볼릭 링크 {context.excluded_files}개를 제외했습니다.")
+            warnings.append(
+                f"자격증명 파일/심볼릭 링크 {context.excluded_files}개를 제외했습니다."
+            )
         if context.truncated:
             warnings.append(
                 "전송 제한으로 일부 변경이 생략되었습니다. 누락 내용을 직접 보완하세요."
             )
         if args.command == "commit" and len(draft.title) > 50:
-            warnings.append("커밋 제목이 권장 길이 50자를 넘습니다. 최대 72자 규칙은 충족합니다.")
-        review = (
-            "AI 초안입니다. 반드시 검토·수정한 뒤 직접 적용하세요. 테스트는 실행하지 않았습니다."
-        )
+            warnings.append(
+                "커밋 제목이 권장 길이 50자를 넘습니다. 최대 72자 규칙은 충족합니다."
+            )
+        review = "AI 초안입니다. 반드시 검토·수정한 뒤 직접 적용하세요. 테스트는 실행하지 않았습니다."
         divider = "=" * 60
         lines = [divider, "변경 요약", divider, *(f"- {s}" for s in draft.summary)]
         lines += [
