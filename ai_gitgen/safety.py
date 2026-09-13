@@ -1,4 +1,4 @@
-# 원문 기록 없는 입력·터미널 출력 보호 처리.
+"""원문을 기록하지 않고 입력과 터미널 출력을 안전하게 처리한다."""
 
 from __future__ import annotations
 
@@ -33,7 +33,7 @@ ESCAPE = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07\x1b]*(?:\x07|\x1b\\))"
 
 
 def terminal_safe(text: str) -> str:
-    # 줄바꿈·탭 유지, ANSI·제어 문자·양방향 제어 문자 제거.
+    """줄바꿈과 탭을 유지하며 ANSI 및 위험한 제어 문자를 제거한다."""
     text = ESCAPE.sub("", text)
     return "".join(
         c for c in text if c in "\n\t" or unicodedata.category(c) not in {"Cc", "Cf", "Cs"}
@@ -41,8 +41,9 @@ def terminal_safe(text: str) -> str:
 
 
 def mask(text: str, api_key: str = "", *, patterns: bool = True) -> str:
+    """실제 API 키와 선택한 민감정보 패턴을 마스킹한다."""
+
     # 안전 모드 OFF에서도 실제 API 키 제거
-    # 실제 API 키 제거 및 선택적 패턴 마스킹.
     if api_key:
         text = text.replace(api_key, REDACTED)
     if patterns:
@@ -53,7 +54,7 @@ def mask(text: str, api_key: str = "", *, patterns: bool = True) -> str:
 
 
 def sensitive_path(path: str) -> bool:
-    # 파일명·경로 기반 민감 파일 판별.
+    """파일명과 경로를 기준으로 민감 파일인지 판별한다."""
     parts = PurePosixPath(path.replace("\\", "/")).parts
     name = parts[-1].lower() if parts else ""
     return (

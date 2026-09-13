@@ -1,6 +1,3 @@
-#!/usr/bin/env python3
-# 터미널 전용 커밋·PR 초안 생성기. Git 읽기 전용, Python 3.10 이상.
-
 from __future__ import annotations
 
 import argparse
@@ -25,6 +22,7 @@ from ai_gitgen.safety import mask
 
 
 def temperature_value(value: str) -> float:
+    """CLI 입력을 0~2 범위의 유한한 실수로 변환한다."""
     try:
         number = float(value)
     except ValueError as exc:
@@ -37,6 +35,7 @@ def temperature_value(value: str) -> float:
 
 
 def tokens_value(value: str) -> int:
+    """CLI 입력을 64~32768 범위의 정수로 변환한다."""
     try:
         number = int(value)
     except ValueError as exc:
@@ -49,6 +48,7 @@ def tokens_value(value: str) -> int:
 
 
 def parser() -> argparse.ArgumentParser:
+    """commit과 pr 하위 명령을 제공하는 CLI 파서를 구성한다."""
     cli = argparse.ArgumentParser(
         description="Git 변경 사항으로 검토용 커밋/PR 초안을 생성합니다."
     )
@@ -84,7 +84,7 @@ def parser() -> argparse.ArgumentParser:
 
 
 def load_api_key(root: Path) -> str:
-    # 기존 환경변수 우선, 저장소 루트 .env 로딩.
+    """환경변수를 우선해 저장소 루트의 .env에서 API 키를 불러온다."""
     key = os.environ.get("AI_API_KEY", "").strip()
     if key:
         return key
@@ -105,6 +105,7 @@ def load_api_key(root: Path) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
+    """CLI 요청을 처리하고 실행 결과에 해당하는 종료 코드를 반환한다."""
     args = parser().parse_args(argv)
     generator = None
     key = ""

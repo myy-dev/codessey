@@ -1,4 +1,4 @@
-# Git 상태·diff 읽기 전용 수집.
+"""Git 상태와 diff를 읽기 전용으로 수집한다."""
 
 from __future__ import annotations
 
@@ -18,7 +18,7 @@ MAX_CONTEXT_CHARS = 200_000
 
 
 def run_git(root: Path, *args: str, allowed: tuple[int, ...] = (0,)) -> bytes:
-    # Git 명령 실행 및 오류·출력 크기 확인.
+    """Git 명령을 실행하고 종료 코드와 출력 크기를 검증한다."""
     env = dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_LITERAL_PATHSPECS="1", LC_ALL="C")
     try:
         result = subprocess.run(
@@ -46,7 +46,7 @@ def run_git(root: Path, *args: str, allowed: tuple[int, ...] = (0,)) -> bytes:
 
 
 def repository_root(cwd: Path) -> Path:
-    # 저장소 루트 조회 및 실행 위치 검증.
+    """Git 저장소 루트를 조회하고 루트에서 실행 중인지 검증한다."""
     raw = run_git(cwd, "rev-parse", "--show-toplevel")
     root = Path(os.fsdecode(raw).rstrip("\n")).resolve()
     if root != cwd.resolve():
@@ -56,18 +56,20 @@ def repository_root(cwd: Path) -> Path:
 
 @dataclass(frozen=True)
 class Change:
+    """변경된 파일의 현재 경로, 상태와 이전 경로를 보관한다."""
+
     path: str
     status: str
     previous_path: str | None = None
 
     @property
     def paths(self) -> tuple[str, ...]:
-        # 현재 경로와 이름 변경 전 경로 반환.
+        """현재 경로와 이름 변경 전 경로를 반환한다."""
         return (self.previous_path, self.path) if self.previous_path else (self.path,)
 
 
 def parse_status(raw: bytes) -> list[Change]:
-    # Git 상태 출력의 파일 경로·변경 상태 해석.
+    """NUL로 구분된 Git 상태 출력을 변경 파일 목록으로 변환한다."""
     fields = raw.split(b"\0")
     changes = []
     i = 0
@@ -89,6 +91,8 @@ def parse_status(raw: bytes) -> list[Change]:
 
 @dataclass
 class Context:
+    """AI에 전달할 Git 변경 내용과 수집 결과 통계를 보관한다."""
+
     files: list[dict[str, str]]
     diff: str
     total_files: int
@@ -97,7 +101,7 @@ class Context:
     truncated: bool
 
     def as_dict(self) -> dict:
-        # 전송용 변경 정보 딕셔너리 구성.
+        """Git 변경 컨텍스트를 API 전송용 딕셔너리로 변환한다."""
         return {
             "scope": "Git 변경 사항",
             "files": self.files,
@@ -120,25 +124,32 @@ DIFF_OPTIONS = (
 
 
 def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
-    # 미커밋 변경 수집 및 안전 정책 적용.
+    """미커밋 Git 변경을 수집하고 선택한 안전 정책을 적용한다."""
+
+    # Git 변경 상태 수집 및 최초 커밋 존재 여부 확인
     changes = parse_status(
         run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     )
     has_head = bool(run_git(root, "rev-parse", "--verify", "HEAD", allowed=(0, 128)).strip())
+
+    # 안전 모드와 관계없는 민감 파일·심볼릭 링크 공통 제외
     excluded = 0
     eligible = []
     for change in changes:
-        # ON/OFF 공통 민감 파일·링크 제외, 저장소 외부 읽기 방지
         if any(sensitive_path(p) or (root / p).is_symlink() for p in change.paths):
             excluded += 1
         else:
             eligible.append(change)
+
+    # 안전 모드별 파일 선택 및 전체 전송 한도 초기화
     selected = eligible[:SAFE_FILES] if safe else eligible
     files = []
     chunks: list[str] = []
     truncated = len(selected) < len(eligible)
     remaining_lines = SAFE_LINES if safe else None
     remaining_chars = SAFE_CHARS if safe else MAX_CONTEXT_CHARS
+
+    # 선택 파일별 메타데이터와 diff 수집
     for change in selected:
         if remaining_lines == 0 or remaining_chars <= 0:
             truncated = True
@@ -153,6 +164,8 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
                 ),
             }
         )
+
+        # 미추적 파일·최초 커밋 이전 파일의 빈 파일 기준 diff 생성
         if change.status == "??" or not has_head:
             if (root / change.path).exists():
                 raw = run_git(
@@ -168,10 +181,14 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
             else:
                 raw = b""
         else:
+            # 추적 파일의 HEAD 기준 staged·unstaged diff 생성
             raw = run_git(root, "diff", "HEAD", *DIFF_OPTIONS, "--", *change.paths)
+
+        # diff 디코딩 및 내용 없는 변경 안내 구성
         raw_text = raw.decode("utf-8", "replace").rstrip() or (
             "[내용 diff 없음: 빈 파일, 파일 모드 또는 서브모듈 상태 변경을 확인하세요.]"
         )
+
         # 잘린 개인 키 노출 방지를 위한 전체 원문 마스킹 후 길이 제한
         cleaned = mask(raw_text, api_key, patterns=safe)
         lines = cleaned.splitlines()
@@ -186,6 +203,8 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
         remaining_chars -= len(text) + 1
         if remaining_lines is not None:
             remaining_lines -= len(text.splitlines())
+
+    # 수집 결과와 제외·생략 통계를 포함한 전송 컨텍스트 구성
     return Context(
         files,
         "\n".join(chunks),

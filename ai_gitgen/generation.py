@@ -1,9 +1,11 @@
-# API 1회 호출 후 로컬 규칙 기반 검증·보정.
+"""API를 한 번 호출하고 결과를 로컬 규칙에 따라 검증·보정한다."""
 
 from __future__ import annotations
 
 import json
 import re
+
+# import sys  # API 요청·응답 디버깅 출력 시 사용
 from dataclasses import dataclass
 from typing import Any
 
@@ -48,7 +50,7 @@ JSON schema에 맞는 JSON만 반환한다. 외부 도구는 사용하지 않는
 
 
 def response_schema(command: str) -> dict:
-    # 커밋·PR 응답 JSON 스키마 구성.
+    """커밋 또는 PR 응답에 사용할 JSON 스키마를 구성한다."""
     array = {"type": "array", "items": {"type": "string"}}
     properties = {"title": {"type": "string"}, "summary": array}
     if command == "commit":
@@ -70,10 +72,15 @@ def response_schema(command: str) -> dict:
     }
 
 
-def build_messages(command: str, context: Context, convention: str) -> list[dict[str, str]]:
-    # 컨벤션과 변경 정보를 포함한 요청 메시지 구성.
+def build_messages(
+    command: str, context: Context, convention: str
+) -> list[dict[str, str]]:
+    """컨벤션과 Git 변경 정보를 포함한 API 요청 메시지를 구성한다."""
     return [
-        {"role": "system", "content": SYSTEM_PROMPT + "\n컨벤션: " + CONVENTIONS[convention]},
+        {
+            "role": "system",
+            "content": SYSTEM_PROMPT + "\n컨벤션: " + CONVENTIONS[convention],
+        },
         {
             "role": "user",
             "content": json.dumps(
@@ -84,8 +91,9 @@ def build_messages(command: str, context: Context, convention: str) -> list[dict
 
 
 def api_error_message(exc: OpenAIError) -> str:
+    """OpenAI API 예외를 사용자용 오류 메시지로 변환한다."""
+
     # 소스·인증정보 노출 방지를 위한 서버 응답 본문·URL 출력 제외
-    # API 오류 유형별 사용자 안내 생성.
     if isinstance(exc, APITimeoutError):
         return "API 응답 시간이 30초를 초과했습니다. 네트워크 상태를 확인하세요."
     if isinstance(exc, APIConnectionError):
@@ -99,14 +107,21 @@ def api_error_message(exc: OpenAIError) -> str:
             404: "모델을 찾을 수 없습니다. --model 값과 모델 사용 권한을 확인하세요.",
             429: "요청 한도 또는 크레딧이 부족합니다. 사용량, 결제와 호출 제한을 확인하세요.",
         }
-        reason = reasons.get(status, "OpenAI 서버 오류입니다. 잠시 후 직접 다시 시도하세요.")
+        reason = reasons.get(
+            status, "OpenAI 서버 오류입니다. 잠시 후 직접 다시 시도하세요."
+        )
         return f"API 오류 (HTTP {status}): {reason}"
-    return "API 응답을 처리할 수 없습니다. 설치된 openai 패키지와 응답 형식을 확인하세요."
+    return (
+        "API 응답을 처리할 수 없습니다. 설치된 openai 패키지와 응답 형식을 확인하세요."
+    )
 
 
 class Generator:
+    """호출 횟수를 제한하며 OpenAI API에서 구조화된 초안을 생성한다."""
+
     def __init__(self, api_key: str):
-        # API 키 저장 및 호출 횟수 초기화.
+        """API 키를 저장하고 호출 횟수를 초기화한다."""
+
         self.api_key = api_key
         self.calls = 0
 
@@ -120,7 +135,8 @@ class Generator:
         temperature: float,
         max_tokens: int,
     ) -> dict:
-        # API 1회 호출 및 응답 JSON 확인.
+        """API를 한 번 호출하고 완성된 JSON 객체 응답을 반환한다."""
+
         if self.calls:
             raise GitgenError("명령별 API 요청은 1회로 제한됩니다.")
         # OPENAI_BASE_URL을 통한 API 키 우회 전송 방지용 주소 고정
@@ -129,31 +145,64 @@ class Generator:
         ) as client:
             self.calls += 1
             try:
-                response = client.chat.completions.create(
-                    model=model,
-                    temperature=temperature,
-                    max_completion_tokens=max_tokens,
-                    messages=build_messages(command, context, convention),
-                    response_format=response_schema(command),
-                    store=False,
-                )
+                request = {
+                    "model": model,
+                    "temperature": temperature,
+                    "max_completion_tokens": max_tokens,
+                    "messages": build_messages(command, context, convention),
+                    "response_format": response_schema(command),
+                    "store": False,
+                }
+                # API 요청 본문 디버깅 출력
+                # print("=== OpenAI API 요청 ===", file=sys.stderr)
+                # print(
+                #     mask(
+                #         json.dumps(request, ensure_ascii=False, indent=2),
+                #         self.api_key,
+                #         patterns=True,
+                #     ),
+                #     file=sys.stderr,
+                # )
+                response = client.chat.completions.create(**request)
+
+                # API 응답 본문 디버깅 출력
+                # print("=== OpenAI API 응답 ===", file=sys.stderr)
+                # print(
+                #     mask(
+                #         json.dumps(
+                #             response.model_dump(),
+                #             ensure_ascii=False,
+                #             indent=2,
+                #             default=str,
+                #         ),
+                #         self.api_key,
+                #         patterns=True,
+                #     ),
+                #     file=sys.stderr,
+                # )
             except OpenAIError as exc:
                 raise GitgenError(api_error_message(exc)) from exc
         if not response.choices:
-            raise GitgenError("API 응답에 생성 결과가 없습니다. 추가 요청은 실행하지 않았습니다.")
+            raise GitgenError(
+                "API 응답에 생성 결과가 없습니다. 추가 요청은 실행하지 않았습니다."
+            )
         choice = response.choices[0]
         message = getattr(choice, "message", None)
         finish_reason = getattr(choice, "finish_reason", None)
         if message is None:
             raise GitgenError("API 응답에 메시지가 없습니다. 응답 형식을 확인하세요.")
         if message.refusal or finish_reason == "content_filter":
-            raise GitgenError("모델이 초안 생성을 거절했습니다. 전송 컨텍스트를 검토하세요.")
+            raise GitgenError(
+                "모델이 초안 생성을 거절했습니다. 전송 컨텍스트를 검토하세요."
+            )
         if finish_reason == "length":
             raise GitgenError(
                 "출력 토큰 한도로 응답이 잘렸습니다. --max-tokens를 늘려 직접 다시 실행하세요."
             )
         if finish_reason != "stop" or not message.content:
-            raise GitgenError("API 응답이 완성되지 않았습니다. 추가 요청은 실행하지 않았습니다.")
+            raise GitgenError(
+                "API 응답이 완성되지 않았습니다. 추가 요청은 실행하지 않았습니다."
+            )
         try:
             data = json.loads(message.content)
         except (json.JSONDecodeError, TypeError) as exc:
@@ -166,14 +215,14 @@ class Generator:
 
 
 def one_line(value: Any) -> str:
-    # 문자열의 제어 문자·장식 제거 및 한 줄 정리.
+    """문자열의 제어 문자와 장식을 제거해 한 줄로 정리한다."""
     if not isinstance(value, str):
         return ""
     return " ".join(terminal_safe(value).split()).strip("`# \t")
 
 
 def items(value: Any, limit: int = 3) -> list[str]:
-    # 불릿 항목 정리 및 개수·길이 제한.
+    """불릿 항목을 정리하고 개수와 각 항목의 길이를 제한한다."""
     if isinstance(value, str):
         value = value.splitlines()
     if not isinstance(value, list):
@@ -184,6 +233,8 @@ def items(value: Any, limit: int = 3) -> list[str]:
 
 @dataclass
 class Draft:
+    """검증과 보정을 마친 커밋 또는 PR 초안을 보관한다."""
+
     command: str
     title: str
     summary: list[str]
@@ -192,7 +243,7 @@ class Draft:
 
 
 def validate(draft: Draft) -> list[str]:
-    # 초안 제목·요약·본문 형식 검증.
+    """초안의 제목, 요약과 본문 형식을 검증해 문제 목록을 반환한다."""
     issues = []
     limit = 72 if draft.command == "commit" else 80
     if not draft.title.strip() or "\n" in draft.title or "\r" in draft.title:
@@ -204,7 +255,9 @@ def validate(draft: Draft) -> list[str]:
     if draft.command == "pr":
         for _, section in PR_SECTIONS:
             match = re.search(
-                rf"^## {section}\n(.*?)(?=^## |\Z)", draft.body, re.MULTILINE | re.DOTALL
+                rf"^## {section}\n(.*?)(?=^## |\Z)",
+                draft.body,
+                re.MULTILINE | re.DOTALL,
             )
             if not match or not re.search(r"^- \S.*", match[1], re.MULTILINE):
                 issues.append(f"{section} 섹션에 불릿이 없습니다.")
@@ -216,9 +269,15 @@ def validate(draft: Draft) -> list[str]:
 
 
 def normalize(
-    data: dict, command: str, context: Context, convention: str, *, api_key: str, safe: bool
+    data: dict,
+    command: str,
+    context: Context,
+    convention: str,
+    *,
+    api_key: str,
+    safe: bool,
 ) -> Draft:
-    # 초안 형식·컨벤션 보정 및 민감정보 마스킹.
+    """API 응답을 초안 형식과 컨벤션에 맞게 보정하고 민감정보를 마스킹한다."""
     repairs = []
     title = one_line(data.get("title"))
     title = re.sub(r"^(?:커밋 제목|PR 제목|title)\s*:\s*", "", title, flags=re.I)
@@ -228,7 +287,9 @@ def normalize(
     if not title:
         title = "변경 사항 반영"
         repairs.append("비어 있는 제목을 확인용 기본 제목으로 보완했습니다.")
-    if convention == "team" and not re.match(r"^(feat|fix|docs|refactor|test|chore): \S", title):
+    if convention == "team" and not re.match(
+        r"^(feat|fix|docs|refactor|test|chore): \S", title
+    ):
         title = "chore: " + title
         repairs.append("팀 컨벤션 접두사를 보완했습니다. 변경 유형을 검토하세요.")
     limit = 72 if command == "commit" else 80
@@ -257,7 +318,9 @@ def normalize(
                 bullets = defaults[key]
                 repairs.append(f"{heading} 섹션에 검토용 불릿을 보완했습니다.")
             if key == "how_to_test":
-                bullets = [b if b.startswith("미실행:") else f"미실행: {b}" for b in bullets]
+                bullets = [
+                    b if b.startswith("미실행:") else f"미실행: {b}" for b in bullets
+                ]
             sections.append(f"## {heading}\n" + "\n".join(f"- {b}" for b in bullets))
         body = "\n\n".join(sections)
     draft = Draft(
