@@ -36,7 +36,9 @@ def terminal_safe(text: str) -> str:
     """줄바꿈과 탭을 유지하며 ANSI 및 위험한 제어 문자를 제거한다."""
     text = ESCAPE.sub("", text)
     return "".join(
-        c for c in text if c in "\n\t" or unicodedata.category(c) not in {"Cc", "Cf", "Cs"}
+        c
+        for c in text
+        if c in "\n\t" or unicodedata.category(c) not in {"Cc", "Cf", "Cs"}
     )
 
 
@@ -62,5 +64,6 @@ def sensitive_path(path: str) -> bool:
         or name == ".env"
         or name.startswith(".env.")
         or name.endswith((".pem", ".key", ".p12", ".pfx", ".keystore"))
-        or name in {"credentials", "credentials.json", "secrets.json", "id_rsa", "id_ed25519"}
+        or name
+        in {"credentials", "credentials.json", "secrets.json", "id_rsa", "id_ed25519"}
     )

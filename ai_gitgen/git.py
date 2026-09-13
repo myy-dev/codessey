@@ -19,7 +19,9 @@ MAX_CONTEXT_CHARS = 200_000
 
 def run_git(root: Path, *args: str, allowed: tuple[int, ...] = (0,)) -> bytes:
     """Git 명령을 실행하고 종료 코드와 출력 크기를 검증한다."""
-    env = dict(os.environ, GIT_OPTIONAL_LOCKS="0", GIT_LITERAL_PATHSPECS="1", LC_ALL="C")
+    env = dict(
+        os.environ, GIT_OPTIONAL_LOCKS="0", GIT_LITERAL_PATHSPECS="1", LC_ALL="C"
+    )
     try:
         result = subprocess.run(
             ["git", "-c", "core.fsmonitor=false", *args],
@@ -30,14 +32,20 @@ def run_git(root: Path, *args: str, allowed: tuple[int, ...] = (0,)) -> bytes:
             check=False,
         )
     except FileNotFoundError as exc:
-        raise GitgenError("Git을 찾을 수 없습니다. Git 설치 및 PATH를 확인하세요.") from exc
+        raise GitgenError(
+            "Git을 찾을 수 없습니다. Git 설치 및 PATH를 확인하세요."
+        ) from exc
     except subprocess.TimeoutExpired as exc:
         raise GitgenError(f"git {args[0]} 실행 시간이 30초를 초과했습니다.") from exc
     except OSError as exc:
-        raise GitgenError(f"Git 프로세스를 실행할 수 없습니다 (OS 오류 {exc.errno}).") from exc
+        raise GitgenError(
+            f"Git 프로세스를 실행할 수 없습니다 (OS 오류 {exc.errno})."
+        ) from exc
     if result.returncode not in allowed:
         reason = mask(result.stderr.decode("utf-8", "replace").strip())[:1000]
-        raise GitgenError(f"git {args[0]} 실패 (종료 코드 {result.returncode}): {reason}")
+        raise GitgenError(
+            f"git {args[0]} 실패 (종료 코드 {result.returncode}): {reason}"
+        )
     if len(result.stdout) > MAX_DIFF_BYTES:
         raise GitgenError(
             f"git {args[0]} 결과가 2MB를 초과했습니다. 수집할 변경의 크기를 줄이세요."
@@ -130,7 +138,9 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
     changes = parse_status(
         run_git(root, "status", "--porcelain=v1", "-z", "--untracked-files=all")
     )
-    has_head = bool(run_git(root, "rev-parse", "--verify", "HEAD", allowed=(0, 128)).strip())
+    has_head = bool(
+        run_git(root, "rev-parse", "--verify", "HEAD", allowed=(0, 128)).strip()
+    )
 
     # 안전 모드와 관계없는 민감 파일·심볼릭 링크 공통 제외
     excluded = 0
@@ -158,7 +168,11 @@ def collect_changes(root: Path, *, safe: bool, api_key: str = "") -> Context:
             {
                 "path": mask(change.path, api_key, patterns=safe),
                 **(
-                    {"previous_path": mask(change.previous_path, api_key, patterns=safe)}
+                    {
+                        "previous_path": mask(
+                            change.previous_path, api_key, patterns=safe
+                        )
+                    }
                     if change.previous_path
                     else {}
                 ),
