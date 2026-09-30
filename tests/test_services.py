@@ -1,4 +1,4 @@
-"""저장소와 서비스 통합 테스트."""
+"""저장소와 서비스 통합 테스트"""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from budget_app.services import BudgetService
 
 
 class BudgetServiceTests(unittest.TestCase):
-    """필수 기능과 보너스 기능의 파일 영속성을 검증한다."""
+    """필수·보너스 기능의 파일 영속성 검증"""
 
     def setUp(self) -> None:
         self.temp_directory = tempfile.TemporaryDirectory()

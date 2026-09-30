@@ -1,4 +1,4 @@
-"""JSONL 파일 저장소와 원자적 파일 교체 구현."""
+"""JSONL 파일 저장소와 원자적 파일 교체 구현"""
 
 from __future__ import annotations
 
@@ -16,12 +16,12 @@ DEFAULT_CATEGORIES = ("food", "transport", "rent", "salary", "etc")
 
 
 def _transaction_sort_key(transaction: Transaction) -> tuple[str, str]:
-    """거래를 날짜와 ID 오름차순으로 저장하기 위한 키를 반환한다."""
+    """거래의 날짜·ID 오름차순 저장용 키 반환"""
     return transaction.date, transaction.id
 
 
 def _identifier_number(value: object, prefix: str) -> int:
-    """TX-000001 같은 ID에서 숫자를 읽고 형식이 다르면 0을 반환한다."""
+    """TX-000001 형식의 ID에서 숫자 추출, 형식 오류 시 0 반환"""
     if not isinstance(value, str) or not value.startswith(f"{prefix}-"):
         return 0
     try:
@@ -31,13 +31,13 @@ def _identifier_number(value: object, prefix: str) -> int:
 
 
 def _ensure_file(path: Path) -> None:
-    """부모 폴더와 빈 저장 파일을 만든다."""
+    """부모 폴더와 빈 저장 파일 생성"""
     path.parent.mkdir(parents=True, exist_ok=True)
     path.touch(exist_ok=True)
 
 
 def _decode_json_line(line: str, path: Path) -> dict[str, Any]:
-    """JSONL 한 줄을 객체로 해석하고 읽기 쉬운 오류를 만든다."""
+    """JSONL 한 줄의 객체 해석 및 읽기 쉬운 오류 생성"""
     try:
         value = json.loads(line)
     except json.JSONDecodeError as exc:
@@ -51,7 +51,7 @@ def _decode_json_line(line: str, path: Path) -> dict[str, Any]:
 
 
 def _iter_lines_reverse(path: Path, block_size: int = 8192) -> Generator[str, None, None]:
-    """파일을 전부 메모리에 올리지 않고 마지막 줄부터 읽는다."""
+    """전체 메모리 적재 없는 파일 역방향 읽기"""
     with path.open("rb") as file:
         file.seek(0, os.SEEK_END)
         position = file.tell()
@@ -71,7 +71,7 @@ def _iter_lines_reverse(path: Path, block_size: int = 8192) -> Generator[str, No
 
 
 def _iter_json_objects(path: Path, reverse: bool = False) -> Generator[dict[str, Any], None, None]:
-    """JSONL 항목을 정방향 또는 역방향으로 스트리밍한다."""
+    """JSONL 항목의 정방향·역방향 스트리밍"""
     _ensure_file(path)
     if reverse:
         for line in _iter_lines_reverse(path):
@@ -85,7 +85,7 @@ def _iter_json_objects(path: Path, reverse: bool = False) -> Generator[dict[str,
 
 
 def _append_json(path: Path, data: dict[str, Any]) -> None:
-    """JSON 객체 하나를 파일 마지막에 추가한다."""
+    """파일 끝에 JSON 객체 하나 추가"""
     _ensure_file(path)
     with path.open("a", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, separators=(",", ":"))
@@ -95,7 +95,7 @@ def _append_json(path: Path, data: dict[str, Any]) -> None:
 
 
 def _atomic_write_jsonl(path: Path, records: Iterable[dict[str, Any]]) -> None:
-    """임시 파일을 완전히 쓴 뒤 원본 경로로 원자적으로 교체한다."""
+    """임시 파일 작성 완료 후 원본 경로의 원자적 교체"""
     _ensure_file(path)
     temp_path: Path | None = None
     try:
@@ -121,7 +121,7 @@ def _atomic_write_jsonl(path: Path, records: Iterable[dict[str, Any]]) -> None:
 
 
 class SequenceStore:
-    """삭제 후에도 재사용되지 않는 영구 ID 시퀀스 저장소."""
+    """삭제 후에도 재사용되지 않는 영구 ID 시퀀스 저장소"""
 
     _PREFIXES = {"transaction": "TX", "recurring": "RC"}
 
@@ -155,7 +155,7 @@ class SequenceStore:
             )
 
     def reserve(self, name: str, count: int = 1) -> tuple[str, ...]:
-        """지정한 개수의 연속 ID를 예약하고 마지막 값을 영구 저장한다."""
+        """지정한 개수의 연속 ID 예약 및 마지막 값 영구 저장"""
         if name not in self._PREFIXES:
             raise DataFileError(f"알 수 없는 ID 시퀀스입니다: {name}")
         if count <= 0:
@@ -182,15 +182,16 @@ class SequenceStore:
 
 
 class TransactionRepository:
-    """거래 JSONL 파일에 대한 스트리밍 CRUD 저장소."""
+    """거래 JSONL 파일의 스트리밍 CRUD 저장소"""
 
     def __init__(self, data_dir: Path, sequences: SequenceStore | None = None) -> None:
         self.path = data_dir / "transactions.jsonl"
         self.sequences = sequences or SequenceStore(data_dir)
+        # data 폴더와 거래 파일이 없으면 생성
         _ensure_file(self.path)
 
     def iter_transactions(self, reverse: bool = False) -> Generator[Transaction, None, None]:
-        """거래를 한 건씩 읽는다. reverse=True이면 최신 저장 건부터 읽는다."""
+        """거래별 스트리밍 읽기, reverse=True 시 최신 저장 건부터 읽기"""
         for data in _iter_json_objects(self.path, reverse=reverse):
             try:
                 yield Transaction.from_dict(data)
@@ -198,19 +199,19 @@ class TransactionRepository:
                 raise DataFileError(f"거래 데이터 형식이 올바르지 않습니다: {self.path}") from exc
 
     def next_id(self) -> str:
-        """삭제 후에도 재사용되지 않는 다음 거래 ID를 만든다."""
+        """삭제 후에도 재사용되지 않는 다음 거래 ID 생성"""
         return self.sequences.reserve("transaction")[0]
 
     def reserve_ids(self, count: int) -> tuple[str, ...]:
-        """CSV 일괄 등록에 사용할 거래 ID 여러 개를 예약한다."""
+        """CSV 일괄 등록용 거래 ID 다중 예약"""
         return self.sequences.reserve("transaction", count)
 
     def add(self, transaction: Transaction) -> None:
-        """거래 한 건을 날짜순 위치에 원자적으로 추가한다."""
+        """날짜순 위치에 거래 한 건 원자적 추가"""
         self.add_many((transaction,))
 
     def add_many(self, transactions: Iterable[Transaction]) -> None:
-        """거래 묶음을 기존 날짜순 스트림과 병합해 원자적으로 저장한다."""
+        """거래 묶음과 기존 날짜순 스트림의 병합 및 원자적 저장"""
         incoming = sorted(transactions, key=_transaction_sort_key)
         if not incoming:
             return
@@ -222,14 +223,14 @@ class TransactionRepository:
         _atomic_write_jsonl(self.path, (transaction.to_dict() for transaction in merged))
 
     def find(self, transaction_id: str) -> Transaction | None:
-        """ID가 일치하는 거래를 찾는다."""
+        """ID가 일치하는 거래 조회"""
         return next(
             (item for item in self.iter_transactions() if item.id == transaction_id),
             None,
         )
 
     def update(self, transaction: Transaction) -> bool:
-        """ID가 같은 거래를 교체하고 날짜순으로 원자적 재정렬한다."""
+        """동일 ID 거래 교체 및 날짜순 원자적 재정렬"""
         if self.find(transaction.id) is None:
             return False
 
@@ -243,7 +244,7 @@ class TransactionRepository:
         return True
 
     def delete(self, transaction_id: str) -> bool:
-        """ID가 같은 거래를 제외하고 전체 파일을 원자적으로 저장한다."""
+        """동일 ID 거래 제외 후 전체 파일의 원자적 저장"""
         found = False
 
         def records() -> Generator[dict[str, Any], None, None]:
@@ -258,12 +259,12 @@ class TransactionRepository:
         return found
 
     def any_in_category(self, category: str) -> bool:
-        """특정 카테고리를 사용하는 거래가 있는지 스트리밍해 확인한다."""
+        """특정 카테고리를 사용하는 거래의 스트리밍 확인"""
         return any(item.category == category for item in self.iter_transactions())
 
 
 class CategoryStore:
-    """카테고리 목록 저장소."""
+    """카테고리 목록 저장소"""
 
     def __init__(self, data_dir: Path) -> None:
         self.path = data_dir / "categories.jsonl"
@@ -272,7 +273,7 @@ class CategoryStore:
             _atomic_write_jsonl(self.path, ({"name": name} for name in DEFAULT_CATEGORIES))
 
     def iter_categories(self) -> Generator[str, None, None]:
-        """카테고리를 저장 순서대로 스트리밍한다."""
+        """카테고리의 저장 순서별 스트리밍"""
         for data in _iter_json_objects(self.path):
             name = data.get("name")
             if not isinstance(name, str) or not name:
@@ -280,22 +281,22 @@ class CategoryStore:
             yield name
 
     def list(self) -> list[str]:
-        """정렬된 카테고리 목록을 반환한다."""
+        """정렬된 카테고리 목록 반환"""
         return sorted(self.iter_categories())
 
     def contains(self, category: str) -> bool:
-        """카테고리 등록 여부를 확인한다."""
+        """카테고리 등록 여부 확인"""
         return any(name == category for name in self.iter_categories())
 
     def add(self, category: str) -> bool:
-        """중복이 아닐 때 카테고리를 추가한다."""
+        """중복되지 않은 카테고리 추가"""
         if self.contains(category):
             return False
         _append_json(self.path, {"name": category})
         return True
 
     def remove(self, category: str) -> bool:
-        """카테고리를 제외하고 파일을 원자적으로 저장한다."""
+        """카테고리 제외 후 파일의 원자적 저장"""
         found = False
 
         def records() -> Generator[dict[str, str], None, None]:
@@ -311,14 +312,14 @@ class CategoryStore:
 
 
 class BudgetStore:
-    """월별 예산 저장소."""
+    """월별 예산 저장소"""
 
     def __init__(self, data_dir: Path) -> None:
         self.path = data_dir / "budgets.jsonl"
         _ensure_file(self.path)
 
     def get(self, month: str) -> int | None:
-        """월에 설정된 예산을 반환한다."""
+        """해당 월의 설정 예산 반환"""
         for data in _iter_json_objects(self.path):
             if data.get("month") == month:
                 try:
@@ -328,7 +329,7 @@ class BudgetStore:
         return None
 
     def set(self, month: str, amount: int) -> None:
-        """월별 예산을 추가하거나 교체하고 원자적으로 저장한다."""
+        """월별 예산 추가·교체 및 원자적 저장"""
         found = False
 
         def records() -> Generator[dict[str, Any], None, None]:
@@ -346,7 +347,7 @@ class BudgetStore:
 
 
 class RecurringRepository:
-    """반복 거래 규칙 저장소."""
+    """반복 거래 규칙 저장소"""
 
     def __init__(self, data_dir: Path, sequences: SequenceStore | None = None) -> None:
         self.path = data_dir / "recurring.jsonl"
@@ -354,7 +355,7 @@ class RecurringRepository:
         _ensure_file(self.path)
 
     def iter_rules(self) -> Generator[RecurringRule, None, None]:
-        """반복 규칙을 한 건씩 읽는다."""
+        """반복 규칙별 스트리밍 읽기"""
         for data in _iter_json_objects(self.path):
             try:
                 yield RecurringRule.from_dict(data)
@@ -362,15 +363,15 @@ class RecurringRepository:
                 raise DataFileError(f"반복 규칙 데이터 형식이 올바르지 않습니다: {self.path}") from exc
 
     def next_id(self) -> str:
-        """삭제 후에도 재사용되지 않는 다음 반복 규칙 ID를 만든다."""
+        """삭제 후에도 재사용되지 않는 다음 반복 규칙 ID 생성"""
         return self.sequences.reserve("recurring")[0]
 
     def add(self, rule: RecurringRule) -> None:
-        """반복 규칙을 추가한다."""
+        """반복 규칙 추가"""
         _append_json(self.path, rule.to_dict())
 
     def delete(self, rule_id: str) -> bool:
-        """ID가 같은 반복 규칙을 원자적으로 삭제한다."""
+        """동일 ID 반복 규칙의 원자적 삭제"""
         found = False
 
         def records() -> Generator[dict[str, Any], None, None]:
@@ -385,12 +386,12 @@ class RecurringRepository:
         return found
 
     def any_in_category(self, category: str) -> bool:
-        """카테고리를 사용하는 반복 규칙이 있는지 확인한다."""
+        """카테고리를 사용하는 반복 규칙의 존재 여부 확인"""
         return any(rule.category == category for rule in self.iter_rules())
 
 
 class DataStores:
-    """CLI 실행에서 함께 사용하는 모든 파일 저장소를 묶는다."""
+    """CLI 실행에 필요한 모든 파일 저장소의 묶음"""
 
     def __init__(self, data_dir: Path) -> None:
         self.data_dir = data_dir
@@ -401,7 +402,7 @@ class DataStores:
         self.recurring = RecurringRepository(data_dir, self.sequences)
 
     def paths(self) -> tuple[Path, ...]:
-        """백업할 모든 영구 저장 파일 경로를 반환한다."""
+        """백업 대상 영구 저장 파일의 전체 경로 반환"""
         return (
             self.transactions.path,
             self.categories.path,

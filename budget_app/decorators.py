@@ -1,41 +1,18 @@
-"""CLI 공통 관심사를 분리하는 데코레이터."""
+"""CLI 공통 관심사 분리용 데코레이터"""
 
 from __future__ import annotations
 
-import logging
 import sys
 from functools import wraps
-from time import perf_counter
-from typing import Callable, ParamSpec, TypeVar
+from typing import Callable, ParamSpec
 
 from .errors import BudgetAppError
 
 P = ParamSpec("P")
-R = TypeVar("R")
-
-logger = logging.getLogger(__name__)
-logger.addHandler(logging.NullHandler())
-
-
-def log_execution(func: Callable[P, R]) -> Callable[P, R]:
-    """함수 실행 결과와 소요 시간을 디버그 로그로 기록한다."""
-
-    @wraps(func)
-    def wrapper(*args: P.args, **kwargs: P.kwargs) -> R:
-        started = perf_counter()
-        try:
-            result = func(*args, **kwargs)
-        except Exception:
-            logger.debug("%s failed after %.4fs", func.__name__, perf_counter() - started)
-            raise
-        logger.debug("%s completed in %.4fs", func.__name__, perf_counter() - started)
-        return result
-
-    return wrapper
 
 
 def handle_cli_errors(func: Callable[P, int]) -> Callable[P, int]:
-    """예상 오류를 스택트레이스 없이 원인과 힌트로 출력한다."""
+    """예상 오류의 스택트레이스 없는 원인·힌트 출력"""
 
     @wraps(func)
     def wrapper(*args: P.args, **kwargs: P.kwargs) -> int:

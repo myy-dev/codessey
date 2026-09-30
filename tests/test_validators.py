@@ -1,4 +1,4 @@
-"""입력 검증 함수 테스트."""
+"""입력 검증 함수 테스트"""
 
 from __future__ import annotations
 
@@ -16,7 +16,7 @@ from budget_app.validators import (
 
 
 class ValidatorTests(unittest.TestCase):
-    """날짜, 금액, 타입, 태그 검증을 확인한다."""
+    """날짜·금액·타입·태그 검증 확인"""
 
     def test_valid_values_are_normalized(self) -> None:
         self.assertEqual(validate_date("2024-02-29"), "2024-02-29")

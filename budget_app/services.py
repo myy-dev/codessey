@@ -1,4 +1,4 @@
-"""거래, 요약, 예산, CSV 및 보너스 기능의 비즈니스 로직."""
+"""거래, 요약, 예산, CSV 및 보너스 기능의 비즈니스 로직"""
 
 from __future__ import annotations
 
@@ -34,7 +34,7 @@ CSV_COLUMNS = ("date", "type", "category", "amount", "memo", "tags")
 
 @dataclass(frozen=True, slots=True)
 class SummaryResult:
-    """월별 요약 계산 결과."""
+    """월별 요약 계산 결과"""
 
     month: str
     income: int
@@ -46,20 +46,20 @@ class SummaryResult:
 
     @property
     def budget_usage(self) -> float | None:
-        """예산이 있으면 지출 사용률을 반환한다."""
+        """예산 설정 시 지출 사용률 반환"""
         if self.budget is None:
             return None
         return self.expense / self.budget * 100
 
     @property
     def over_budget(self) -> bool:
-        """지출이 설정 예산을 초과했는지 반환한다."""
+        """지출의 설정 예산 초과 여부 반환"""
         return self.budget is not None and self.expense > self.budget
 
 
 @dataclass(frozen=True, slots=True)
 class ImportResult:
-    """CSV 가져오기 처리 건수와 건너뛴 행의 이유."""
+    """CSV 가져오기 처리 건수와 건너뛴 행의 이유"""
 
     imported: int
     skipped: int
@@ -67,13 +67,13 @@ class ImportResult:
 
 
 class BudgetService:
-    """파일 저장소 위에서 가계부 기능을 제공한다."""
+    """파일 저장소 기반 가계부 기능 제공"""
 
     def __init__(self, data_dir: Path | str) -> None:
         self.stores = DataStores(Path(data_dir))
 
     def _require_category(self, category: str) -> str:
-        """카테고리 이름과 등록 여부를 검증한다."""
+        """카테고리 이름과 등록 여부 검증"""
         normalized = validate_category_name(category)
         if not self.stores.categories.contains(normalized):
             raise ValidationError(
@@ -93,7 +93,7 @@ class BudgetService:
         memo: str = "",
         tags: str | Iterable[str] | None = None,
     ) -> Transaction:
-        """저장하지 않고 검증된 거래 객체를 만든다."""
+        """저장 없는 검증된 거래 객체 생성"""
         return Transaction(
             id=transaction_id,
             type=validate_transaction_type(transaction_type),
@@ -114,7 +114,7 @@ class BudgetService:
         memo: str = "",
         tags: str | Iterable[str] | None = None,
     ) -> Transaction:
-        """입력값을 검증하고 새 거래를 저장한다."""
+        """입력값 검증 및 새 거래 저장"""
         transaction = self._build_transaction(
             self.stores.transactions.next_id(),
             date=date,
@@ -128,7 +128,7 @@ class BudgetService:
         return transaction
 
     def list_transactions(self, limit: int = 20) -> Generator[Transaction, None, None]:
-        """최근 저장된 거래를 제한 개수만큼 스트리밍한다."""
+        """최근 거래의 지정 개수 스트리밍"""
         checked_limit = validate_positive_int(limit, "조회 개수")
         for index, transaction in enumerate(self.stores.transactions.iter_transactions(reverse=True)):
             if index >= checked_limit:
@@ -145,7 +145,7 @@ class BudgetService:
         query: str | None = None,
         tag: str | None = None,
     ) -> Generator[Transaction, None, None]:
-        """조건과 일치하는 거래를 최신 저장순으로 스트리밍한다."""
+        """조건에 맞는 거래의 최신 저장순 스트리밍"""
         start, end = validate_date_range(from_date, to_date)
         checked_category = self._require_category(category) if category else None
         checked_type = validate_transaction_type(transaction_type) if transaction_type else None
@@ -178,7 +178,7 @@ class BudgetService:
         memo: str | None = None,
         tags: str | Iterable[str] | None = None,
     ) -> Transaction:
-        """ID 기준으로 지정된 필드만 수정한다."""
+        """ID 기준 지정 필드 수정"""
         current = self.stores.transactions.find(transaction_id)
         if current is None:
             raise BudgetAppError(f"거래를 찾을 수 없습니다: {transaction_id}", "list로 ID를 확인하세요.")
@@ -203,14 +203,14 @@ class BudgetService:
         return updated
 
     def delete_transaction(self, transaction_id: str) -> None:
-        """ID 기준으로 거래를 삭제한다."""
+        """ID 기준 거래 삭제"""
         if self.stores.transactions.find(transaction_id) is None:
             raise BudgetAppError(f"거래를 찾을 수 없습니다: {transaction_id}", "list로 ID를 확인하세요.")
         if not self.stores.transactions.delete(transaction_id):
             raise BudgetAppError(f"거래를 삭제하지 못했습니다: {transaction_id}")
 
     def summarize(self, month: str, top: int = 3) -> SummaryResult:
-        """월별 수입, 지출, 잔액과 카테고리별 지출 순위를 계산한다."""
+        """월별 수입·지출·잔액과 카테고리별 지출 순위 계산"""
         checked_month = validate_month(month)
         checked_top = validate_positive_int(top, "상위 카테고리 개수")
         income = 0
@@ -237,29 +237,29 @@ class BudgetService:
         )
 
     def set_budget(self, month: str, amount: int | str) -> int:
-        """월 예산을 저장하고 검증된 금액을 반환한다."""
+        """월 예산 저장 및 검증된 금액 반환"""
         checked_month = validate_month(month)
         checked_amount = validate_amount(amount)
         self.stores.budgets.set(checked_month, checked_amount)
         return checked_amount
 
     def get_budget(self, month: str) -> int | None:
-        """월 예산을 조회한다."""
+        """월 예산 조회"""
         return self.stores.budgets.get(validate_month(month))
 
     def list_categories(self) -> list[str]:
-        """카테고리 목록을 반환한다."""
+        """카테고리 목록 반환"""
         return self.stores.categories.list()
 
     def add_category(self, category: str) -> str:
-        """새 카테고리를 추가한다."""
+        """새 카테고리 추가"""
         checked = validate_category_name(category)
         if not self.stores.categories.add(checked):
             raise BudgetAppError(f"이미 등록된 카테고리입니다: {checked}")
         return checked
 
     def remove_category(self, category: str) -> None:
-        """사용 중이지 않은 카테고리를 삭제한다."""
+        """미사용 카테고리 삭제"""
         checked = validate_category_name(category)
         if not self.stores.categories.contains(checked):
             raise BudgetAppError(f"카테고리를 찾을 수 없습니다: {checked}")
@@ -277,7 +277,7 @@ class BudgetService:
             raise BudgetAppError(f"카테고리를 삭제하지 못했습니다: {checked}")
 
     def import_csv(self, source: Path | str) -> ImportResult:
-        """CSV 전체를 검증한 뒤 유효한 행을 한 번에 원자적으로 등록한다."""
+        """CSV 전체 검증 후 유효 행의 일괄 원자적 등록"""
         source_path = validate_existing_file(Path(source))
         skipped = 0
         errors: list[str] = []
@@ -331,7 +331,7 @@ class BudgetService:
         from_date: str | None = None,
         to_date: str | None = None,
     ) -> int:
-        """월 또는 기간 조건 거래를 충돌 검사 후 원자적으로 CSV 저장한다."""
+        """월·기간 조건 거래의 충돌 검사 및 원자적 CSV 저장"""
         if month and (from_date or to_date):
             raise ValidationError("--month와 --from/--to는 함께 사용할 수 없습니다.")
         if not month and not (from_date and to_date):
@@ -397,7 +397,7 @@ class BudgetService:
         return count
 
     def create_backup(self, output_dir: Path | str = "backups") -> Path:
-        """모든 영구 데이터 파일을 타임스탬프 ZIP으로 백업한다."""
+        """모든 영구 데이터 파일의 타임스탬프 ZIP 백업"""
         target_dir = Path(output_dir)
         target_dir.mkdir(parents=True, exist_ok=True)
         timestamp = datetime.now().strftime("%Y%m%d-%H%M%S-%f")
@@ -417,7 +417,7 @@ class BudgetService:
         memo: str = "",
         tags: str | Iterable[str] | None = None,
     ) -> RecurringRule:
-        """매월 적용할 반복 거래 규칙을 저장한다."""
+        """매월 적용할 반복 거래 규칙 저장"""
         rule = RecurringRule(
             id=self.stores.recurring.next_id(),
             type=validate_transaction_type(transaction_type),
@@ -431,16 +431,16 @@ class BudgetService:
         return rule
 
     def list_recurring_rules(self) -> list[RecurringRule]:
-        """등록된 반복 규칙 목록을 반환한다."""
+        """등록된 반복 규칙 목록 반환"""
         return list(self.stores.recurring.iter_rules())
 
     def remove_recurring_rule(self, rule_id: str) -> None:
-        """ID 기준으로 반복 규칙을 삭제한다."""
+        """ID 기준 반복 규칙 삭제"""
         if not self.stores.recurring.delete(rule_id):
             raise BudgetAppError(f"반복 규칙을 찾을 수 없습니다: {rule_id}")
 
     def generate_recurring_transactions(self, month: str) -> tuple[int, int]:
-        """반복 규칙을 특정 월의 거래로 만들고 중복 생성을 건너뛴다."""
+        """특정 월의 반복 거래 생성 및 중복 생성 건너뛰기"""
         checked_month = validate_month(month)
         year, month_number = (int(part) for part in checked_month.split("-"))
         last_day = calendar.monthrange(year, month_number)[1]

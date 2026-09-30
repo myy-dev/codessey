@@ -1,4 +1,4 @@
-"""외부 라이브러리 없는 콘솔 표와 요약 출력."""
+"""외부 라이브러리 없는 콘솔 표와 요약 출력"""
 
 from __future__ import annotations
 
@@ -10,17 +10,17 @@ from .services import SummaryResult
 
 
 def _display_width(value: str) -> int:
-    """한글과 전각 문자를 고려한 터미널 표시 너비를 계산한다."""
+    """한글·전각 문자를 고려한 터미널 표시 너비 계산"""
     return sum(2 if unicodedata.east_asian_width(character) in {"W", "F"} else 1 for character in value)
 
 
 def _pad(value: str, width: int) -> str:
-    """표시 너비에 맞춰 문자열 오른쪽에 공백을 채운다."""
+    """표시 너비에 맞춘 문자열 오른쪽 공백 채우기"""
     return value + " " * max(0, width - _display_width(value))
 
 
 def _fixed_row(values: Sequence[str], widths: Sequence[int]) -> str:
-    """최소 열 너비를 유지하면서 내용을 자르지 않는 표 한 행을 만든다."""
+    """최소 열 너비 유지 및 내용 잘림 없는 표 한 행 생성"""
     return " | ".join(
         _pad(value, widths[index])
         for index, value in enumerate(values)
@@ -28,7 +28,7 @@ def _fixed_row(values: Sequence[str], widths: Sequence[int]) -> str:
 
 
 def _transaction_values(transaction: Transaction) -> tuple[str, ...]:
-    """거래 한 건을 표에 넣을 문자열 값으로 변환한다."""
+    """거래 한 건의 표 출력용 문자열 값 변환"""
     return (
         transaction.id,
         transaction.date,
@@ -41,7 +41,7 @@ def _transaction_values(transaction: Transaction) -> tuple[str, ...]:
 
 
 def make_table(headers: Sequence[str], rows: Iterable[Sequence[object]]) -> str:
-    """헤더와 행을 열 너비에 맞춘 텍스트 표로 만든다."""
+    """헤더와 행의 열 너비에 맞춘 텍스트 표 생성"""
     string_rows = [[str(value) for value in row] for row in rows]
     if not string_rows:
         return ""
@@ -59,13 +59,8 @@ def make_table(headers: Sequence[str], rows: Iterable[Sequence[object]]) -> str:
     return "\n".join((header_line, separator, *body))
 
 
-def format_transactions(transactions: Iterable[Transaction]) -> str:
-    """거래 스트림을 하나의 문자열로 만든다. 테스트나 소규모 호출에 사용한다."""
-    return "\n".join(iter_transaction_lines(transactions))
-
-
 def iter_transaction_lines(transactions: Iterable[Transaction]) -> Iterable[str]:
-    """거래를 한 건만 미리 읽고 고정 너비 표의 줄을 지연 생성한다."""
+    """거래 한 건 선행 읽기 및 고정 너비 표 줄의 지연 생성"""
     iterator = iter(transactions)
     first = next(iterator, None)
     if first is None:
@@ -82,7 +77,7 @@ def iter_transaction_lines(transactions: Iterable[Transaction]) -> Iterable[str]
 
 
 def format_summary(summary: SummaryResult) -> str:
-    """월별 요약을 사람이 읽기 쉬운 한국어 문자열로 만든다."""
+    """월별 요약의 읽기 쉬운 한국어 문자열 변환"""
     lines = [
         f"총 수입: {summary.income:,}원",
         f"총 지출: {summary.expense:,}원",
@@ -108,7 +103,7 @@ def format_summary(summary: SummaryResult) -> str:
 
 
 def format_recurring_rules(rules: Iterable[RecurringRule]) -> str:
-    """반복 거래 규칙을 정렬된 표로 만든다."""
+    """반복 거래 규칙의 정렬된 표 생성"""
     rows = [
         (
             rule.id,

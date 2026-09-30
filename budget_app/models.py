@@ -1,4 +1,4 @@
-"""가계부 데이터 모델."""
+"""가계부 데이터 모델"""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from typing import Any
 
 @dataclass(frozen=True, slots=True)
 class Transaction:
-    """수입 또는 지출 한 건을 표현한다."""
+    """수입 또는 지출 한 건의 표현"""
 
     id: str
     type: str
@@ -19,14 +19,14 @@ class Transaction:
     tags: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
-        """JSON 직렬화가 가능한 딕셔너리로 변환한다."""
+        """JSON 직렬화 가능한 딕셔너리로 변환"""
         data = asdict(self)
         data["tags"] = list(self.tags)
         return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Transaction:
-        """저장된 딕셔너리에서 거래 객체를 만든다."""
+        """저장된 딕셔너리에서 거래 객체 생성"""
         raw_tags = data.get("tags", [])
         if isinstance(raw_tags, str):
             raw_tags = [tag.strip() for tag in raw_tags.split(",") if tag.strip()]
@@ -43,7 +43,7 @@ class Transaction:
 
 @dataclass(frozen=True, slots=True)
 class RecurringRule:
-    """매월 반복해서 생성할 거래 규칙."""
+    """매월 반복해서 생성할 거래 규칙"""
 
     id: str
     type: str
@@ -54,14 +54,14 @@ class RecurringRule:
     tags: tuple[str, ...] = ()
 
     def to_dict(self) -> dict[str, Any]:
-        """JSON 직렬화가 가능한 딕셔너리로 변환한다."""
+        """JSON 직렬화 가능한 딕셔너리로 변환"""
         data = asdict(self)
         data["tags"] = list(self.tags)
         return data
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> RecurringRule:
-        """저장된 딕셔너리에서 반복 규칙 객체를 만든다."""
+        """저장된 딕셔너리에서 반복 규칙 객체 생성"""
         raw_tags = data.get("tags", [])
         if isinstance(raw_tags, str):
             raw_tags = [tag.strip() for tag in raw_tags.split(",") if tag.strip()]

@@ -1,4 +1,4 @@
-"""CLI 진입점과 사용자 출력 테스트."""
+"""CLI 진입점과 사용자 출력 테스트"""
 
 from __future__ import annotations
 
@@ -17,7 +17,7 @@ from budget_app.models import Transaction
 
 
 class CliTests(unittest.TestCase):
-    """종료 코드, 대화형 입력, 오류 출력 형식을 검증한다."""
+    """종료 코드·대화형 입력·오류 출력 형식 검증"""
 
     def setUp(self) -> None:
         self.temp_directory = tempfile.TemporaryDirectory()
