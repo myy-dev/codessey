@@ -33,6 +33,8 @@ Python 표준 라이브러리만으로 구현하는 파일 기반 콘솔 가계�
 │   ├── USER_GUIDE.md       # 실행 방법과 명령어 안내
 │   ├── USER_DEMO.md        # 기능 시연 순서와 명령어
 │   └── DATA_FORMAT.md      # 저장 파일 및 CSV 형식
+├── scripts/
+│   └── user_demo.sh        # 사용자 시연 1~9번 자동 실행
 ├── .gitignore
 └── README.md               # 프로젝트 개요 및 요구사항
 ```
