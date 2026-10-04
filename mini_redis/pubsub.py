@@ -2,7 +2,7 @@ from data_structures import DoublyLinkedList, HashMap
 
 
 class Subscription:
-    """One subscriber and its FIFO message buffer."""
+    """구독자 한 명과 FIFO 메시지 버퍼"""
 
     def __init__(self, subscriber_id):
         self.subscriber_id = subscriber_id
@@ -19,7 +19,7 @@ class Subscription:
 
 
 class PubSubChannel:
-    """Channel containing ordered subscribers with per-subscriber buffers."""
+    """순서가 보장된 Subscription과 개별 버퍼를 포함하는 PubSubChannel"""
 
     def __init__(self, name):
         self.name = name
@@ -51,7 +51,7 @@ class PubSubChannel:
 
 
 class PubSubManager:
-    """In-memory channel bus shared by one or more MiniRedisStore clients."""
+    """여러 MiniRedisStore 클라이언트가 공유하는 PubSubManager"""
 
     def __init__(self):
         self._channels = HashMap()
@@ -76,7 +76,7 @@ class PubSubManager:
         return channel.publish(message)
 
     def read_messages(self, subscriber_id, channel_name):
-        """Drain buffered channel messages for a subscriber in publish order."""
+        """publish 순서에 따른 구독자 채널 메시지 버퍼 비우기"""
 
         channel = self._channels.get(channel_name)
         if channel is None:

@@ -1,7 +1,7 @@
 import unittest
 
-from pubsub import PubSubManager
-from store import MiniRedisStore
+from mini_redis.pubsub import PubSubManager
+from mini_redis.store import MiniRedisStore
 
 
 class PubSubCommandTests(unittest.TestCase):

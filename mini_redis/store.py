@@ -1,8 +1,9 @@
 from data_structures import DoublyLinkedList, HashMap
-from memory import MemoryManager
-from pubsub import PubSubManager
-import response
-from ttl import TTLManager
+
+from . import response
+from .memory import MemoryManager
+from .pubsub import PubSubManager
+from .ttl import TTLManager
 
 
 OOM_ERROR = "OOM command not allowed when used_memory > 'maxmemory'"
@@ -10,7 +11,7 @@ INTEGER_ERROR = "ERR value is not an integer or out of range"
 
 
 class MiniRedisStore:
-    """Execute Mini Redis commands and coordinate all storage policies."""
+    """Mini Redis 명령 실행과 저장소 정책 조정"""
 
     def __init__(
         self,
@@ -29,7 +30,7 @@ class MiniRedisStore:
         self._subscriber_id = subscriber_id if subscriber_id is not None else object()
 
     def execute(self, parts):
-        """Execute one tokenized command and return its Redis-style response."""
+        """토큰화된 명령 실행 및 Redis 형식 응답 반환"""
 
         if len(parts) == 0:
             return None
@@ -206,7 +207,7 @@ class MiniRedisStore:
         return response.subscription(channel, subscription_count)
 
     def read_messages(self, channel):
-        """Drain this client's buffered messages for a subscribed channel."""
+        """구독 채널의 클라이언트 메시지 버퍼 비우기"""
 
         return self._pubsub.read_messages(self._subscriber_id, channel)
 
@@ -247,8 +248,7 @@ class MiniRedisStore:
             key = self._ttl.pop_expired_key()
 
     def _evict_until_within_limit(self):
-        # Expired keys are logically absent and must never cause a live key to
-        # be counted as evicted. The expiration heap lets us clear them first.
+        # 실제 LRU eviction 전 만료 키 정리 및 eviction 통계 제외
         self._purge_expired()
         while self._memory.over_limit() and not self._lru_list.is_empty():
             key = self._lru_list.tail.data

@@ -1,7 +1,7 @@
 import unittest
 
-from parser import ParseError, parse_command
-from store import MiniRedisStore
+from mini_redis.parser import ParseError, parse_command
+from mini_redis.store import MiniRedisStore
 
 
 class Clock:

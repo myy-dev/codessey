@@ -1,5 +1,5 @@
 class MemoryManager:
-    """Track payload memory, configured limits, and LRU eviction totals."""
+    """payload 메모리, maxmemory 설정값, LRU eviction 횟수 추적"""
 
     def __init__(self):
         self.used_memory = 0
@@ -24,7 +24,9 @@ class MemoryManager:
         self.used_memory += self.entry_size(key, value)
 
     def replace_entry(self, key, old_value, new_value):
-        self.used_memory += self.entry_size(key, new_value) - self.entry_size(key, old_value)
+        self.used_memory += self.entry_size(key, new_value) - self.entry_size(
+            key, old_value
+        )
 
     def remove_entry(self, key, value):
         self.used_memory -= self.entry_size(key, value)

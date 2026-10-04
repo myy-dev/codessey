@@ -2,7 +2,7 @@ import json
 
 
 def _quoted(value):
-    """Quote and escape a value for the human-readable CLI response."""
+    """사람이 읽을 수 있는 CLI 응답용 값 인용 및 escape 처리"""
 
     return json.dumps(str(value), ensure_ascii=False)
 
@@ -38,7 +38,7 @@ def array(values):
 
 
 def subscription(channel, subscription_count):
-    """Return a Redis-style SUBSCRIBE confirmation array."""
+    """Redis 형식 SUBSCRIBE 확인 배열 생성"""
 
     return "\n".join(
         [
