@@ -1,9 +1,9 @@
 class DynamicArray:
-    """A small dynamic array implementation with explicit capacity growth."""
+    """명시적 capacity 확장을 지원하는 소형 DynamicArray"""
 
     def __init__(self, initial_capacity=4):
         if initial_capacity <= 0:
-            raise ValueError("initial_capacity must be positive")
+            raise ValueError("초기 capacity 양수 조건 위반")
         self._capacity = initial_capacity
         self._size = 0
         self._items = [None] * self._capacity
@@ -33,7 +33,7 @@ class DynamicArray:
 
     def pop(self):
         if self._size == 0:
-            raise IndexError("pop from empty array")
+            raise IndexError("빈 배열 pop 요청")
         return self.remove(self._size - 1)
 
     def size(self):
@@ -60,7 +60,7 @@ class DynamicArray:
 
     def _validate_index(self, index):
         if index < 0 or index >= self._size:
-            raise IndexError("index out of range")
+            raise IndexError("배열 인덱스 범위 초과")
 
     def __len__(self):
         return self._size

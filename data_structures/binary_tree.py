@@ -2,7 +2,7 @@ from .linked_list import DoublyLinkedList
 
 
 class BinaryTreeNode:
-    """Node with explicit left and right child references."""
+    """명시적 left·right 자식 참조를 포함하는 BinaryTreeNode"""
 
     def __init__(self, data):
         self.data = data
@@ -12,7 +12,7 @@ class BinaryTreeNode:
 
 
 class BinaryTree:
-    """General binary tree with the four standard traversal algorithms."""
+    """네 가지 표준 순회를 지원하는 BinaryTree"""
 
     def __init__(self, root_data=None):
         self.root = None
@@ -20,47 +20,47 @@ class BinaryTree:
             self.set_root(root_data)
 
     def set_root(self, data):
-        """Create and return the root of an empty tree."""
+        """빈 BinaryTree의 root 생성 및 반환"""
 
         if self.root is not None:
-            raise ValueError("root already exists")
+            raise ValueError("root 중복 생성")
         self.root = BinaryTreeNode(data)
         self.root._owner = self
         return self.root
 
     def insert_left(self, parent, data):
-        """Insert and return a left child without replacing an existing child."""
+        """기존 자식 대체 없는 left 자식 삽입 및 반환"""
 
         return self._insert_child(parent, data, "left")
 
     def insert_right(self, parent, data):
-        """Insert and return a right child without replacing an existing child."""
+        """기존 자식 대체 없는 right 자식 삽입 및 반환"""
 
         return self._insert_child(parent, data, "right")
 
     def preorder(self):
-        """Return root-left-right traversal results."""
+        """preorder 순회 결과"""
 
         result = []
         self._preorder(self.root, result)
         return result
 
     def inorder(self):
-        """Return left-root-right traversal results."""
+        """inorder 순회 결과"""
 
         result = []
         self._inorder(self.root, result)
         return result
 
     def postorder(self):
-        """Return left-right-root traversal results."""
+        """postorder 순회 결과"""
 
         result = []
         self._postorder(self.root, result)
         return result
 
     def level_order(self):
-        """Return breadth-first results using a linked list as a queue."""
+        """DoublyLinkedList queue 기반 level-order 순회 결과"""
 
         if self.root is None:
             return []
@@ -79,9 +79,9 @@ class BinaryTree:
 
     def _insert_child(self, parent, data, side):
         if not isinstance(parent, BinaryTreeNode) or parent._owner is not self:
-            raise ValueError("parent does not belong to this tree")
+            raise ValueError("parent의 트리 소속 불일치")
         if getattr(parent, side) is not None:
-            raise ValueError(f"{side} child already exists")
+            raise ValueError(f"{side} child 중복 생성")
 
         node = BinaryTreeNode(data)
         node._owner = self

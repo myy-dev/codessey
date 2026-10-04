@@ -1,4 +1,4 @@
-"""Custom data structures for Mini Redis."""
+"""Mini Redis용 사용자 정의 자료구조"""
 
 from .binary_search_tree import BinarySearchTree, BinarySearchTreeNode
 from .binary_tree import BinaryTree, BinaryTreeNode

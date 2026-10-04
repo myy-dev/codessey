@@ -6,13 +6,13 @@ class HashMapEntry:
 
 
 class HashMap:
-    """Hash map with separate chaining and explicit resize control."""
+    """체이닝 방식과 명시적 resize 제어를 사용하는 HashMap"""
 
     def __init__(self, initial_capacity=8, max_load_factor=0.75):
         if initial_capacity <= 0:
-            raise ValueError("initial_capacity must be positive")
+            raise ValueError("초기 capacity 양수 조건 위반")
         if max_load_factor <= 0:
-            raise ValueError("max_load_factor must be positive")
+            raise ValueError("최대 load factor 양수 조건 위반")
         self._capacity = initial_capacity
         self._max_load_factor = max_load_factor
         self._size = 0

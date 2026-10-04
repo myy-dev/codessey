@@ -1,5 +1,5 @@
 class LinkedListNode:
-    """Node used by DoublyLinkedList."""
+    """DoublyLinkedList용 노드"""
 
     def __init__(self, data):
         self.prev = None
@@ -9,7 +9,7 @@ class LinkedListNode:
 
 
 class DoublyLinkedList:
-    """Doubly linked list with O(1) node insertion, removal, and movement."""
+    """O(1) 노드 삽입, 삭제, 이동을 지원하는 DoublyLinkedList"""
 
     def __init__(self):
         self.head = None

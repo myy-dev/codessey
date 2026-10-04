@@ -1,5 +1,5 @@
 class BinarySearchTreeNode:
-    """Node used by BinarySearchTree, including a parent reference."""
+    """parent 참조를 포함하는 BinarySearchTree 노드"""
 
     def __init__(self, data):
         self.data = data
@@ -9,14 +9,14 @@ class BinarySearchTreeNode:
 
 
 class BinarySearchTree:
-    """Binary search tree with insertion, lookup, deletion, and sorted traversal."""
+    """삽입, 검색, 삭제, 정렬 순회를 지원하는 BinarySearchTree"""
 
     def __init__(self):
         self.root = None
         self._size = 0
 
     def insert(self, data):
-        """Insert data and return its node; duplicate values reuse the old node."""
+        """데이터 삽입 및 노드 반환, 중복 값의 기존 노드 재사용"""
 
         if self.root is None:
             self.root = BinarySearchTreeNode(data)
@@ -44,7 +44,7 @@ class BinarySearchTree:
         return node
 
     def search(self, data):
-        """Return the node containing data, or None when it is absent."""
+        """데이터 포함 노드 반환, 부재 시 None"""
 
         current = self.root
         while current is not None:
@@ -60,7 +60,7 @@ class BinarySearchTree:
         return self.search(data) is not None
 
     def delete(self, data):
-        """Delete data when present and report whether the tree changed."""
+        """존재 데이터 삭제 및 트리 변경 여부 반환"""
 
         node = self.search(data)
         if node is None:
@@ -87,7 +87,7 @@ class BinarySearchTree:
         return True
 
     def inorder(self):
-        """Return all values in ascending order."""
+        """오름차순 전체 값 반환"""
 
         result = []
         self._inorder(self.root, result)

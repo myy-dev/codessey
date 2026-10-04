@@ -2,7 +2,7 @@ from .dynamic_array import DynamicArray
 
 
 class MinHeap:
-    """Min heap backed by DynamicArray."""
+    """DynamicArray 기반 MinHeap"""
 
     def __init__(self):
         self._items = DynamicArray()

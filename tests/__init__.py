@@ -1,1 +1,1 @@
-"""Unit tests for Mini Redis."""
+"""Mini Redis 단위 테스트"""
