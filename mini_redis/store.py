@@ -70,17 +70,15 @@ class MiniRedisStore:
 
         key = parts[1]
         value = parts[2]
-        self._delete_if_expired(key)
+        old_value = self._get_live_value(key)
 
         if not self._memory.can_store_entry(key, value):
             return response.error(OOM_ERROR)
 
-        if self._data.contains(key):
-            old_value = self._data.get(key)
-            self._data.put(key, value)
+        self._data.put(key, value)
+        if old_value is not None:
             self._memory.replace_entry(key, old_value, value)
         else:
-            self._data.put(key, value)
             self._memory.add_entry(key, value)
 
         self._ttl.remove(key)
@@ -96,19 +94,19 @@ class MiniRedisStore:
             return self._wrong_args("get")
 
         key = parts[1]
-        if self._delete_if_expired(key) or not self._data.contains(key):
+        value = self._get_live_value(key)
+        if value is None:
             return response.nil()
 
         self._touch_lru(key)
-        return response.bulk_string(self._data.get(key))
+        return response.bulk_string(value)
 
     def _execute_del(self, parts):
         if len(parts) != 2:
             return self._wrong_args("del")
 
         key = parts[1]
-        self._delete_if_expired(key)
-        if not self._data.contains(key):
+        if self._get_live_value(key) is None:
             return response.integer(0)
 
         self._delete_key(key)
@@ -118,10 +116,7 @@ class MiniRedisStore:
         if len(parts) != 2:
             return self._wrong_args("exists")
 
-        key = parts[1]
-        if self._delete_if_expired(key) or not self._data.contains(key):
-            return response.integer(0)
-        return response.integer(1)
+        return response.integer(int(self._get_live_value(parts[1]) is not None))
 
     def _execute_dbsize(self, parts):
         if len(parts) != 1:
@@ -169,8 +164,7 @@ class MiniRedisStore:
         if seconds is None:
             return response.error(INTEGER_ERROR)
 
-        self._delete_if_expired(key)
-        if not self._data.contains(key):
+        if self._get_live_value(key) is None:
             return response.integer(0)
 
         if seconds <= 0:
@@ -185,10 +179,8 @@ class MiniRedisStore:
             return self._wrong_args("ttl")
 
         key = parts[1]
-        if self._delete_if_expired(key) or not self._data.contains(key):
+        if self._get_live_value(key) is None:
             return response.integer(-2)
-        if not self._ttl.has_expire(key):
-            return response.integer(-1)
         return response.integer(self._ttl.ttl(key))
 
     def _execute_publish(self, parts):
@@ -220,26 +212,23 @@ class MiniRedisStore:
             self._lru_list.move_to_front(node)
 
     def _delete_key(self, key):
-        if not self._data.contains(key):
-            self._ttl.remove(key)
-            node = self._lru_nodes.remove(key)
-            if node is not None:
-                self._lru_list.remove_node(node)
-            return None
-
         value = self._data.remove(key)
-        self._memory.remove_entry(key, value)
+        if value is not None:
+            self._memory.remove_entry(key, value)
         self._ttl.remove(key)
         node = self._lru_nodes.remove(key)
         if node is not None:
             self._lru_list.remove_node(node)
         return value
 
-    def _delete_if_expired(self, key):
-        if self._data.contains(key) and self._ttl.is_expired(key):
+    def _get_live_value(self, key):
+        """만료 키를 정리하고 문자열 값 반환, 키 부재 시 None"""
+
+        value = self._data.get(key)
+        if value is not None and self._ttl.is_expired(key):
             self._delete_key(key)
-            return True
-        return False
+            return None
+        return value
 
     def _purge_expired(self):
         key = self._ttl.pop_expired_key()

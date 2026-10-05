@@ -171,5 +171,107 @@ class ExpirationAndLRUIntegrationTests(unittest.TestCase):
         self.assertIn("evicted_keys:0", self.store.execute(["INFO", "memory"]))
 
 
+class StoreRegressionTests(unittest.TestCase):
+    def setUp(self):
+        self.clock = Clock()
+        self.store = MiniRedisStore(time_provider=self.clock.now)
+
+    def test_empty_string_is_a_live_value(self):
+        self.assertEqual(self.store.execute(["SET", "key", ""]), "OK")
+        self.assertEqual(self.store.execute(["GET", "key"]), '""')
+        self.assertEqual(self.store.execute(["EXISTS", "key"]), "(integer) 1")
+        self.assertEqual(self.store.execute(["TTL", "key"]), "(integer) -1")
+        self.assertEqual(self.store.execute(["EXPIRE", "key", "10"]), "(integer) 1")
+        self.assertEqual(self.store.execute(["TTL", "key"]), "(integer) 10")
+        self.assertEqual(self.store.execute(["DEL", "key"]), "(integer) 1")
+        self.assertEqual(self.store.execute(["DEL", "key"]), "(integer) 0")
+        self.assertIn("used_memory:0", self.store.execute(["INFO", "memory"]))
+
+    def test_missing_and_expired_keys_have_the_same_responses(self):
+        commands = (
+            (["GET", "key"], "(nil)"),
+            (["EXISTS", "key"], "(integer) 0"),
+            (["DEL", "key"], "(integer) 0"),
+            (["EXPIRE", "key", "10"], "(integer) 0"),
+            (["TTL", "key"], "(integer) -2"),
+        )
+        for expired in (False, True):
+            for command, expected in commands:
+                with self.subTest(expired=expired, command=command):
+                    store = MiniRedisStore(time_provider=self.clock.now)
+                    if expired:
+                        store.execute(["SET", "key", "value"])
+                        store.execute(["EXPIRE", "key", "1"])
+                        self.clock.advance(1)
+                    self.assertEqual(store.execute(command), expected)
+                    self.assertEqual(
+                        store.execute(["INFO", "memory"]),
+                        "used_memory:0\nmaxmemory:0\nevicted_keys:0",
+                    )
+
+    def test_overwrite_clears_ttl_and_updates_utf8_memory(self):
+        self.store.execute(["SET", "키", "긴값"])
+        self.store.execute(["EXPIRE", "키", "1"])
+        self.assertEqual(self.store.execute(["SET", "키", ""]), "OK")
+        self.assertEqual(self.store.execute(["TTL", "키"]), "(integer) -1")
+        self.clock.advance(1)
+        self.assertEqual(self.store.execute(["DBSIZE"]), "(integer) 1")
+        self.assertEqual(self.store.execute(["GET", "키"]), '""')
+        self.assertEqual(
+            self.store.execute(["INFO", "memory"]),
+            "used_memory:3\nmaxmemory:0\nevicted_keys:0",
+        )
+
+    def test_expired_overwrite_counts_only_the_new_entry(self):
+        self.store.execute(["SET", "key", "old"])
+        self.store.execute(["EXPIRE", "key", "1"])
+        self.clock.advance(1)
+        self.assertEqual(self.store.execute(["SET", "key", "new value"]), "OK")
+        self.assertEqual(self.store.execute(["TTL", "key"]), "(integer) -1")
+        self.assertEqual(self.store.execute(["GET", "key"]), '"new value"')
+        self.assertEqual(
+            self.store.execute(["INFO", "memory"]),
+            "used_memory:12\nmaxmemory:0\nevicted_keys:0",
+        )
+
+    def test_rejected_overwrite_preserves_value_ttl_and_memory(self):
+        self.store.execute(["CONFIG", "SET", "maxmemory", "3"])
+        self.store.execute(["SET", "a", "11"])
+        self.store.execute(["EXPIRE", "a", "10"])
+        self.assertEqual(
+            self.store.execute(["SET", "a", "too large"]),
+            "(error) OOM command not allowed when used_memory > 'maxmemory'",
+        )
+        self.assertEqual(self.store.execute(["GET", "a"]), '"11"')
+        self.assertEqual(self.store.execute(["TTL", "a"]), "(integer) 10")
+        self.assertEqual(
+            self.store.execute(["INFO", "memory"]),
+            "used_memory:3\nmaxmemory:3\nevicted_keys:0",
+        )
+        self.clock.advance(10)
+        self.assertEqual(self.store.execute(["GET", "a"]), "(nil)")
+
+    def test_non_read_commands_and_missing_get_do_not_touch_lru(self):
+        commands = (
+            ["EXISTS", "a"],
+            ["TTL", "a"],
+            ["EXPIRE", "a", "10"],
+            ["DEL", "missing"],
+            ["GET", "missing"],
+            ["SET", "a", "too large"],
+        )
+        for command in commands:
+            with self.subTest(command=command):
+                store = MiniRedisStore(time_provider=self.clock.now)
+                store.execute(["CONFIG", "SET", "maxmemory", "6"])
+                store.execute(["SET", "a", "11"])
+                store.execute(["SET", "b", "22"])
+                store.execute(command)
+                self.assertEqual(store.execute(["SET", "c", "33"]), "OK")
+                self.assertEqual(store.execute(["GET", "a"]), "(nil)")
+                self.assertEqual(store.execute(["GET", "b"]), '"22"')
+                self.assertIn("evicted_keys:1", store.execute(["INFO", "memory"]))
+
+
 if __name__ == "__main__":
     unittest.main()
