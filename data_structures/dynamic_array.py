@@ -46,10 +46,7 @@ class DynamicArray:
         return self._size == 0
 
     def to_list(self):
-        result = []
-        for i in range(self._size):
-            result.append(self._items[i])
-        return result
+        return list(self)
 
     def _resize(self, new_capacity):
         new_items = [None] * new_capacity

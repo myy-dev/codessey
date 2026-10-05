@@ -11,8 +11,6 @@ def parse_command(line):
     """공백 포함 인용 값을 보존하는 명령줄 분할"""
 
     stripped = line.strip()
-    if stripped == "":
-        return []
 
     try:
         return shlex.split(stripped)

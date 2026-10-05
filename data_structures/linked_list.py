@@ -43,13 +43,9 @@ class DoublyLinkedList:
         return node
 
     def remove_front(self):
-        if self.head is None:
-            return None
         return self.remove_node(self.head)
 
     def remove_back(self):
-        if self.tail is None:
-            return None
         return self.remove_node(self.tail)
 
     def remove_node(self, node):
@@ -98,12 +94,7 @@ class DoublyLinkedList:
         return self._size == 0
 
     def to_list(self):
-        result = []
-        current = self.head
-        while current is not None:
-            result.append(current.data)
-            current = current.next
-        return result
+        return list(self)
 
     def __len__(self):
         return self._size
