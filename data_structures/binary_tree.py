@@ -5,6 +5,8 @@ class BinaryTreeNode:
     """명시적 left·right 자식 참조를 포함하는 BinaryTreeNode"""
 
     def __init__(self, data):
+        """노드 데이터, 좌우 자식, 소유 트리 초기화"""
+
         self.data = data
         self.left = None
         self.right = None
@@ -15,6 +17,8 @@ class BinaryTree:
     """네 가지 표준 순회를 지원하는 BinaryTree"""
 
     def __init__(self, root_data=None):
+        """빈 트리 또는 초기 루트 데이터를 포함한 트리 초기화"""
+
         self.root = None
         if root_data is not None:
             self.set_root(root_data)
@@ -39,21 +43,21 @@ class BinaryTree:
         return self._insert_child(parent, data, "right")
 
     def preorder(self):
-        """preorder 순회 결과"""
+        """전위 순회(현재 노드·왼쪽·오른쪽 순서) 결과 반환"""
 
         result = []
         self._preorder(self.root, result)
         return result
 
     def inorder(self):
-        """inorder 순회 결과"""
+        """중위 순회(왼쪽·현재 노드·오른쪽 순서) 결과 반환"""
 
         result = []
         self._inorder(self.root, result)
         return result
 
     def postorder(self):
-        """postorder 순회 결과"""
+        """후위 순회(왼쪽·오른쪽·현재 노드 순서) 결과 반환"""
 
         result = []
         self._postorder(self.root, result)
@@ -78,6 +82,8 @@ class BinaryTree:
         return result
 
     def _insert_child(self, parent, data, side):
+        """부모 소속과 자식 위치 검증 후 지정 방향의 자식 삽입"""
+
         if not isinstance(parent, BinaryTreeNode) or parent._owner is not self:
             raise ValueError("parent의 트리 소속 불일치")
         if getattr(parent, side) is not None:
@@ -89,6 +95,8 @@ class BinaryTree:
         return node
 
     def _preorder(self, node, result):
+        """전위 순회(현재 노드·왼쪽·오른쪽 순서) 결과 누적"""
+
         if node is None:
             return
         result.append(node.data)
@@ -96,6 +104,8 @@ class BinaryTree:
         self._preorder(node.right, result)
 
     def _inorder(self, node, result):
+        """중위 순회(왼쪽·현재 노드·오른쪽 순서) 결과 누적"""
+
         if node is None:
             return
         self._inorder(node.left, result)
@@ -103,6 +113,8 @@ class BinaryTree:
         self._inorder(node.right, result)
 
     def _postorder(self, node, result):
+        """후위 순회(왼쪽·오른쪽·현재 노드 순서) 결과 누적"""
+
         if node is None:
             return
         self._postorder(node.left, result)

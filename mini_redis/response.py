@@ -8,26 +8,38 @@ def _quoted(value):
 
 
 def simple_string(value):
+    """값을 그대로 사용하는 단순 문자열 응답 생성"""
+
     return value
 
 
 def nil():
+    """존재하지 않는 값을 나타내는 nil 응답 생성"""
+
     return "(nil)"
 
 
 def integer(value):
+    """정숫값을 포함하는 Redis 형식 응답 생성"""
+
     return f"(integer) {value}"
 
 
 def error(message):
+    """오류 메시지를 포함하는 Redis 형식 응답 생성"""
+
     return f"(error) {message}"
 
 
 def bulk_string(value):
+    """인용 및 이스케이프 처리된 벌크 문자열 응답 생성"""
+
     return _quoted(value)
 
 
 def array(values):
+    """값 목록의 번호를 포함하는 Redis 형식 배열 응답 생성"""
+
     if len(values) == 0:
         return "(empty array)"
 
@@ -50,6 +62,8 @@ def subscription(channel, subscription_count):
 
 
 def memory_info(used_memory, maxmemory, evicted_keys):
+    """메모리 사용량, 제한, 제거 통계 응답 생성"""
+
     return "\n".join(
         [
             f"used_memory:{used_memory}",

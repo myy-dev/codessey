@@ -27,6 +27,7 @@ class BinarySearchTree:
         current = self.root
         while current is not None:
             parent = current
+            # 중복값은 새 노드로 삽입하지 않고 기존 노드 반환
             if data == current.data:
                 return current
             if data < current.data:
