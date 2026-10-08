@@ -26,11 +26,19 @@ Redis의 핵심 동작을 학습하기 위해 순수 Python으로 구현한 CLI 
 │   ├── hash_map.py         # 체이닝 해시맵
 │   ├── linked_list.py      # 이중 연결 리스트
 │   └── min_heap.py         # TTL용 최소 힙
+├── scripts/
+│   ├── demo_basic_commands.py # 기본 명령어 예제 자동화
+│   └── demo_memory_lru.py     # 메모리 및 LRU 예제 자동화
 ├── tests/                  # 단위 및 통합 회귀 테스트
 └── docs/
-    ├── USER_GUIDE.md        # 명령어 명세 및 Pub/Sub 사용 안내
-    ├── USER_DEMO.md         # 실행 예제 및 예상 출력
-    └── STACK_QUEUE_DEQUE.md # 스택, 큐, 덱 및 힙 학습 정리
+    ├── user/
+    │   ├── USER_GUIDE.md    # CLI 명령어 명세
+    │   └── USER_DEMO.md     # 실행 예제 및 예상 출력
+    └── learning/
+        ├── STACK_QUEUE_DEQUE.md # 스택, 큐, 덱 학습 정리
+        ├── BINARY_TREE.md  # 이진 트리와 이진 탐색 트리
+        ├── MIN_HEAP.md     # 최소 힙 개념
+        └── PUB_SUB.md      # Pub/Sub 기본 개념
 ```
 
 ## 수행 항목 체크리스트
@@ -102,10 +110,10 @@ Redis의 핵심 동작을 학습하기 위해 순수 Python으로 구현한 CLI 
 
 - [x] 동적 배열: `append`, `get`, `set`, `remove` 연산과 capacity 2배 확장 구현
 - [x] 최소 힙 내부 저장소에 동적 배열 적용
-- [x] 스택, 큐, 덱 개념 조사 및 `docs/STACK_QUEUE_DEQUE.md` 문서 작성
-- [x] 이진 트리 및 전위·중위·후위·레벨 순회 구현
-- [x] 힙의 완전 이진 트리 배열 표현을 `docs/STACK_QUEUE_DEQUE.md`에 설명
-- [x] 이진 탐색 트리 삽입·탐색·삭제와 중위 순회 정렬 결과 구현
+- [x] 스택, 큐, 덱 개념 조사 및 [학습 문서](docs/learning/STACK_QUEUE_DEQUE.md) 작성
+- [x] 이진 트리 및 전위·중위·후위·레벨 순회 구현과 [학습 문서](docs/learning/BINARY_TREE.md) 작성
+- [x] 힙의 완전 이진 트리 배열 표현을 [최소 힙 문서](docs/learning/MIN_HEAP.md)에 설명
+- [x] 이진 탐색 트리 삽입·탐색·삭제와 중위 순회 정렬 결과 구현 및 [학습 문서](docs/learning/BINARY_TREE.md) 작성
 - [x] `PUBLISH`, `SUBSCRIBE` 명령어 및 채널 기반 메시징 구현
 - [x] 연결 리스트를 메시지 큐 또는 구독자별 버퍼로 재활용
 
@@ -124,5 +132,12 @@ Redis의 핵심 동작을 학습하기 위해 순수 Python으로 구현한 CLI 
 
 ### 사용자 가이드 (User Guide)
 
-- [USER_GUIDE.md](docs/USER_GUIDE.md)
-- [USER_DEMO.md](docs/USER_DEMO.md)
+- [USER_GUIDE.md](docs/user/USER_GUIDE.md)
+- [USER_DEMO.md](docs/user/USER_DEMO.md)
+
+### 참고 문서 (Additional Documentation)
+
+- [STACK_QUEUE_DEQUE.md](docs/learning/STACK_QUEUE_DEQUE.md)
+- [BINARY_TREE.md](docs/learning/BINARY_TREE.md)
+- [MIN_HEAP.md](docs/learning/MIN_HEAP.md)
+- [PUB_SUB.md](docs/learning/PUB_SUB.md)
