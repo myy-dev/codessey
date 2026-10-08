@@ -15,4 +15,4 @@ def parse_command(line):
     try:
         return shlex.split(stripped)
     except ValueError as exc:
-        raise ParseError("명령행 구문 오류") from exc
+        raise ParseError("syntax error") from exc
