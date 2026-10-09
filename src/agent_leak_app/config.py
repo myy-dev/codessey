@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import math
 import os
 from dataclasses import dataclass
 from pathlib import Path
@@ -41,8 +42,8 @@ def _positive_float(env: Mapping[str, str], name: str, default: float) -> float:
         value = float(raw)
     except ValueError as exc:
         raise ConfigError(f"{name} must be a number") from exc
-    if value <= 0:
-        raise ConfigError(f"{name} must be greater than zero")
+    if not math.isfinite(value) or value <= 0:
+        raise ConfigError(f"{name} must be finite and greater than zero")
     return value
 
 

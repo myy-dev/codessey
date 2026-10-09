@@ -7,6 +7,14 @@ from pathlib import Path
 from agent_leak_app.config import Config, ConfigError, parse_bool
 
 
+FLOAT_FIELDS = {
+    "AGENT_RUN_SECONDS": "run_seconds",
+    "LEAK_INTERVAL": "leak_interval",
+    "WATCHDOG_INTERVAL": "watchdog_interval",
+    "SCHEDULER_QUANTUM": "scheduler_quantum",
+}
+
+
 class ConfigTest(unittest.TestCase):
     def setUp(self) -> None:
         self.temporary = tempfile.TemporaryDirectory()
@@ -54,6 +62,21 @@ class ConfigTest(unittest.TestCase):
         self.env["CPU_MAX_OCCUPY"] = "101"
         with self.assertRaisesRegex(ConfigError, "between 10 and 100"):
             Config.from_env(self.env, euid=1000)
+
+    def test_non_finite_time_settings_are_rejected(self) -> None:
+        for name in FLOAT_FIELDS:
+            for value in ("nan", "inf", "-inf"):
+                with self.subTest(name=name, value=value):
+                    env = {**self.env, name: value}
+                    with self.assertRaisesRegex(ConfigError, f"{name} must be finite"):
+                        Config.from_env(env, euid=1000)
+
+    def test_finite_positive_time_settings_are_accepted(self) -> None:
+        for name, attribute in FLOAT_FIELDS.items():
+            for value in ("0.001", "1.25", "100"):
+                with self.subTest(name=name, value=value):
+                    config = Config.from_env({**self.env, name: value}, euid=1000)
+                    self.assertEqual(getattr(config, attribute), float(value))
 
     def test_secret_content_is_enforced(self) -> None:
         (Path(self.env["AGENT_KEY_PATH"]) / "secret.key").write_text("wrong\n", encoding="utf-8")
