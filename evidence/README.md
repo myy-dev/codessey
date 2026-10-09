@@ -8,9 +8,10 @@ make docker-evidence
 
 ## 실행 환경
 
-- Linux: Docker Desktop LinuxKit
+- 운영체제: Ubuntu 24.04 LTS 컨테이너 (`ubuntu:24.04`)
+- Linux 커널: Docker Desktop LinuxKit
 - 아키텍처: `aarch64`
-- Python: `3.13.15`
+- Python: `3.12.3`
 - 상세 환경: [`generated/summary.json`](generated/summary.json)
 
 ## 장애별 증거

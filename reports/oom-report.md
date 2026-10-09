@@ -2,7 +2,7 @@
 
 ## 1. Description (현상 설명)
 
-`MEMORY_LIMIT=50`으로 `agent-leak-app`의 메모리 시나리오를 실행하면 RSS가 지속적으로 증가합니다. 실행 약 0.74초 후 RSS가 52.5MB에 도달하면서 MemoryGuard가 프로세스를 종료하며, 자동 실험에서 종료 코드 `137`을 확인했습니다.
+`MEMORY_LIMIT=50`으로 `agent-leak-app`의 메모리 시나리오를 실행하면 RSS가 지속적으로 증가합니다. 부트 성공 약 0.94초 후 RSS가 53.6MB에 도달하면서 MemoryGuard가 프로세스를 종료하며, 자동 실험에서 종료 코드 `137`을 확인했습니다.
 
 ### 재현 절차
 
@@ -21,21 +21,21 @@ AGENT_SCENARIO=memory MEMORY_LIMIT=50 AGENT_RUN_SECONDS=2 ./bin/agent-leak-app
 
 ![OOM 메모리 변화](../evidence/charts/oom-memory.svg)
 
-관제 로그는 RSS가 6.1MB에서 48.5MB까지 증가하는 흐름을 기록했습니다.
+관제 로그는 RSS가 7.3MB에서 53.6MB까지 증가하는 흐름을 기록했습니다.
 
 ```text
-PROCESS:python3 ... RSS:24.4MB ...
-PROCESS:python3 ... RSS:32.4MB ...
-PROCESS:python3 ... RSS:40.5MB ...
-PROCESS:python3 ... RSS:48.5MB ...
+PROCESS:python3 ... RSS:37.6MB ...
+PROCESS:python3 ... RSS:41.6MB ...
+PROCESS:python3 ... RSS:45.6MB ...
+PROCESS:python3 ... RSS:53.6MB ...
 ```
 
 애플리케이션 내부 관측은 임계값을 넘은 마지막 할당까지 기록했습니다.
 
 ```text
-[MemoryGuard] RSS=48.5MB LIMIT=50MB chunks=7
-[MemoryGuard] RSS=52.5MB LIMIT=50MB chunks=8
-[CRITICAL] [MemoryGuard] Memory limit exceeded (52.5MB >= 50MB)
+[MemoryGuard] RSS=49.6MB LIMIT=50MB chunks=9
+[MemoryGuard] RSS=53.6MB LIMIT=50MB chunks=10
+[CRITICAL] [MemoryGuard] Memory limit exceeded (53.6MB >= 50MB)
 [CRITICAL] >>> [SYSTEM] SELF-TERMINATED (Memory Limit Exceeded) <<<
 ```
 
@@ -59,7 +59,7 @@ Linux에서 프로세스의 가상 주소 공간에 페이지가 할당되고 �
 | --- | --- | --- |
 | `MEMORY_LIMIT` | 50MB | 128MB |
 | 실행 조건 | 4MB/0.1초 할당 | 동일 |
-| 관측된 최대 RSS | 52.5MB (앱 로그) | 60.5MB (앱 로그) |
+| 관측된 최대 RSS | 53.6MB (앱 로그) | 53.6MB (앱 로그) |
 | 결과 | MemoryGuard 종료 | 설정된 실험 시간 정상 완료 |
 | 종료 코드 | 137 | 0 |
 

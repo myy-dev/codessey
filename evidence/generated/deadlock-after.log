@@ -1,7 +1,7 @@
-[2026-08-18 06:36:46.917] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=deadlock
-[2026-08-18 06:36:46.917] [INFO] [DeadlockLab] MULTI_THREAD_ENABLE=false; running locks sequentially
-[2026-08-18 06:36:46.917] [INFO] [Thread-A] acquired Resource-A
-[2026-08-18 06:36:46.917] [INFO] [Thread-A] acquired Resource-B; task completed
-[2026-08-18 06:36:46.917] [INFO] [Thread-B] acquired Resource-B
-[2026-08-18 06:36:46.917] [INFO] [Thread-B] acquired Resource-A; task completed
-[2026-08-18 06:36:46.917] [INFO] [DeadlockLab] COMPLETED without deadlock
+[2026-10-09 15:19:49.848] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=deadlock
+[2026-10-09 15:19:49.848] [INFO] [DeadlockLab] MULTI_THREAD_ENABLE=false; running locks sequentially
+[2026-10-09 15:19:49.848] [INFO] [Thread-A] acquired Resource-A
+[2026-10-09 15:19:49.848] [INFO] [Thread-A] acquired Resource-B; task completed
+[2026-10-09 15:19:49.849] [INFO] [Thread-B] acquired Resource-B
+[2026-10-09 15:19:49.849] [INFO] [Thread-B] acquired Resource-A; task completed
+[2026-10-09 15:19:49.849] [INFO] [DeadlockLab] COMPLETED without deadlock

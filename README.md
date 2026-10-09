@@ -14,7 +14,10 @@
 
 - **운영체제**: Ubuntu 24.04 LTS (`ubuntu:24.04` Docker 이미지)
 - **언어**: Python 3.11 이상
-- **검증 런타임**: Python 3.13.15, Linux aarch64
+- **실행 런타임**: Python 3.12 (Ubuntu 기본 패키지)
+- **검증 런타임**: Ubuntu 24.04 LTS, Python 3.12.3, Linux aarch64
+- **증거 생성 환경**: Ubuntu 24.04 LTS 컨테이너, Python 3.12.3, Docker Desktop LinuxKit, Linux aarch64
+- **CI 실행 환경**: Ubuntu 24.04 LTS, Python 3.12
 - **대상 프로세스명**: `agent-leak-app`
 - **실행 파일 래퍼**:
   - `bin/agent-app-leak-x86` (Intel/AMD64)
@@ -94,7 +97,7 @@ make verify
 ### 메모리 누수 및 OOM 분석
 
 - [x] `monitor.sh`로 대상 프로세스의 RSS를 0.1초 간격으로 관측
-- [x] RSS가 6.0MB에서 48.5MB 이상으로 상승하는 패턴 기록
+- [x] RSS의 7.3MB→53.6MB 상승 패턴 기록
 - [x] 프로세스 종료 직전·직후 애플리케이션 로그 수집
 - [x] `Memory limit exceeded` 로그 식별
 - [x] `SELF-TERMINATED` 로그 식별
@@ -120,7 +123,7 @@ make verify
 
 - [x] `ps -ef`로 무응답 상태에서도 프로세스 PID가 유지됨을 확인
 - [x] `ps -L`로 메인·워커 스레드 3개와 워커 CPU `0.0%` 확인
-- [x] 관제 로그에서 교착 후 CPU `0.0%`, RSS `20.5MB` 정체 확인
+- [x] 관제 로그에서 교착 후 CPU `0.0%`, RSS `13.6MB` 정체 확인
 - [x] 로그 출력이 멈춘 마지막 지점 수집
 - [x] `WAITING`, `BLOCKED`, `DEADLOCK DETECTED` 로그 식별
 - [x] Thread-A와 Thread-B의 상반된 락 획득 순서 및 순환 대기 증명

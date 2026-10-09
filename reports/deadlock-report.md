@@ -23,17 +23,17 @@ AGENT_SCENARIO=deadlock MULTI_THREAD_ENABLE=true ./bin/agent-leak-app
 
 ![Deadlock RSS 정체](../evidence/charts/deadlock-rss.svg)
 
-`ps -ef`는 PID `1277`이 존재함을 보여주고, `ps -L`은 메인 스레드와 두 워커 스레드가 살아 있으면서 워커 CPU가 각각 `0.0%`임을 보여줍니다. PID는 실행마다 달라질 수 있습니다.
+`ps -ef`는 PID `1188`이 존재함을 보여주고, `ps -L`은 메인 스레드와 두 워커 스레드가 살아 있으면서 워커 CPU가 각각 `0.0%`임을 보여줍니다. PID는 실행마다 달라질 수 있습니다.
 
 ```text
-$ ps -L -p 1277 -o pid,tid,pcpu,pmem,stat,comm
+$ ps -L -p 1188 -o pid,tid,pcpu,pmem,stat,comm
   PID   TID %CPU %MEM STAT COMMAND
- 1277  1277 10.5  0.2 Sl   python3
- 1277  1346  0.0  0.2 Sl   python3
- 1277  1347  0.0  0.2 Sl   python3
+ 1188  1188  2.0  0.1 Sl   python3
+ 1188  1225  0.0  0.1 Sl   python3
+ 1188  1226  0.0  0.1 Sl   python3
 ```
 
-교착 후 관제 로그는 CPU `0.0%`, RSS `20.5MB`, 스레드 3개가 반복적으로 유지되는 정체 상태를 기록했습니다.
+교착 후 관제 로그는 CPU `0.0%`, RSS `13.6MB`, 스레드 3개가 반복적으로 유지되는 정체 상태를 기록했습니다.
 
 ```text
 [Thread-B] WAITING for Resource-A; state=BLOCKED

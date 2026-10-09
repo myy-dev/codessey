@@ -1,14 +1,14 @@
 {
-  "generated_at": "2026-08-18T06:36:47Z",
-  "platform": "Linux-6.12.76-linuxkit-aarch64-with-glibc2.41",
-  "python": "3.13.15",
+  "generated_at": "2026-10-09T15:19:50Z",
+  "platform": "Linux-6.12.76-linuxkit-aarch64-with-glibc2.39",
+  "python": "3.12.3",
   "experiments": [
     {
       "name": "oom-before",
       "scenario": "memory",
       "exit_code": 137,
       "timed_out_while_alive": false,
-      "elapsed_seconds": 1.05,
+      "elapsed_seconds": 1.148,
       "settings": {
         "MEMORY_LIMIT": "50",
         "CPU_MAX_OCCUPY": "20",
@@ -16,13 +16,13 @@
         "AGENT_RUN_SECONDS": "2.0"
       },
       "monitor": {
-        "samples": 8,
+        "samples": 9,
         "min_cpu_percent": 0.0,
-        "max_cpu_percent": 90.9,
+        "max_cpu_percent": 9.1,
         "final_cpu_percent": 0.0,
-        "min_rss_mb": 6.0,
-        "max_rss_mb": 48.5,
-        "final_rss_mb": 48.5
+        "min_rss_mb": 7.3,
+        "max_rss_mb": 53.6,
+        "final_rss_mb": 53.6
       },
       "files": {
         "application_log": "evidence/generated/oom-before.log",
@@ -35,7 +35,7 @@
       "scenario": "memory",
       "exit_code": 0,
       "timed_out_while_alive": false,
-      "elapsed_seconds": 1.373,
+      "elapsed_seconds": 1.263,
       "settings": {
         "MEMORY_LIMIT": "128",
         "CPU_MAX_OCCUPY": "20",
@@ -43,13 +43,13 @@
         "AGENT_RUN_SECONDS": "1.0"
       },
       "monitor": {
-        "samples": 11,
+        "samples": 9,
         "min_cpu_percent": 0.0,
-        "max_cpu_percent": 90.9,
-        "final_cpu_percent": 8.3,
-        "min_rss_mb": 6.2,
-        "max_rss_mb": 56.5,
-        "final_rss_mb": 20.4
+        "max_cpu_percent": 18.2,
+        "final_cpu_percent": 0.0,
+        "min_rss_mb": 7.4,
+        "max_rss_mb": 53.6,
+        "final_rss_mb": 53.6
       },
       "files": {
         "application_log": "evidence/generated/oom-after.log",
@@ -62,7 +62,7 @@
       "scenario": "cpu",
       "exit_code": 143,
       "timed_out_while_alive": false,
-      "elapsed_seconds": 0.59,
+      "elapsed_seconds": 0.486,
       "settings": {
         "MEMORY_LIMIT": "50",
         "CPU_MAX_OCCUPY": "20",
@@ -71,13 +71,13 @@
         "AGENT_RUN_SECONDS": "2.0"
       },
       "monitor": {
-        "samples": 4,
+        "samples": 3,
         "min_cpu_percent": 0.0,
-        "max_cpu_percent": 100.0,
+        "max_cpu_percent": 90.9,
         "final_cpu_percent": 72.7,
-        "min_rss_mb": 6.1,
-        "max_rss_mb": 20.7,
-        "final_rss_mb": 20.7
+        "min_rss_mb": 7.3,
+        "max_rss_mb": 13.6,
+        "final_rss_mb": 13.6
       },
       "files": {
         "application_log": "evidence/generated/cpu-before.log",
@@ -90,7 +90,7 @@
       "scenario": "cpu",
       "exit_code": 0,
       "timed_out_while_alive": false,
-      "elapsed_seconds": 1.877,
+      "elapsed_seconds": 1.805,
       "settings": {
         "MEMORY_LIMIT": "50",
         "CPU_MAX_OCCUPY": "95",
@@ -99,13 +99,13 @@
         "AGENT_RUN_SECONDS": "1.5"
       },
       "monitor": {
-        "samples": 16,
+        "samples": 15,
         "min_cpu_percent": 0.0,
-        "max_cpu_percent": 91.7,
+        "max_cpu_percent": 90.9,
         "final_cpu_percent": 72.7,
-        "min_rss_mb": 6.0,
-        "max_rss_mb": 20.7,
-        "final_rss_mb": 20.7
+        "min_rss_mb": 7.2,
+        "max_rss_mb": 13.6,
+        "final_rss_mb": 13.6
       },
       "files": {
         "application_log": "evidence/generated/cpu-after.log",
@@ -118,7 +118,7 @@
       "scenario": "deadlock",
       "exit_code": -15,
       "timed_out_while_alive": true,
-      "elapsed_seconds": 1.669,
+      "elapsed_seconds": 1.665,
       "settings": {
         "MEMORY_LIMIT": "50",
         "CPU_MAX_OCCUPY": "20",
@@ -128,11 +128,11 @@
       "monitor": {
         "samples": 13,
         "min_cpu_percent": 0.0,
-        "max_cpu_percent": 90.9,
+        "max_cpu_percent": 27.3,
         "final_cpu_percent": 0.0,
-        "min_rss_mb": 6.0,
-        "max_rss_mb": 20.5,
-        "final_rss_mb": 20.5
+        "min_rss_mb": 7.3,
+        "max_rss_mb": 13.6,
+        "final_rss_mb": 13.6
       },
       "files": {
         "application_log": "evidence/generated/deadlock-before.log",
@@ -145,7 +145,7 @@
       "scenario": "deadlock",
       "exit_code": 0,
       "timed_out_while_alive": false,
-      "elapsed_seconds": 0.329,
+      "elapsed_seconds": 0.223,
       "settings": {
         "MEMORY_LIMIT": "50",
         "CPU_MAX_OCCUPY": "20",
@@ -153,13 +153,13 @@
         "AGENT_RUN_SECONDS": "1.0"
       },
       "monitor": {
-        "samples": 2,
+        "samples": 1,
         "min_cpu_percent": 0.0,
-        "max_cpu_percent": 100.0,
-        "final_cpu_percent": 100.0,
-        "min_rss_mb": 6.1,
-        "max_rss_mb": 19.2,
-        "final_rss_mb": 19.2
+        "max_cpu_percent": 0.0,
+        "final_cpu_percent": 0.0,
+        "min_rss_mb": 7.3,
+        "max_rss_mb": 7.3,
+        "final_rss_mb": 7.3
       },
       "files": {
         "application_log": "evidence/generated/deadlock-after.log",
@@ -172,7 +172,7 @@
       "scenario": "normal",
       "exit_code": 0,
       "timed_out_while_alive": false,
-      "elapsed_seconds": 0.741,
+      "elapsed_seconds": 0.643,
       "settings": {
         "MEMORY_LIMIT": "50",
         "CPU_MAX_OCCUPY": "20",
@@ -180,13 +180,13 @@
         "AGENT_RUN_SECONDS": "1.0"
       },
       "monitor": {
-        "samples": 6,
+        "samples": 4,
         "min_cpu_percent": 0.0,
-        "max_cpu_percent": 100.0,
+        "max_cpu_percent": 16.7,
         "final_cpu_percent": 8.3,
-        "min_rss_mb": 0.0,
-        "max_rss_mb": 20.5,
-        "final_rss_mb": 0.0
+        "min_rss_mb": 7.4,
+        "max_rss_mb": 13.6,
+        "final_rss_mb": 13.6
       },
       "files": {
         "application_log": "evidence/generated/scheduling-round-robin.log",

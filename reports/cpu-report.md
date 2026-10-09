@@ -21,12 +21,12 @@ AGENT_SCENARIO=cpu CPU_LOAD_PERCENT=75 CPU_MAX_OCCUPY=20 ./bin/agent-leak-app
 
 ![CPU 사용률 변화](../evidence/charts/cpu-usage.svg)
 
-`monitor.sh`는 대상 `python3` 프로세스의 CPU 사용률이 72~100% 범위까지 상승한 구간을 기록했습니다. 동일 시점 RSS는 약 20.7MB로 유지되어 메모리 장애와 구분됩니다.
+`monitor.sh`는 대상 `python3` 프로세스의 CPU 사용률이 72.7~90.9% 범위까지 상승한 구간을 기록했습니다. 동일 시점 RSS는 약 13.6MB로 유지되어 메모리 장애와 구분됩니다.
 
 ```text
 [Watchdog] START limit=20% target_load=75%
-[Watchdog] CPU=80.2% LIMIT=20%
-[CRITICAL] [Watchdog] CPU threshold exceeded (80.2% >= 20%)
+[Watchdog] CPU=80.5% LIMIT=20%
+[CRITICAL] [Watchdog] CPU threshold exceeded (80.5% >= 20%)
 [CRITICAL] >>> [SYSTEM] WATCHDOG: INITIATING EMERGENCY ABORT (SIGTERM) <<<
 ```
 
@@ -50,7 +50,7 @@ Watchdog은 `time.process_time()`의 증가량을 벽시계 시간과 비교하�
 | --- | --- | --- |
 | 목표 부하 | 75% | 75% |
 | `CPU_MAX_OCCUPY` | 20% | 95% |
-| Watchdog 측정 | 약 80% | 약 67~80% |
+| Watchdog 측정 | 80.5% | 65.4~79.9% |
 | 결과 | `SIGTERM` 보호 종료 | 1.5초 실험 정상 완료 |
 | 종료 코드 | 143 | 0 |
 

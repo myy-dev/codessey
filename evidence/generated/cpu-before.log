@@ -1,6 +1,6 @@
-[2026-08-18 06:36:42.756] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=cpu
-[2026-08-18 06:36:42.756] [INFO] [Watchdog] START limit=20% target_load=75%
-[2026-08-18 06:36:43.013] [INFO] [Watchdog] CPU=80.2% LIMIT=20%
-[2026-08-18 06:36:43.025] [CRITICAL] [Watchdog] CPU threshold exceeded (80.2% >= 20%)
-[2026-08-18 06:36:43.032] [CRITICAL] >>> [SYSTEM] WATCHDOG: INITIATING EMERGENCY ABORT (SIGTERM) <<<
-[2026-08-18 06:36:43.032] [INFO] [Watchdog] process stopped by protection policy
+[2026-10-09 15:19:45.856] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=cpu
+[2026-10-09 15:19:45.857] [INFO] [Watchdog] START limit=20% target_load=75%
+[2026-10-09 15:19:46.116] [INFO] [Watchdog] CPU=80.5% LIMIT=20%
+[2026-10-09 15:19:46.129] [CRITICAL] [Watchdog] CPU threshold exceeded (80.5% >= 20%)
+[2026-10-09 15:19:46.132] [CRITICAL] >>> [SYSTEM] WATCHDOG: INITIATING EMERGENCY ABORT (SIGTERM) <<<
+[2026-10-09 15:19:46.132] [INFO] [Watchdog] process stopped by protection policy

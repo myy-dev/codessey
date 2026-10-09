@@ -13,7 +13,7 @@
 <text x="66" y="130.0" text-anchor="end" font-family="monospace" font-size="12" fill="#4b5563">84</text>
 <line x1="78" y1="70.0" x2="898" y2="70.0" stroke="#e5e7eb"/>
 <text x="66" y="75.0" text-anchor="end" font-family="monospace" font-size="12" fill="#4b5563">105</text>
-<polyline points="78.0,345.0 146.3,106.9 214.7,214.0 283.0,345.0 351.3,345.0 419.7,345.0 488.0,345.0 556.3,345.0 624.7,345.0 693.0,345.0 761.3,345.0 829.7,345.0 898.0,345.0" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+<polyline points="78.0,345.0 146.3,273.5 214.7,345.0 283.0,345.0 351.3,345.0 419.7,345.0 488.0,345.0 556.3,345.0 624.7,345.0 693.0,345.0 761.3,345.0 829.7,345.0 898.0,345.0" fill="none" stroke="#2563eb" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
 <line x1="78" y1="382" x2="106" y2="382" stroke="#2563eb" stroke-width="4"/>
 <text x="114" y="387" font-family="sans-serif" font-size="14" fill="#111827">MULTI_THREAD_ENABLE=true</text>
 <line x1="78" y1="345" x2="898" y2="345" stroke="#111827"/>
