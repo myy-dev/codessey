@@ -2,13 +2,7 @@
 
 ## 프로젝트 개요 (Project Overview)
 
-- Linux 환경에서 실행되는 `agent-leak-app`의 **메모리 누수/OOM**, **CPU 과점유**, **교착상태(Deadlock)**를 직접 재현하고 관제 데이터와 로그로 분석하는 프로젝트입니다.
-- 장애를 단순 재부팅으로 넘기지 않고, 재현 경로와 객관적 증거를 바탕으로 근본 원인을 추론한 뒤 GitHub Issue 형식의 기술 리포트로 기록합니다.
-- 제공 ZIP/바이너리가 저장소에 포함되지 않아 원본을 디컴파일하지 않고, 동일한 부트 조건·로그·보호 정책·장애 상태를 재현하는 Python 실습 앱을 독립 구현했습니다.
-- **분석 원칙**: 관제 데이터와 로그를 먼저 수집하여 원인 증거를 보존한 뒤 조치합니다.
-- **분야**: AI/SW 기초
-- **구분**: Linux와 OS
-- **학습 시간**: 40시간
+- Linux 환경의 `agent-leak-app`에서 발생하는 **메모리 누수/OOM**, **CPU 과점유**, **교착상태(Deadlock)**의 직접 재현 및 관제 데이터·로그 기반 분석 프로젝트
 
 ## 실행 환경 (Environment)
 
@@ -22,7 +16,7 @@
 - **실행 파일 래퍼**:
   - `bin/agent-app-leak-x86` (Intel/AMD64)
   - `bin/agent-app-leak-arm64` (Apple Silicon/ARM64)
-- **실행 계정**: `root`가 아닌 일반 사용자
+- **실행 계정**: 비루트 일반 사용자
 - **사용 도구**: `monitor.sh`, `ps`, `ps -L`, `kill` 등 Linux 표준 명령어
 - **네트워크**: `0.0.0.0:15034` 실제 바인딩
 
@@ -90,7 +84,7 @@ make verify
 - [x] `0.0.0.0:15034` 실제 소켓 바인딩 및 점유 충돌 검증
 - [x] `MEMORY_LIMIT` 정수·`50~512MB` 범위 검증
 - [x] `CPU_MAX_OCCUPY` 정수·`10~100%` 범위 검증
-- [x] `MULTI_THREAD_ENABLE`의 `true/false`, `1/0`, `yes/no` 처리
+- [x] `MULTI_THREAD_ENABLE`의 `true/false`, `1/0`, `yes/no` 값 처리
 - [x] 필수 조건 실패 시 원인이 포함된 부트 실패 메시지와 종료 코드 `2` 반환
 - [x] 유효한 설정에서 부트 시퀀스 및 고정 포트 바인딩 정상 통과
 
@@ -121,7 +115,7 @@ make verify
 
 ### 교착상태(Deadlock) 진단
 
-- [x] `ps -ef`로 무응답 상태에서도 프로세스 PID가 유지됨을 확인
+- [x] `ps -ef` 기반 무응답 상태의 프로세스 PID 유지 확인
 - [x] `ps -L`로 메인·워커 스레드 3개와 워커 CPU `0.0%` 확인
 - [x] 관제 로그에서 교착 후 CPU `0.0%`, RSS `13.6MB` 정체 확인
 - [x] 로그 출력이 멈춘 마지막 지점 수집
@@ -155,25 +149,25 @@ make verify
 
 ## 보너스 과제
 
-### 스케줄링 알고리즘 추론
+### 작업 단위 Round-Robin 시뮬레이션 분석
 
-- [x] 정상 실행 상태에서 Thread-A·B·C 작업 로그 수집
-- [x] 타임스탬프와 실행 순서를 기준으로 교체 패턴 분석
-- [x] 작업 완료 전에 다른 작업이 실행되는 선점형 패턴 확인
-- [x] FCFS·Priority를 배제하고 Round-Robin으로 추론
-- [x] A→B→C 순환 로그와 동일 작업량을 근거로 제시
-- [x] Round-Robin의 장점과 문맥 교환 비용 분석
-- [x] 대화형 웹 서버와 순차 배치 처리의 적합성 비교
-- [x] [스케줄링 알고리즘 추론 리포트](reports/scheduling-report.md) 작성
+- [x] 단일 스레드에서 작업 A·B·C를 나타내는 `Thread-A·B·C` 로그 수집
+- [x] 타임스탬프와 출력 순서를 기준으로 순환 작업 배분 패턴 분석
+- [x] 각 작업의 완료 전 다음 작업 단위로 전환하는 시뮬레이션 확인
+- [x] 구현 및 로그 기반 작업 단위 Round-Robin 순환 정책 확인
+- [x] A→B→C 순환 로그와 동일한 25% 진행 단위를 근거로 제시
+- [x] 일반 Round-Robin 알고리즘의 장점과 문맥 교환 비용 설명
+- [x] 일반 알고리즘 관점의 대화형 웹 서버·순차 배치 처리 적합성 비교
+- [x] [Round-Robin 시뮬레이션 분석 리포트](reports/scheduling-report.md) 작성
 
 ## 제약 사항 (Constraints)
 
-- 바이너리를 디컴파일하거나 리버스 엔지니어링하지 않습니다.
-- 실습 앱은 비루트 Docker 컨테이너 또는 격리된 로컬 환경에서 실행합니다.
-- 공유 네트워크에서는 방화벽 설정과 `15034` 포트 노출에 유의합니다.
-- 관제와 진단에는 Linux 표준 명령어와 Python 표준 라이브러리만 사용합니다.
-- 외부 Python 패키지 없이 실행·테스트·증거 생성을 완료합니다.
-- 실습용 메모리/CPU 부하는 운영 서버에서 실행하지 않습니다.
+- 바이너리 디컴파일 및 리버스 엔지니어링 금지
+- 비루트 Docker 컨테이너 또는 격리된 로컬 환경에서의 실습 앱 실행
+- 공유 네트워크의 방화벽 설정 및 `15034` 포트 노출 주의
+- 관제·진단 도구를 Linux 표준 명령어와 Python 표준 라이브러리로 제한
+- 외부 Python 패키지 없이 실행·테스트·증거 생성 완료
+- 운영 서버에서의 실습용 메모리/CPU 부하 실행 금지
 
 ## 커스텀 설정값 명세
 
@@ -186,7 +180,7 @@ make verify
 | `AGENT_LOG_DIR` | 사용자 지정 로그 경로 | 존재 및 쓰기 권한 필수 |
 | `MEMORY_LIMIT` | `50~512` | 정수, 단위 MB |
 | `CPU_MAX_OCCUPY` | `10~100` | 정수, 단위 % |
-| `MULTI_THREAD_ENABLE` | `true/false` | `1/0`, `yes/no`도 허용 |
+| `MULTI_THREAD_ENABLE` | `true/false` | 추가 허용값: `1/0`, `yes/no` |
 | `secret.key` | `agent_api_key_test` | `$AGENT_HOME/api_keys/secret.key`에 저장 |
 | `AGENT_SCENARIO` | `normal` | `normal`, `memory`, `cpu`, `deadlock` |
 | `AGENT_RUN_SECONDS` | `2.0` | 자동 실험 실행 시간 |
@@ -200,7 +194,7 @@ make docker-evidence # 7개 실험 및 증거·그래프 재생성
 make verify          # README 요구사항과 SHA-256 무결성 검사
 ```
 
-현재 검증 결과:
+검증 결과:
 
 - **테스트**: 14개 통과
 - **Linux 실험**: 7개 통과
@@ -215,8 +209,8 @@ make verify          # README 요구사항과 SHA-256 무결성 검사
 - [x] [Deadlock 분석 리포트](reports/deadlock-report.md)
 - [x] [로그·명령어 출력·그래프 증거 자료](evidence/README.md)
 - [x] [환경변수 변경 전후 자동 비교 결과](evidence/generated/summary.json)
-- [x] [스케줄링 알고리즘 추론 리포트](reports/scheduling-report.md)
-- [x] 제출용 GitHub Repository: [myy-dev/B1-2](https://github.com/myy-dev/B1-2)
+- [x] [Round-Robin 시뮬레이션 분석 리포트](reports/scheduling-report.md)
+- [x] 제출용 GitHub Repository: [myy-dev/B4-2](https://github.com/myy-dev/B4-2)
 
 ### 결과 그래프
 
@@ -230,7 +224,7 @@ make verify          # README 요구사항과 SHA-256 무결성 검사
 
 ## 완료 기준
 
-이 저장소의 구현·테스트·증거·리포트를 통해 다음 내용을 설명하고 재현할 수 있습니다.
+구현·테스트·증거·리포트 기반 설명·재현 항목
 
 - 메모리 구조와 메모리 누수가 프로세스 및 시스템에 미치는 영향
 - 특정 프로세스의 CPU 과점유가 시스템 지연을 유발하는 원리
