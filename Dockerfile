@@ -1,10 +1,10 @@
-FROM python:3.13-slim
+FROM ubuntu:24.04
 
 ARG APP_UID=10001
 ARG APP_GID=10001
 
 RUN apt-get update \
-    && apt-get install -y --no-install-recommends procps \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends python3 procps \
     && rm -rf /var/lib/apt/lists/* \
     && groupadd --gid "${APP_GID}" appuser \
     && useradd --uid "${APP_UID}" --gid "${APP_GID}" --create-home appuser

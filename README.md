@@ -12,7 +12,7 @@
 
 ## 실행 환경 (Environment)
 
-- **운영체제**: Linux (Docker Desktop LinuxKit 검증 완료)
+- **운영체제**: Ubuntu 24.04 LTS (`ubuntu:24.04` Docker 이미지)
 - **언어**: Python 3.11 이상
 - **검증 런타임**: Python 3.13.15, Linux aarch64
 - **대상 프로세스명**: `agent-leak-app`

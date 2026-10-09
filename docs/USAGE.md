@@ -6,6 +6,8 @@
 
 Docker Desktop 또는 Docker Engine이 실행 중이어야 합니다.
 
+실습 컨테이너 환경: Ubuntu 24.04 LTS (`ubuntu:24.04`), Python 3.12.
+
 ```bash
 make docker-build
 make docker-test
