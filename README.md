@@ -11,7 +11,6 @@
 - **실행 런타임**: Python 3.12 (Ubuntu 기본 패키지)
 - **검증 런타임**: Ubuntu 24.04 LTS, Python 3.12.3, Linux aarch64
 - **증거 생성 환경**: Ubuntu 24.04 LTS 컨테이너, Python 3.12.3, Docker Desktop LinuxKit, Linux aarch64
-- **CI 실행 환경**: Ubuntu 24.04 LTS, Python 3.12
 - **대상 프로세스명**: `agent-leak-app`
 - **실행 파일 래퍼**:
   - `bin/agent-app-leak-x86` (Intel/AMD64)
@@ -46,12 +45,11 @@
 ├── evidence/
 │   ├── generated/                   # Linux 실행 로그·ps 출력·요약·해시
 │   └── charts/                      # OOM·CPU·Deadlock·스케줄링 그래프
-├── reports/
-│   ├── oom-report.md                # 메모리 누수/OOM 분석
-│   ├── cpu-report.md                # CPU 과점유 분석
-│   ├── deadlock-report.md           # 교착상태 분석
-│   └── scheduling-report.md         # 스케줄링 알고리즘 추론
-└── .github/workflows/test.yml       # Linux CI 검증
+└── reports/
+    ├── oom-report.md                # 메모리 누수/OOM 분석
+    ├── cpu-report.md                # CPU 과점유 분석
+    ├── deadlock-report.md           # 교착상태 분석
+    └── scheduling-report.md         # 스케줄링 알고리즘 추론
 ```
 
 ## 빠른 실행 (Quick Start)
@@ -200,7 +198,6 @@ make verify          # README 요구사항과 SHA-256 무결성 검사
 - **Linux 실험**: 7개 통과
 - **검증된 증거 파일**: 21개
 - **요구사항 검사**: PASS
-- **CI**: GitHub Actions에서 Linux 테스트 및 증거 검증 자동 실행
 
 ## 결과물 (Deliverables)
 
