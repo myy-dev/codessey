@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import argparse
 import html
 import hashlib
 import json
@@ -11,16 +12,14 @@ from pathlib import Path
 
 
 ROOT = Path(__file__).resolve().parents[1]
-GENERATED = ROOT / "evidence" / "generated"
-CHARTS = ROOT / "evidence" / "charts"
 COLORS = ("#2563eb", "#dc2626", "#059669", "#7c3aed")
 
 
-def read_metric(filename: str, metric: str) -> list[float]:
+def read_metric(path: Path, metric: str) -> list[float]:
     pattern = re.compile(rf"{metric}:([0-9.]+)(?:%|MB)")
     return [
         float(match.group(1))
-        for line in (GENERATED / filename).read_text(encoding="utf-8").splitlines()
+        for line in path.read_text(encoding="utf-8").splitlines()
         if (match := pattern.search(line))
     ]
 
@@ -37,18 +36,20 @@ def trim_process_teardown(values: list[float]) -> list[float]:
     return trimmed
 
 
-def update_manifest() -> None:
+def update_manifest(output_root: Path) -> None:
+    generated = output_root / "evidence" / "generated"
+    charts = output_root / "evidence" / "charts"
     artifact_paths = [
         path
-        for path in sorted(GENERATED.iterdir())
+        for path in sorted(generated.iterdir())
         if path.is_file() and path.name != "manifest.sha256.json"
     ]
-    artifact_paths.extend(sorted(CHARTS.glob("*.svg")))
+    artifact_paths.extend(sorted(charts.glob("*.svg")))
     manifest = {
-        str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
+        str(path.relative_to(output_root)): hashlib.sha256(path.read_bytes()).hexdigest()
         for path in artifact_paths
     }
-    (GENERATED / "manifest.sha256.json").write_text(
+    (generated / "manifest.sha256.json").write_text(
         json.dumps(manifest, indent=2) + "\n",
         encoding="utf-8",
     )
@@ -65,7 +66,7 @@ def points(values: list[float], left: int, top: int, width: int, height: int, ma
 
 
 def write_line_chart(
-    filename: str,
+    path: Path,
     title: str,
     unit: str,
     series: list[tuple[str, list[float]]],
@@ -119,11 +120,11 @@ def write_line_chart(
             "</svg>",
         ]
     )
-    (CHARTS / filename).write_text("\n".join(elements) + "\n", encoding="utf-8")
+    path.write_text("\n".join(elements) + "\n", encoding="utf-8")
 
 
-def write_scheduler_chart() -> None:
-    log_text = (GENERATED / "scheduling-round-robin.log").read_text(encoding="utf-8")
+def write_scheduler_chart(log_path: Path, chart_path: Path) -> None:
+    log_text = log_path.read_text(encoding="utf-8")
     labels = re.findall(r"\[(Thread-[ABC])\] (?:Task Started|Resumed)", log_text)
     box_width = 68
     total_width = 90 + box_width * len(labels)
@@ -149,60 +150,67 @@ def write_scheduler_chart() -> None:
             "</svg>",
         ]
     )
-    (CHARTS / "scheduling-timeline.svg").write_text(
+    chart_path.write_text(
         "\n".join(elements) + "\n", encoding="utf-8"
     )
 
 
-def main() -> int:
-    CHARTS.mkdir(parents=True, exist_ok=True)
+def main(output_root: Path = ROOT) -> int:
+    generated = output_root / "evidence" / "generated"
+    charts = output_root / "evidence" / "charts"
+    charts.mkdir(parents=True, exist_ok=True)
     write_line_chart(
-        "oom-memory.svg",
+        charts / "oom-memory.svg",
         "OOM 실험: MEMORY_LIMIT 변경 전후 RSS",
         "RSS (MB)",
         [
             (
                 "Before: 50MB",
-                trim_process_teardown(read_metric("oom-before-monitor.log", "RSS")),
+                trim_process_teardown(read_metric(generated / "oom-before-monitor.log", "RSS")),
             ),
             (
                 "After: 128MB",
-                trim_process_teardown(read_metric("oom-after-monitor.log", "RSS")),
+                trim_process_teardown(read_metric(generated / "oom-after-monitor.log", "RSS")),
             ),
         ],
         maximum=135,
         threshold=50,
     )
     write_line_chart(
-        "cpu-usage.svg",
+        charts / "cpu-usage.svg",
         "CPU 실험: 동일 부하에서 임계값 변경 전후",
         "CPU (%)",
         [
-            ("Before: limit 20%", read_metric("cpu-before-monitor.log", "CPU")),
-            ("After: limit 95%", read_metric("cpu-after-monitor.log", "CPU")),
+            ("Before: limit 20%", read_metric(generated / "cpu-before-monitor.log", "CPU")),
+            ("After: limit 95%", read_metric(generated / "cpu-after-monitor.log", "CPU")),
         ],
         maximum=105,
         threshold=20,
     )
     write_line_chart(
-        "deadlock-rss.svg",
+        charts / "deadlock-rss.svg",
         "Deadlock 실험: 프로세스 RSS 정체",
         "RSS (MB)",
-        [("MULTI_THREAD_ENABLE=true", read_metric("deadlock-before-monitor.log", "RSS"))],
+        [("MULTI_THREAD_ENABLE=true", read_metric(generated / "deadlock-before-monitor.log", "RSS"))],
         maximum=30,
     )
     write_line_chart(
-        "deadlock-cpu.svg",
+        charts / "deadlock-cpu.svg",
         "Deadlock 실험: 교착 후 CPU 활동 소멸",
         "CPU (%)",
-        [("MULTI_THREAD_ENABLE=true", read_metric("deadlock-before-monitor.log", "CPU"))],
+        [("MULTI_THREAD_ENABLE=true", read_metric(generated / "deadlock-before-monitor.log", "CPU"))],
         maximum=105,
     )
-    write_scheduler_chart()
-    update_manifest()
-    print(f"Charts generated: {CHARTS}")
+    write_scheduler_chart(generated / "scheduling-round-robin.log", charts / "scheduling-timeline.svg")
+    update_manifest(output_root)
+    print(f"Charts generated: {charts}")
     return 0
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--output-root", type=Path, default=ROOT,
+        help="출력 기준 디렉터리 (기본값: 프로젝트 루트)",
+    )
+    raise SystemExit(main(parser.parse_args().output_root.resolve()))

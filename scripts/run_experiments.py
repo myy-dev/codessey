@@ -3,7 +3,7 @@
 
 from __future__ import annotations
 
-import hashlib
+import argparse
 import json
 import os
 import platform
@@ -16,10 +16,10 @@ import time
 from dataclasses import dataclass
 from pathlib import Path
 
+from generate_charts import main as generate_charts
+
 
 ROOT = Path(__file__).resolve().parents[1]
-EVIDENCE_DIR = ROOT / "evidence" / "generated"
-LAB_ROOT = ROOT / ".lab" / "experiments"
 MONITOR = ROOT / "scripts" / "monitor.sh"
 
 
@@ -101,8 +101,8 @@ EXPERIMENTS = (
 )
 
 
-def prepare_environment(name: str) -> tuple[dict[str, str], Path]:
-    experiment_root = LAB_ROOT / name
+def prepare_environment(name: str, output_root: Path) -> dict[str, str]:
+    experiment_root = output_root / ".lab" / "experiments" / name
     if experiment_root.exists():
         shutil.rmtree(experiment_root)
     agent_home = experiment_root / "agent-home"
@@ -131,7 +131,7 @@ def prepare_environment(name: str) -> tuple[dict[str, str], Path]:
             "WATCHDOG_INTERVAL": "0.25",
         }
     )
-    return environment, experiment_root
+    return environment
 
 
 def capture_process_snapshot(pid: int, destination: Path) -> None:
@@ -173,14 +173,15 @@ def parse_monitor(path: Path) -> dict[str, float]:
     }
 
 
-def run_experiment(experiment: Experiment) -> dict[str, object]:
-    environment, _ = prepare_environment(experiment.name)
+def run_experiment(experiment: Experiment, output_root: Path) -> dict[str, object]:
+    environment = prepare_environment(experiment.name, output_root)
     environment.update(experiment.overrides)
     environment["AGENT_SCENARIO"] = experiment.scenario
 
-    app_log = EVIDENCE_DIR / f"{experiment.name}.log"
-    monitor_log = EVIDENCE_DIR / f"{experiment.name}-monitor.log"
-    snapshot_file = EVIDENCE_DIR / f"{experiment.name}-ps.txt"
+    evidence_dir = output_root / "evidence" / "generated"
+    app_log = evidence_dir / f"{experiment.name}.log"
+    monitor_log = evidence_dir / f"{experiment.name}-monitor.log"
+    snapshot_file = evidence_dir / f"{experiment.name}-ps.txt"
     started = time.monotonic()
     timed_out = False
 
@@ -249,33 +250,34 @@ def run_experiment(experiment: Experiment) -> dict[str, object]:
         },
         "monitor": parse_monitor(monitor_log),
         "files": {
-            "application_log": str(app_log.relative_to(ROOT)),
-            "monitor_log": str(monitor_log.relative_to(ROOT)),
-            "process_snapshot": str(snapshot_file.relative_to(ROOT)) if snapshot_file.exists() else None,
+            "application_log": str(app_log.relative_to(output_root)),
+            "monitor_log": str(monitor_log.relative_to(output_root)),
+            "process_snapshot": str(snapshot_file.relative_to(output_root)) if snapshot_file.exists() else None,
         },
     }
 
 
-def sha256(path: Path) -> str:
-    digest = hashlib.sha256()
-    digest.update(path.read_bytes())
-    return digest.hexdigest()
-
-
 def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--output-root", type=Path, default=ROOT,
+        help="출력 기준 디렉터리 (기본값: 프로젝트 루트)",
+    )
+    output_root = parser.parse_args().output_root.resolve()
     if os.geteuid() == 0:
         print("Evidence generation must run as a non-root user.", file=sys.stderr)
         return 2
 
-    EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
-    for old_file in EVIDENCE_DIR.iterdir():
+    evidence_dir = output_root / "evidence" / "generated"
+    evidence_dir.mkdir(parents=True, exist_ok=True)
+    for old_file in evidence_dir.iterdir():
         if old_file.is_file():
             old_file.unlink()
 
     results = []
     for experiment in EXPERIMENTS:
         print(f"[run] {experiment.name}", flush=True)
-        results.append(run_experiment(experiment))
+        results.append(run_experiment(experiment, output_root))
 
     summary = {
         "generated_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
@@ -283,27 +285,11 @@ def main() -> int:
         "python": platform.python_version(),
         "experiments": results,
     }
-    summary_path = EVIDENCE_DIR / "summary.json"
+    summary_path = evidence_dir / "summary.json"
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
 
-    subprocess.run(
-        [sys.executable, "scripts/generate_charts.py"],
-        cwd=ROOT,
-        check=True,
-    )
-
-    artifact_paths = [
-        path
-        for path in sorted(EVIDENCE_DIR.iterdir())
-        if path.is_file() and path.name != "manifest.sha256.json"
-    ]
-    artifact_paths.extend(sorted((ROOT / "evidence" / "charts").glob("*.svg")))
-    manifest = {str(path.relative_to(ROOT)): sha256(path) for path in artifact_paths}
-    (EVIDENCE_DIR / "manifest.sha256.json").write_text(
-        json.dumps(manifest, indent=2) + "\n",
-        encoding="utf-8",
-    )
-    print(f"Evidence generated: {len(results)} experiments -> {EVIDENCE_DIR}")
+    generate_charts(output_root)
+    print(f"Evidence generated: {len(results)} experiments -> {evidence_dir}")
     return 0
 
 

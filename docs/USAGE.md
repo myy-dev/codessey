@@ -14,10 +14,21 @@ make docker-test
 make docker-evidence
 ```
 
+`make docker-test`는 임시 디렉터리에서 실험과 그래프 생성을 검증하며 기존 제출 증거를 보존합니다.
+
 `make docker-evidence`는 비루트 사용자로 Linux 컨테이너를 실행하고 다음 결과를 생성합니다.
 
 - `evidence/generated/`: 애플리케이션 로그, `monitor.sh` 로그, `ps`/`ps -L` 출력, 요약 JSON, SHA-256 매니페스트
 - `evidence/charts/`: 실제 관제 로그로 만든 SVG 그래프
+
+별도 출력 위치 지정 방법:
+
+```bash
+python3 scripts/run_experiments.py --output-root /tmp/agent-lab-results
+python3 scripts/generate_charts.py --output-root /tmp/agent-lab-results
+```
+
+지정한 경로 아래의 `evidence/generated/`·`evidence/charts/`에 증거 저장, `.lab/experiments/`에 실험 환경 생성. 옵션 생략 시 기존 프로젝트 경로 사용.
 
 ## 2. 호스트에서 환경 준비
 
