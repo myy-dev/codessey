@@ -1,230 +1,126 @@
-# Linux 시스템 장애 분석 및 트러블슈팅
+# 컴퓨터가 갑자기 느려지거나 멈췄을 때 원인 찾아 고치기
 
 ## 프로젝트 개요 (Project Overview)
 
-- Linux 환경의 `agent-leak-app`에서 발생하는 **메모리 누수/OOM**, **CPU 과점유**, **교착상태(Deadlock)**의 직접 재현 및 관제 데이터·로그 기반 분석 프로젝트
+과제 제공 앱의 메모리 증가·CPU 과점유·교착상태 재현 및 관제·로그 기반 원인 분석과 조치 전후 비교 프로젝트
 
 ## 실행 환경 (Environment)
 
-- **운영체제**: Ubuntu 24.04 LTS (`ubuntu:24.04` Docker 이미지)
-- **언어**: Python 3.11 이상
-- **실행 런타임**: Python 3.12 (Ubuntu 기본 패키지)
-- **검증 런타임**: Ubuntu 24.04 LTS, Python 3.12.3, Linux aarch64
-- **증거 생성 환경**: Ubuntu 24.04 LTS 컨테이너, Python 3.12.3, Docker Desktop LinuxKit, Linux aarch64
-- **대상 프로세스명**: `agent-leak-app`
-- **실행 파일 래퍼**:
-  - `bin/agent-app-leak-x86` (Intel/AMD64)
-  - `bin/agent-app-leak-arm64` (Apple Silicon/ARM64)
-- **실행 계정**: 비루트 일반 사용자
-- **사용 도구**: `monitor.sh`, `ps`, `ps -L`, `kill` 등 Linux 표준 명령어
-- **네트워크**: `0.0.0.0:15034` 실제 바인딩
+- **운영체제·아키텍처**: Ubuntu 24.04 LTS / ARM64
+- **컨테이너 조건**: 외부 네트워크 차단, 메모리 768MB, CPU 1개 분량, PID 64개
+- **제공 앱**: `agent-app-leak/agent-leak-app-arm64`
+- **실행 계정**: `appuser`
+- **사용 도구**: Shell, `monitor.sh`, `/proc`, `ps`, `ps -L`, `pgrep`, `kill`
 
 ## 프로젝트 구조 (Project Structure)
 
 ```text
 .
-├── README.md                         # 프로젝트 설명 및 완료 체크리스트
-├── Dockerfile                       # 비루트 Linux 실습 이미지
-├── compose.yaml                     # 개별 시나리오 실행 구성
-├── Makefile                         # 테스트·증거 생성·검증 명령
-├── bin/
-│   ├── agent-leak-app               # 공통 실행 래퍼
-│   ├── agent-app-leak-x86           # x86_64 실행 래퍼
-│   └── agent-app-leak-arm64         # ARM64 실행 래퍼
-├── src/agent_leak_app/
-│   ├── config.py                    # 환경변수 및 부트 조건 검증
-│   └── app.py                       # OOM·CPU·Deadlock·정상 시나리오
+├── README.md                     # 프로젝트 설명 및 수행 항목 체크리스트
+├── Dockerfile                    # 일반 사용자 실행 환경·디렉터리·키 준비
+├── compose.yaml                  # 컨테이너 격리·자원 제한·장애 설정
+├── agent-app-leak/
+│   └── agent-leak-app-arm64      # ARM64 제공 원본
 ├── scripts/
-│   ├── setup_lab.sh                 # 디렉터리·키·환경변수 초기화
-│   ├── select_binary.sh             # 시스템 아키텍처별 래퍼 선택
-│   ├── monitor.sh                   # CPU·RSS·상태·스레드 관제
-│   ├── run_experiments.py           # 7개 Before/After 실험 자동화
-│   ├── generate_charts.py           # 관제 로그 기반 SVG 생성
-│   └── verify_requirements.py       # README 요구사항 자동 검증
-├── tests/                            # 부트·설정·장애 통합 테스트
-├── evidence/
-│   ├── generated/                   # Linux 실행 로그·ps 출력·요약·해시
-│   └── charts/                      # OOM·CPU·Deadlock·스케줄링 그래프
-└── reports/
-    ├── oom-report.md                # 메모리 누수/OOM 분석
-    ├── cpu-report.md                # CPU 과점유 분석
-    ├── deadlock-report.md           # 교착상태 분석
-    └── scheduling-report.md         # 스케줄링 알고리즘 추론
+│   └── monitor.sh               # 실제 워커의 CPU·RSS·상태·스레드 관제
+├── docs/
+│   ├── USER_DEMO.md             # 동료 평가용 실행·관제·종료 명령
+│   ├── EVIDENCE.md              # 실행 환경·증거 목록·관제 수치 해석
+│   └── reports/
+│       ├── oom-report.md        # 메모리 증가·MemoryGuard 종료 분석
+│       ├── cpu-report.md        # CPU 부하 증가·보호 종료 분석
+│       └── deadlock-report.md   # 순환 자원 대기·작업 중단 분석
+└── evidence/
+    ├── revalidation.log        # 별도 재실행의 종료 코드·경과시간·정리 기록
+    └── generated/              # 앱·관제 로그 및 프로세스·스레드 출력 원문
 ```
 
-## 빠른 실행 (Quick Start)
+### 프로젝트 흐름
 
-```bash
-make docker-build
-make docker-test
-make docker-evidence
-make verify
+```text
+Docker 실습 환경 준비
+        ↓
+장애 조건으로 제공 앱 실행
+        ↓
+실제 워커의 관제·로그·스레드 증거 수집
+        ↓
+환경변수 변경 후 재실행 및 조치 전후 비교
+        ↓
+GitHub Issue 형식의 분석 리포트 3건 작성
 ```
-
-- 수동 실습 방법: [실습 실행 가이드](docs/USAGE.md)
-- 증거 파일 설명: [증거 자료 인덱스](evidence/README.md)
-- 장애 분석 문서: [리포트 인덱스](reports/README.md)
 
 ## 수행 항목 체크리스트
 
-### 사전 준비 및 부트 검증
+### 사전 준비 및 앱 부트 조건
 
-- [x] 제공 바이너리 미첨부 상태에서 독립 호환 실습 앱 구현
-- [x] `x86_64`·`arm64` 실행 래퍼 및 자동 아키텍처 선택 스크립트 구현
-- [x] `root` 실행 자동 거부
-- [x] `AGENT_HOME` 필수 환경변수 검증
-- [x] `AGENT_UPLOAD_DIR=$AGENT_HOME/upload_files` 경로·디렉터리 검증
-- [x] `AGENT_KEY_PATH=$AGENT_HOME/api_keys` 경로·디렉터리 검증
-- [x] `AGENT_LOG_DIR` 존재 및 쓰기 권한 검증
-- [x] `$AGENT_HOME/api_keys/secret.key` 존재 검증
-- [x] `secret.key` 내용 `agent_api_key_test` 검증
-- [x] `AGENT_PORT=15034` 고정값 검증
-- [x] `0.0.0.0:15034` 실제 소켓 바인딩 및 점유 충돌 검증
-- [x] `MEMORY_LIMIT` 정수·`50~512MB` 범위 검증
-- [x] `CPU_MAX_OCCUPY` 정수·`10~100%` 범위 검증
-- [x] `MULTI_THREAD_ENABLE`의 `true/false`, `1/0`, `yes/no` 값 처리
-- [x] 필수 조건 실패 시 원인이 포함된 부트 실패 메시지와 종료 코드 `2` 반환
-- [x] 유효한 설정에서 부트 시퀀스 및 고정 포트 바인딩 정상 통과
+- [x] 제공 ARM64 원본 실행 파일을 압축 해제해 프로젝트에 보관
+- [x] 컨테이너 아키텍처를 `linux/arm64`로 명시하고 원본 직접 실행
+- [x] root가 아닌 `appuser` 계정으로 앱 실행
+- [x] `AGENT_HOME` 설정 및 디렉터리 생성
+- [x] `AGENT_UPLOAD_DIR=$AGENT_HOME/upload_files` 설정 및 디렉터리 생성
+- [x] `AGENT_KEY_PATH=$AGENT_HOME/api_keys` 설정 및 디렉터리 생성
+- [x] `AGENT_LOG_DIR` 설정 및 일반 계정의 로그 쓰기 권한 확보
+- [x] `$AGENT_HOME/api_keys/secret.key` 생성 및 `agent_api_key_test` 저장
+- [x] `AGENT_PORT=15034` 설정 및 포트 사용 가능 부트 조건 통과
+- [x] `MEMORY_LIMIT`·`CPU_MAX_OCCUPY`·`MULTI_THREAD_ENABLE` 실험 조건 설정
+- [x] 제공 앱의 Boot Sequence 6단계 통과 및 `Agent READY` 확인
 
-### 메모리 누수 및 OOM 분석
+### 프로세스 관제 및 증거 수집
 
-- [x] `monitor.sh`로 대상 프로세스의 RSS를 0.1초 간격으로 관측
-- [x] RSS의 7.3MB→53.6MB 상승 패턴 기록
-- [x] 프로세스 종료 직전·직후 애플리케이션 로그 수집
-- [x] `Memory limit exceeded` 로그 식별
-- [x] `SELF-TERMINATED` 로그 식별
-- [x] 힙 객체 참조 유지와 MemoryGuard 정책의 동작 원리 분석
-- [x] `MEMORY_LIMIT=50` 기준 실험 수행 및 종료 코드 `137` 확인
-- [x] `MEMORY_LIMIT=128` 비교 실험 수행 및 종료 코드 `0` 확인
-- [x] 설정 변경 전후 RSS·생존 결과 비교 그래프 생성
-- [x] [OOM 장애 분석 리포트](reports/oom-report.md) 작성
+- [x] 원본 실행기의 부모 PID와 실제 워커 PID 구분
+- [x] `monitor.sh`로 실제 워커의 CPU·RSS·프로세스 상태·스레드 수 수집
+- [x] `/proc`의 CPU 시간 증가량과 경과 시간을 이용한 구간 CPU 사용률 계산
+- [x] 앱 실행 로그와 워커 관제 로그를 실험별 파일로 분리
+- [x] 앱 내부 Heap·부하 값과 OS 관측 RSS·CPU 수치 구분
+- [x] 앱 자체의 보호 종료와 관측 후 외부 정리 구분
+
+### 메모리 증가 및 OOM 분석
+
+- [x] `monitor.sh`로 실제 워커 RSS의 `10.1→41.6MB` 상승 관측
+- [x] `Current Heap`의 `25→50MB` 증가 및 `Memory limit exceeded` 로그 수집
+- [x] MemoryGuard의 자기 종료 로그와 `SIGKILL` 종료 확인
+- [x] 메모리 누적과 앱 내부 보호 정책에 따른 종료 원인 추론
+- [x] `MEMORY_LIMIT=50→512` 변경 전후 실행 비교
+- [x] 약 5초 후 보호 종료와 12초 관측 중 생존 결과 기록
+- [x] [메모리/OOM 분석 리포트](docs/reports/oom-report.md) 작성
 
 ### CPU 과점유 분석
 
-- [x] `/proc`, `ps`, `monitor.sh`로 대상 프로세스의 순간 CPU 사용률 관측
-- [x] 시스템 전체 부하가 아닌 `agent-leak-app` 프로세스의 CPU 급상승 식별
-- [x] CPU 사용률 급상승 구간을 수치와 SVG 그래프로 기록
-- [x] `WATCHDOG` 및 `SIGTERM` 종료 로그 식별
-- [x] Watchdog의 프로세스 CPU 측정 및 보호 종료 원리 분석
-- [x] 동일한 75% 목표 부하에서 `CPU_MAX_OCCUPY=20` 기준 실험 수행
-- [x] `CPU_MAX_OCCUPY=95` 비교 실험 수행
-- [x] 설정 변경 전후 종료 코드 `143→0`과 생존 결과 비교
-- [x] [CPU 과점유 장애 분석 리포트](reports/cpu-report.md) 작성
+- [x] 시스템 전체가 아닌 실제 워커의 CPU 사용률 상승 관측
+- [x] 앱 부하 증가와 `CPU Threshold Violated!` 로그 수집
+- [x] CPU 보호 동작에 따른 `SIGTERM` 종료 원인 추론
+- [x] `CPU_MAX_OCCUPY=100→20` 변경 전후 실행 비교
+- [x] 관제 최고 CPU `45.5→18.2%` 및 약 30초 후 보호 종료·40초 관측 중 생존 결과 기록
+- [x] [CPU 과점유 분석 리포트](docs/reports/cpu-report.md) 작성
 
 ### 교착상태(Deadlock) 진단
 
-- [x] `ps -ef` 기반 무응답 상태의 프로세스 PID 유지 확인
-- [x] `ps -L`로 메인·워커 스레드 3개와 워커 CPU `0.0%` 확인
-- [x] 관제 로그에서 교착 후 CPU `0.0%`, RSS `13.6MB` 정체 확인
-- [x] 로그 출력이 멈춘 마지막 지점 수집
-- [x] `WAITING`, `BLOCKED`, `DEADLOCK DETECTED` 로그 식별
-- [x] Thread-A와 Thread-B의 상반된 락 획득 순서 및 순환 대기 증명
-- [x] 상호 배제·점유 대기·비선점·순환 대기의 4대 조건 분석
-- [x] `MULTI_THREAD_ENABLE=true`에서 PID가 1.5초 이상 유지되는 데드락 재현
-- [x] `MULTI_THREAD_ENABLE=false`에서 순차 락 획득 및 정상 완료 확인
-- [x] 설정 변경 전후 종료 여부와 스레드 상태 비교
-- [x] [교착상태 장애 분석 리포트](reports/deadlock-report.md) 작성
+- [x] `ps -ef`로 작업 중단 상태의 PID 유지 확인
+- [x] `ps -L`로 메인·워커 스레드의 `futex_wait_queue` 대기 확인
+- [x] 교착 후 CPU `0.0%`·RSS `16.7MB`·스레드 3개 정체 관측
+- [x] 마지막 `WAITING`·`BLOCKED` 로그 및 이후 로그 무진행 확인
+- [x] 두 워커의 상반된 자원 획득 순서와 순환 대기 추론
+- [x] 상호 배제·점유 대기·비선점·순환 대기의 네 조건 분석
+- [x] `MULTI_THREAD_ENABLE=true→false` 변경 전후 실행 비교
+- [x] 14초 관측 중 작업 중단과 설정 변경 후 작업 진행 결과 기록
+- [x] [교착상태 분석 리포트](docs/reports/deadlock-report.md) 작성
 
-### 장애 리포트 공통 작성 기준
+### 분석 리포트 및 제출 증거
 
-- [x] 장애 시점과 조건을 포함한 발생 현상 작성
-- [x] 재현 명령과 환경변수를 포함한 재현 경로 작성
-- [x] 관제 로그, 실행 로그, `ps`/`ps -L` 출력, SVG 그래프 첨부
-- [x] 수집한 증거를 근거로 근본 원인 분석
-- [x] 메모리·CPU 스케줄링·락과 관련된 OS 동작 원리 설명
-- [x] 환경변수 조정에 따른 임시 조치 기록
-- [x] 조치 전후 결과를 수치·종료 코드·그래프로 비교
-- [x] 각 리포트에 근본 해결을 위한 추가 제안 작성
-- [x] OOM, CPU, Deadlock 리포트 총 3건 완성
-
-## 장애 유형별 필수 증거
-
-| 장애 유형 | 필수 증거 | 결과 |
-| --- | --- | --- |
-| OOM | 메모리 상승 관제, 임계값 및 자기 종료 로그, `MEMORY_LIMIT` 전후 실행 | [로그·그래프](evidence/README.md#장애별-증거) |
-| CPU | CPU 급상승 관제, Watchdog `SIGTERM` 로그, `CPU_MAX_OCCUPY` 전후 실행 | [로그·그래프](evidence/README.md#장애별-증거) |
-| Deadlock | PID 존재, `ps -L` 스레드 정체, 마지막 `WAITING/BLOCKED` 로그, 락 대기 근거 | [로그·ps 출력·그래프](evidence/README.md#장애별-증거) |
-
-## 보너스 과제
-
-### 작업 단위 Round-Robin 시뮬레이션 분석
-
-- [x] 단일 스레드에서 작업 A·B·C를 나타내는 `Thread-A·B·C` 로그 수집
-- [x] 타임스탬프와 출력 순서를 기준으로 순환 작업 배분 패턴 분석
-- [x] 각 작업의 완료 전 다음 작업 단위로 전환하는 시뮬레이션 확인
-- [x] 구현 및 로그 기반 작업 단위 Round-Robin 순환 정책 확인
-- [x] A→B→C 순환 로그와 동일한 25% 진행 단위를 근거로 제시
-- [x] 일반 Round-Robin 알고리즘의 장점과 문맥 교환 비용 설명
-- [x] 일반 알고리즘 관점의 대화형 웹 서버·순차 배치 처리 적합성 비교
-- [x] [Round-Robin 시뮬레이션 분석 리포트](reports/scheduling-report.md) 작성
-
-## 제약 사항 (Constraints)
-
-- 바이너리 디컴파일 및 리버스 엔지니어링 금지
-- 비루트 Docker 컨테이너 또는 격리된 로컬 환경에서의 실습 앱 실행
-- 공유 네트워크의 방화벽 설정 및 `15034` 포트 노출 주의
-- 관제·진단 도구를 Linux 표준 명령어와 Python 표준 라이브러리로 제한
-- 외부 Python 패키지 없이 실행·테스트·증거 생성 완료
-- 운영 서버에서의 실습용 메모리/CPU 부하 실행 금지
-
-## 커스텀 설정값 명세
-
-| 항목 | 기준값 | 비고 |
-| --- | --- | --- |
-| `AGENT_HOME` | 필수 설정 | 애플리케이션 기준 경로 |
-| `AGENT_PORT` | `15034` | 고정값, `0.0.0.0` 바인딩 |
-| `AGENT_UPLOAD_DIR` | `$AGENT_HOME/upload_files` | 디렉터리 존재 필수 |
-| `AGENT_KEY_PATH` | `$AGENT_HOME/api_keys` | 경로 존재 필수 |
-| `AGENT_LOG_DIR` | 사용자 지정 로그 경로 | 존재 및 쓰기 권한 필수 |
-| `MEMORY_LIMIT` | `50~512` | 정수, 단위 MB |
-| `CPU_MAX_OCCUPY` | `10~100` | 정수, 단위 % |
-| `MULTI_THREAD_ENABLE` | `true/false` | 추가 허용값: `1/0`, `yes/no` |
-| `secret.key` | `agent_api_key_test` | `$AGENT_HOME/api_keys/secret.key`에 저장 |
-| `AGENT_SCENARIO` | `normal` | `normal`, `memory`, `cpu`, `deadlock` |
-| `AGENT_RUN_SECONDS` | `2.0` | 자동 실험 실행 시간 |
-| `CPU_LOAD_PERCENT` | `75` | CPU 실습 목표 부하 |
-
-## 검증 (Verification)
-
-```bash
-make docker-test     # Linux 컨테이너에서 단위·통합 테스트 실행
-make docker-evidence # 7개 실험 및 증거·그래프 재생성
-make verify          # README 요구사항과 SHA-256 무결성 검사
-```
-
-검증 결과:
-
-- **테스트**: 16개 통과
-- **Linux 실험**: 7개 통과
-- **검증된 증거 파일**: 21개
-- **요구사항 검사**: PASS
+- [x] OOM·CPU·Deadlock의 GitHub Issue 형식 리포트 3건 작성
+- [x] 각 리포트에 발생 현상·재현 조건·증거·원인 분석·조치 및 검증 포함
+- [x] 로그와 OS 관측에 근거한 원인 추론 및 관련 OS 동작 원리 설명
+- [x] 환경변수 변경 전후의 수치·생존 여부·작업 진행 비교
+- [x] 앱·관제 로그와 `ps` 출력 원문 총 13개 보관
+- [x] 별도 재실행의 종료 코드·경과시간·외부 정리 기록 보관
+- [x] 원본 디컴파일 없이 관측된 사실과 추론 범위 구분
 
 ## 결과물 (Deliverables)
 
-- [x] [OOM Crash 분석 리포트](reports/oom-report.md)
-- [x] [CPU Latency 분석 리포트](reports/cpu-report.md)
-- [x] [Deadlock 분석 리포트](reports/deadlock-report.md)
-- [x] [로그·명령어 출력·그래프 증거 자료](evidence/README.md)
-- [x] [환경변수 변경 전후 자동 비교 결과](evidence/generated/summary.json)
-- [x] [Round-Robin 시뮬레이션 분석 리포트](reports/scheduling-report.md)
-- [x] 제출용 GitHub Repository: [myy-dev/B4-2](https://github.com/myy-dev/B4-2)
-
-### 결과 그래프
-
-| OOM 메모리 | CPU 과점유 |
+| 문서 | 내용 |
 | --- | --- |
-| ![OOM 메모리 변화](evidence/charts/oom-memory.svg) | ![CPU 사용률 변화](evidence/charts/cpu-usage.svg) |
-
-| Deadlock CPU/RSS | Round-Robin 순서 |
-| --- | --- |
-| ![Deadlock CPU 정체](evidence/charts/deadlock-cpu.svg) | ![Round-Robin 실행 순서](evidence/charts/scheduling-timeline.svg) |
-
-## 완료 기준
-
-구현·테스트·증거·리포트 기반 설명·재현 항목
-
-- 메모리 구조와 메모리 누수가 프로세스 및 시스템에 미치는 영향
-- 특정 프로세스의 CPU 과점유가 시스템 지연을 유발하는 원리
-- 교착상태의 4대 조건과 Linux 도구를 활용한 진단 방법
-- 관제 데이터와 로그를 근거로 장애 원인을 추론하는 방법
-- GitHub Issue 형식으로 장애 상황과 조치 결과를 공유하는 방법
+| [메모리/OOM 분석 리포트](docs/reports/oom-report.md) | 메모리 증가·보호 종료·설정 변경 검증 |
+| [CPU 과점유 분석 리포트](docs/reports/cpu-report.md) | CPU 상승·보호 종료·설정 변경 검증 |
+| [교착상태 분석 리포트](docs/reports/deadlock-report.md) | 순환 대기 분석·멀티스레드 설정 변경 검증 |
+| [실행 증거 및 관제 해석](docs/EVIDENCE.md) | 원문 증거·실행 환경·관측 한계 |
+| [평가 시연 가이드](docs/USER_DEMO.md) | 실행·관제·결과 확인·로그 보관·종료 명령 |
