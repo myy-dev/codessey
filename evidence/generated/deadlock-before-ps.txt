@@ -1,10 +1,18 @@
 $ ps -ef
 UID        PID  PPID  C STIME TTY          TIME CMD
-501       1188    13  2 15:19 ?        00:00:00 /usr/bin/python3 -m agent_leak_app
-501       1189    13  1 15:19 ?        00:00:00 sh /workspace/scripts/monitor.sh 1188 /workspace/evidence/generated/deadlock-before-monitor.log 0.10
+501          1     0  0 08:19 ?        00:00:00 python3 scripts/run_experiments.py
+501       1356     1  0 08:19 ?        00:00:00 [sleep] <defunct>
+501       4500     1  0 08:19 ?        00:00:00 [sleep] <defunct>
+501      12474     1  0 08:19 ?        00:00:00 [sleep] <defunct>
+501      22946     1  0 08:20 ?        00:00:00 [sleep] <defunct>
+501      22947     1  0 08:20 ?        00:00:00 /workspace/bin/agent-leak-app-arm64
+501      22948 22947  0 08:20 ?        00:00:00 /workspace/bin/agent-leak-app-arm64
+501      22949     1  1 08:20 ?        00:00:00 sh /workspace/scripts/monitor.sh 22948 /workspace/evidence/generated/deadlock-before-monitor.log 0.10
+501      26634 22949  0 08:20 ?        00:00:00 [sleep]
+501      26635     1  0 08:20 ?        00:00:00 ps -ef
 
-$ ps -L -p 1188 -o pid,tid,pcpu,pmem,stat,comm
-  PID   TID %CPU %MEM STAT COMMAND
- 1188  1188  2.0  0.1 Sl   python3
- 1188  1225  0.0  0.1 Sl   python3
- 1188  1226  0.0  0.1 Sl   python3
+$ ps -L -p 22948 -o pid,tid,pcpu,pmem,stat,wchan:24,comm
+  PID   TID %CPU %MEM STAT WCHAN                    COMMAND
+22948 22948  0.1  0.2 SNl  futex_wait_queue         agent-leak-app-
+22948 24843  0.0  0.2 SNl  futex_wait_queue         agent-leak-app-
+22948 24844  0.0  0.2 SNl  futex_wait_queue         agent-leak-app-

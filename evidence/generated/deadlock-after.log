@@ -1,7 +1,61 @@
-[2026-10-09 15:19:49.848] [INFO] [BOOT] SUCCESS user_uid=501 bind=0.0.0.0:15034 scenario=deadlock
-[2026-10-09 15:19:49.848] [INFO] [DeadlockLab] MULTI_THREAD_ENABLE=false; running locks sequentially
-[2026-10-09 15:19:49.848] [INFO] [Thread-A] acquired Resource-A
-[2026-10-09 15:19:49.848] [INFO] [Thread-A] acquired Resource-B; task completed
-[2026-10-09 15:19:49.849] [INFO] [Thread-B] acquired Resource-B
-[2026-10-09 15:19:49.849] [INFO] [Thread-B] acquired Resource-A; task completed
-[2026-10-09 15:19:49.849] [INFO] [DeadlockLab] COMPLETED without deadlock
+>>> Starting Agent Boot Sequence...
+[1/6] Checking User Account               [OK]
+   ... Running as service user '501' (uid=501)
+[2/6] Verifying Environment Variables     [OK]
+   ... All required Envs correct
+[3/6] Checking Required Files             [OK]
+   ... Verified 'secret.key' with correct key string.
+[4/6] Checking Port Availability          [OK]
+   ... Port 15034 is available.
+[5/6] Verifying Log Permission            [OK]
+   ... Log directory is writable: /workspace/.lab/experiments/deadlock-after/logs
+[6/6] Verifying Mission Environment       [OK]
+   ... MEMORY_LIMIT=512MB, CPU_MAX_OCCUPY=20%, MULTI_THREAD_ENABLE=False
+------------------------------------------------------------
+All Boot Checks Passed!
+Agent READY
+2026-10-17 08:20:42,531 [INFO] [SafetyGuard] Process priority lowered (nice=10).
+2026-10-17 08:20:42,531 [INFO] Agent listening at port 15034
+
+==================================================
+ [ Agent Initiate ] Resource Check 
+==================================================
+ [ MEMORY ] Limit: 512MB 		[ OK ]
+ [ CPU    ] Limit: 20%  		[ OK ]
+ [ THREAD ] Concurrency: False 		[ OK ]
+--------------------------------------------------
+ >>> SYSTEM STATUS: STABLE. STARTING WORKLOAD MONITORING...
+==================================================
+
+2026-10-17 08:20:44,544 [INFO] >>> Scenario Selected: [Healthy System Monitoring]
+
+>>> [SYSTEM] ALL CONFIGURATIONS OPTIMAL. RUNNING STABILITY TEST... <<<
+
+2026-10-17 08:20:44,546 [INFO] [Scheduler] Task Scheduler Initialized.
+2026-10-17 08:20:44,547 [INFO] [Scheduler] Registered Tasks: ['Thread-A', 'Thread-B', 'Thread-C']
+2026-10-17 08:20:44,548 [INFO] [Scheduler] Starting task execution...
+2026-10-17 08:20:44,549 [INFO] [Thread-A] Task Started. Calculating... (20%)
+2026-10-17 08:20:44,600 [INFO] [Thread-A] Calculating... (40%)
+2026-10-17 08:20:44,652 [INFO] [Thread-A] Calculating... (60%)
+2026-10-17 08:20:44,707 [INFO] [Thread-A] Calculating... (80%)
+2026-10-17 08:20:44,761 [INFO] [Thread-A] Task Completed. (100%)
+2026-10-17 08:20:44,812 [INFO] [Thread-B] Task Started. Calculating... (20%)
+2026-10-17 08:20:44,865 [INFO] [Thread-B] Calculating... (40%)
+2026-10-17 08:20:44,916 [INFO] [Thread-B] Calculating... (60%)
+2026-10-17 08:20:44,968 [INFO] [Thread-B] Calculating... (80%)
+2026-10-17 08:20:45,020 [INFO] [Thread-B] Task Completed. (100%)
+2026-10-17 08:20:45,072 [INFO] [Thread-C] Task Started. Calculating... (20%)
+2026-10-17 08:20:45,125 [INFO] [Thread-C] Calculating... (40%)
+2026-10-17 08:20:45,176 [INFO] [Thread-C] Calculating... (60%)
+2026-10-17 08:20:45,228 [INFO] [Thread-C] Calculating... (80%)
+2026-10-17 08:20:45,279 [INFO] [Thread-C] Task Completed. (100%)
+2026-10-17 08:20:45,331 [INFO] [Scheduler] All tasks completed.
+2026-10-17 08:20:45,337 [INFO] [MemoryWorker] Current Heap: 25MB
+2026-10-17 08:20:45,338 [INFO] [CpuWorker] Started. Maximum CPU Limit: 20%
+2026-10-17 08:20:45,340 [INFO] [CpuWorker] Current Load: 5.00%
+2026-10-17 08:20:48,362 [INFO] [MemoryWorker] Current Heap: 50MB
+2026-10-17 08:20:48,463 [INFO] [CpuWorker] Current Load: 7.62%
+2026-10-17 08:20:51,388 [INFO] [MemoryWorker] Current Heap: 75MB
+2026-10-17 08:20:51,581 [INFO] [CpuWorker] Current Load: 14.07%
+2026-10-17 08:20:54,400 [INFO] [MemoryWorker] Current Heap: 100MB
+2026-10-17 08:20:54,702 [INFO] [CpuWorker] Current Load: 16.38%

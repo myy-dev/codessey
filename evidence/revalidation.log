@@ -1,0 +1,46 @@
+ Container b4-2-agent-lab-run-1607769f7139 Creating 
+ Container b4-2-agent-lab-run-1607769f7139 Created 
+aarch64
+uid=1001(appuser) gid=1001(appuser) groups=1001(appuser)
+PRETTY_NAME="Ubuntu 24.04.5 LTS"
+NAME="Ubuntu"
+
+START case=oom-before time=1792238313.772162213 memory=50 cpu=20 multi=false
+2026-10-17 11:58:38,884 [CRITICAL] [MemoryGuard] Memory limit exceeded (50MB >= 50MB) / (Recommend Over 256MB)
+PASS case=oom-before start=1792238313.772162213 end=1792238319.799988257 elapsed=6.028s launcher=19 worker=21 exit=137 cause=app-protection
+
+START case=oom-after time=1792238319.806285591 memory=512 cpu=20 multi=false
+CLEANUP case=oom-after time=1792238332.817503597 signal=SIGTERM worker=396
+Terminated
+PASS case=oom-after start=1792238319.806285591 end=1792238332.892200264 elapsed=13.086s launcher=394 worker=396 exit=143 cause=external-SIGTERM
+
+START case=cpu-before time=1792238332.895566847 memory=512 cpu=100 multi=false
+2026-10-17 11:59:20,084 [CRITICAL] [CpuWorker] CPU Threshold Violated! (53.31%).
+PASS case=cpu-before start=1792238332.895566847 end=1792238360.973522888 elapsed=28.078s launcher=1472 worker=1474 exit=143 cause=app-protection
+
+START case=cpu-after time=1792238360.978855679 memory=512 cpu=20 multi=false
+2026-10-17 11:59:32,264 [INFO] [CpuWorker] Peak reached (20.00%). Starting cooldown...
+2026-10-17 11:59:41,636 [INFO] [CpuWorker] Cooldown complete (5.00%). Resuming load increase...
+2026-10-17 11:59:47,883 [INFO] [CpuWorker] Peak reached (20.00%). Starting cooldown...
+2026-10-17 11:59:57,257 [INFO] [CpuWorker] Cooldown complete (5.00%). Resuming load increase...
+CLEANUP case=cpu-after time=1792238401.994432087 signal=SIGTERM worker=3799
+Terminated
+PASS case=cpu-after start=1792238360.978855679 end=1792238402.002621795 elapsed=41.024s launcher=3797 worker=3799 exit=143 cause=external-SIGTERM
+
+START case=deadlock-before time=1792238402.005745420 memory=512 cpu=20 multi=true
+[2026-10-17 12:00:16] PROCESS:agent-leak-app- PID:7348 CPU:0.0% RSS:16.5MB VSZ:165.9MB STATE:SNl THREADS:3
+[2026-10-17 12:00:16] PROCESS:agent-leak-app- PID:7348 CPU:0.0% RSS:16.5MB VSZ:165.9MB STATE:SNl THREADS:3
+[2026-10-17 12:00:16] PROCESS:agent-leak-app- PID:7348 CPU:0.0% RSS:16.5MB VSZ:165.9MB STATE:SNl THREADS:3
+ 7348  7348  0.1  0.2 SNl  futex_wait_queue         agent-leak-app-
+ 7348  7894  0.0  0.2 SNl  futex_wait_queue         agent-leak-app-
+ 7348  7895  0.0  0.2 SNl  futex_wait_queue         agent-leak-app-
+CLEANUP case=deadlock-before time=1792238417.032277677 signal=SIGTERM worker=7348
+Terminated
+PASS case=deadlock-before start=1792238402.005745420 end=1792238417.046421011 elapsed=15.041s launcher=7346 worker=7348 exit=143 cause=external-SIGTERM
+
+START case=deadlock-after time=1792238417.049556344 memory=512 cpu=20 multi=false
+CLEANUP case=deadlock-after time=1792238432.063060420 signal=SIGTERM worker=8601
+Terminated
+PASS case=deadlock-after start=1792238417.049556344 end=1792238432.115643087 elapsed=15.066s launcher=8599 worker=8601 exit=143 cause=external-SIGTERM
+
+ALL SIX CASES PASSED
