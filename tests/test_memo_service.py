@@ -26,6 +26,8 @@ class MemoServiceTestCase(unittest.TestCase):
 
     def test_crud_flow(self) -> None:
         created = self.service.create_memo(" 첫 메모 ", " 테스트 내용 ")
+        self.session.expire_all()
+        self.assertEqual(self.service.get_memo(created.id), created)
         self.assertEqual(created.title, "첫 메모")
         self.assertEqual(created.content, "테스트 내용")
         self.assertEqual(len(self.service.list_memos()), 1)
@@ -34,6 +36,8 @@ class MemoServiceTestCase(unittest.TestCase):
         self.assertEqual(found, created)
 
         updated = self.service.update_memo(created.id, "수정된 제목", "수정된 내용")
+        self.session.expire_all()
+        self.assertEqual(self.service.get_memo(created.id), updated)
         self.assertEqual(updated.title, "수정된 제목")
         self.assertEqual(updated.content, "수정된 내용")
 

@@ -33,8 +33,5 @@ def create_db_and_tables() -> None:
 def get_db() -> Generator[Session, None, None]:
     """Provide one database session per request and always close it."""
 
-    db = SessionLocal()
-    try:
+    with SessionLocal() as db:
         yield db
-    finally:
-        db.close()

@@ -14,7 +14,7 @@ class MemoRepository:
         statement = select(Memo).order_by(Memo.created_at.desc(), Memo.id.desc())
         if search:
             statement = statement.where(Memo.title.contains(search, autoescape=True))
-        return list(self.db.scalars(statement).all())
+        return self.db.scalars(statement).all()
 
     def get_by_id(self, memo_id: int) -> Memo | None:
         return self.db.get(Memo, memo_id)
@@ -23,14 +23,12 @@ class MemoRepository:
         memo = Memo(title=title, content=content)
         self.db.add(memo)
         self.db.commit()
-        self.db.refresh(memo)
         return memo
 
     def update(self, memo: Memo, *, title: str, content: str) -> Memo:
         memo.title = title
         memo.content = content
         self.db.commit()
-        self.db.refresh(memo)
         return memo
 
     def delete(self, memo: Memo) -> None:
