@@ -17,6 +17,9 @@ class MemoRepository:
         return self.db.scalars(statement).all()
 
     def get_by_id(self, memo_id: int) -> Memo | None:
+        # SQLite INTEGER values must fit in a signed 64-bit integer.
+        if not -(2**63) <= memo_id < 2**63:
+            return None
         return self.db.get(Memo, memo_id)
 
     def create(self, *, title: str, content: str) -> Memo:

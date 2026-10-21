@@ -55,6 +55,35 @@ def main() -> None:
     assert 'name="title"' in form and 'name="content"' in form
     assert 'maxlength="1000"' in form and "1,000자 이하로 입력해 주세요." in form
 
+    for path in ("/not-a-route", "/memos/abc", "/memos/abc/edit"):
+        status, headers, missing = request(connection, "GET", path)
+        assert status == 404, (path, status)
+        assert "text/html" in headers["content-type"], path
+        assert "404 NOT FOUND" in missing, path
+        message = (
+            "요청한 페이지를 찾을 수 없습니다."
+            if path == "/not-a-route"
+            else "해당 메모를 찾을 수 없습니다."
+        )
+        assert message in missing, path
+
+    for memo_id in (str(-(2**63) - 1), str(2**63), "abc", "9" * 4301):
+        for method, suffix, data in (
+            ("GET", "", None),
+            ("GET", "/edit", None),
+            ("POST", "/edit", {}),
+            ("POST", "/delete", None),
+        ):
+            path = f"/memos/{memo_id}{suffix}"
+            status, headers, missing = request(connection, method, path, data)
+            assert status == 404, (method, suffix, memo_id[:20], status)
+            assert "text/html" in headers["content-type"]
+            assert "404 NOT FOUND" in missing
+            assert "해당 메모를 찾을 수 없습니다." in missing
+
+    status, headers, _ = request(connection, "PUT", "/memos/new")
+    assert status == 405 and "allow" in headers
+
     status, headers, _ = request(
         connection,
         "POST",
@@ -158,6 +187,12 @@ def main() -> None:
         {"title": "없는 메모", "content": "수정할 수 없음"},
     )
     assert status == 404 and "찾을 수 없습니다" in missing_edit
+
+    status, headers, missing_edit = request(
+        connection, "POST", f"/memos/{memo_id}/edit", {}
+    )
+    assert status == 404 and "text/html" in headers["content-type"]
+    assert "404 NOT FOUND" in missing_edit and 'name="title"' not in missing_edit
 
     status, _, missing_delete = request(connection, "POST", f"/memos/{memo_id}/delete")
     assert status == 404 and "찾을 수 없습니다" in missing_delete

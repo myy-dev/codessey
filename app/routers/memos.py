@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.repositories.memo_repository import MemoRepository
 from app.schemas.memo import MemoFormData
-from app.services.memo_service import MemoNotFoundError, MemoService, MemoValidationError
+from app.services.memo_service import MemoService, MemoValidationError
 from app.templating import templates
 
 
@@ -16,15 +16,6 @@ router = APIRouter(prefix="/memos", tags=["memos"])
 
 def get_memo_service(db: Session = Depends(get_db)) -> MemoService:
     return MemoService(MemoRepository(db))
-
-
-def not_found_response(request: Request, message: str) -> HTMLResponse:
-    return templates.TemplateResponse(
-        request=request,
-        name="memos/not_found.html",
-        context={"message": message},
-        status_code=404,
-    )
 
 
 @router.get("", response_class=HTMLResponse, name="memo_list")
@@ -79,10 +70,7 @@ def memo_detail(
     memo_id: int,
     service: MemoService = Depends(get_memo_service),
 ) -> HTMLResponse:
-    try:
-        memo = service.get_memo(memo_id)
-    except MemoNotFoundError as exc:
-        return not_found_response(request, str(exc))
+    memo = service.get_memo(memo_id)
 
     return templates.TemplateResponse(
         request=request,
@@ -97,10 +85,7 @@ def memo_edit_form(
     memo_id: int,
     service: MemoService = Depends(get_memo_service),
 ) -> HTMLResponse:
-    try:
-        memo = service.get_memo(memo_id)
-    except MemoNotFoundError as exc:
-        return not_found_response(request, str(exc))
+    memo = service.get_memo(memo_id)
 
     return templates.TemplateResponse(
         request=request,
@@ -130,8 +115,6 @@ def memo_update(
             context={"memo_id": memo_id, "form": exc.form, "errors": exc.errors},
             status_code=422,
         )
-    except MemoNotFoundError as exc:
-        return not_found_response(request, str(exc))
 
     return RedirectResponse(
         url=request.url_for("memo_detail", memo_id=memo.id),
@@ -145,9 +128,6 @@ def memo_delete(
     memo_id: int,
     service: MemoService = Depends(get_memo_service),
 ) -> Response:
-    try:
-        service.delete_memo(memo_id)
-    except MemoNotFoundError as exc:
-        return not_found_response(request, str(exc))
+    service.delete_memo(memo_id)
 
     return RedirectResponse(url=request.url_for("memo_list"), status_code=303)

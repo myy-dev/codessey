@@ -34,8 +34,8 @@ class MemoService:
         return self._to_dto(memo)
 
     def update_memo(self, memo_id: int, title: str, content: str) -> MemoDTO:
-        form = self._validate(title, content)
         memo = self._require_memo(memo_id)
+        form = self._validate(title, content)
         updated = self.repository.update(memo, title=form.title, content=form.content)
         return self._to_dto(updated)
 

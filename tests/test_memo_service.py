@@ -96,6 +96,24 @@ class MemoServiceTestCase(unittest.TestCase):
         self.session.expire_all()
         self.assertEqual(self.service.get_memo(created.id), created)
 
+    def test_out_of_range_ids_are_not_found(self) -> None:
+        for memo_id in (-(2**63) - 1, 2**63):
+            with self.subTest(memo_id=memo_id):
+                with self.assertRaises(MemoNotFoundError):
+                    self.service.get_memo(memo_id)
+                with self.assertRaises(MemoNotFoundError):
+                    self.service.update_memo(memo_id, "제목", "내용")
+                with self.assertRaises(MemoNotFoundError):
+                    self.service.delete_memo(memo_id)
+
+    def test_deleted_memo_is_not_found_before_input_validation(self) -> None:
+        memo = self.service.create_memo("삭제할 메모", "테스트 내용")
+        self.service.delete_memo(memo.id)
+        for title, content in (("", ""), ("   ", "내용"), ("가" * 121, "내용")):
+            with self.subTest(title=title, content=content):
+                with self.assertRaises(MemoNotFoundError):
+                    self.service.update_memo(memo.id, title, content)
+
 
 if __name__ == "__main__":
     unittest.main()
