@@ -7,6 +7,7 @@ Run the app first, then execute::
 
 from html import escape
 from http.client import HTTPConnection
+import re
 from urllib.parse import urlencode, urlsplit
 from uuid import uuid4
 
@@ -44,7 +45,13 @@ def main() -> None:
     assert status == 200
     assert "메모 목록 보기" in home and "새 메모 작성" in home
 
-    status, _, stylesheet = request(connection, "GET", "/static/styles.css")
+    stylesheet_link = re.search(r'<link rel="stylesheet" href="([^"]+)"', home)
+    assert stylesheet_link is not None
+    stylesheet_url = urlsplit(stylesheet_link[1])
+    assert stylesheet_url.query.startswith("v=") and stylesheet_url.query[2:].isdigit()
+    status, _, stylesheet = request(
+        connection, "GET", f"{stylesheet_url.path}?{stylesheet_url.query}"
+    )
     assert status == 200 and "--green" in stylesheet
 
     status, _, listing = request(connection, "GET", "/memos")

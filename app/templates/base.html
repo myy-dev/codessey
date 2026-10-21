@@ -6,7 +6,7 @@
     <meta name="description" content="FastAPI와 SQLAlchemy로 만든 메모 관리 애플리케이션">
     <title>{% block title %}나의 메모 앱{% endblock %}</title>
     <link rel="icon" href="{{ url_for('static', path='/favicon.svg') }}" type="image/svg+xml">
-    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}?v={{ styles_version() }}">
 </head>
 <body>
     <header class="site-header">
