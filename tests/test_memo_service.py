@@ -76,6 +76,26 @@ class MemoServiceTestCase(unittest.TestCase):
 
         self.assertIn("title", context.exception.errors)
 
+    def test_content_at_1000_characters_is_accepted(self) -> None:
+        created = self.service.create_memo("제목", "가" * 1000)
+        self.assertEqual(created.content, "가" * 1000)
+        updated = self.service.update_memo(created.id, "제목", "나" * 1000)
+        self.session.expire_all()
+        self.assertEqual(self.service.get_memo(created.id), updated)
+        self.assertEqual(updated.content, "나" * 1000)
+
+    def test_content_over_1000_characters_is_rejected(self) -> None:
+        with self.assertRaises(MemoValidationError) as context:
+            self.service.create_memo("제목", "가" * 1001)
+        self.assertEqual(context.exception.errors["content"], "내용은 1,000자 이하로 입력해 주세요.")
+        self.assertEqual(self.service.list_memos(), [])
+
+        created = self.service.create_memo("제목", "기존 내용")
+        with self.assertRaises(MemoValidationError):
+            self.service.update_memo(created.id, "변경할 제목", "나" * 1001)
+        self.session.expire_all()
+        self.assertEqual(self.service.get_memo(created.id), created)
+
 
 if __name__ == "__main__":
     unittest.main()

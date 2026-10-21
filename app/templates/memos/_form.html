@@ -26,11 +26,14 @@
         id="content"
         name="content"
         rows="12"
+        maxlength="1000"
         required
-        aria-describedby="{% if errors.content %}content-error{% endif %}"
+        aria-describedby="{% if errors.content %}content-error{% else %}content-help{% endif %}"
     >{{ form.content }}</textarea>
     {% if errors.content %}
     <p class="field-error" id="content-error">{{ errors.content }}</p>
+    {% else %}
+    <p class="field-help" id="content-help">1,000자 이하로 입력해 주세요.</p>
     {% endif %}
 </div>
 

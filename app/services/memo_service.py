@@ -61,6 +61,8 @@ class MemoService:
 
         if not form.content:
             errors["content"] = "내용을 입력해 주세요."
+        elif len(form.content) > 1000:
+            errors["content"] = "내용은 1,000자 이하로 입력해 주세요."
 
         if errors:
             raise MemoValidationError(errors, form)

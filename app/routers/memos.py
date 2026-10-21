@@ -53,8 +53,8 @@ def memo_create_form(request: Request) -> HTMLResponse:
 @router.post("", name="memo_create")
 def memo_create(
     request: Request,
-    title: Annotated[str, Form()],
-    content: Annotated[str, Form()],
+    title: Annotated[str, Form()] = "",
+    content: Annotated[str, Form()] = "",
     service: MemoService = Depends(get_memo_service),
 ) -> Response:
     try:
@@ -117,8 +117,8 @@ def memo_edit_form(
 def memo_update(
     request: Request,
     memo_id: int,
-    title: Annotated[str, Form()],
-    content: Annotated[str, Form()],
+    title: Annotated[str, Form()] = "",
+    content: Annotated[str, Form()] = "",
     service: MemoService = Depends(get_memo_service),
 ) -> Response:
     try:
