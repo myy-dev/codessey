@@ -162,7 +162,7 @@ Uvicorn running on http://127.0.0.1:8000
 
 ## 테스트
 
-서비스 CRUD, 검색, 검증 단위 테스트를 실행한다.
+서비스 CRUD, 저장 결과 재조회, 검색, 검증 테스트를 실행한다.
 
 ```bash
 python -m unittest discover -v
@@ -174,7 +174,13 @@ python -m unittest discover -v
 python tests/http_smoke.py
 ```
 
-HTTP 스모크 테스트는 홈·목록·등록 폼, CRUD, 검색, 서버 검증, 404 안내 화면과 POST 이후 HTTP 303 리다이렉트를 확인한다. 테스트 중 생성한 메모는 완료 후 삭제한다.
+HTTP 테스트는 홈·목록·등록 폼, CRUD, 검색, 404 화면과 HTTP 303 리다이렉트를 확인한다.
+등록·수정 시 빈 문자열·공백·누락된 필드의 HTML 오류 안내, 입력값 유지 및 기존 데이터가
+변경되지 않는지도 검증한다. 테스트 중 생성한 메모는 완료 후 삭제한다.
+실행마다 고유한 제목을 사용하고, 삭제한 테스트 메모의 ID로 404를 확인해 기존 메모와의 충돌을 피한다.
+CSS가 변경되면 스타일시트 URL의 버전이 자동으로 바뀌어 브라우저가 최신 파일을 불러온다.
+잘못된 주소·숫자가 아닌 메모 번호·SQLite 정수 범위를 벗어난 번호는 HTML 404 화면으로 처리한다.
+삭제된 메모에 빈 수정 폼을 제출해도 입력 오류 폼 대신 404 화면을 표시하는지 검증한다.
 
 ## 화면 예시
 
@@ -250,7 +256,7 @@ Router
 
 ### HTML Form과 `Form()`
 
-브라우저가 `application/x-www-form-urlencoded` 형식으로 폼을 POST하면 라우터의 `Form()` 파라미터가 제목과 내용을 받는다. 라우터는 값을 서비스에 전달하고, 서비스는 공백 제거와 필수값·제목 길이를 검증한다. 검증에 실패하면 기존 입력값과 오류 메시지를 폼 템플릿에 다시 전달하며 DB에는 저장하지 않는다.
+브라우저가 `application/x-www-form-urlencoded` 형식으로 폼을 POST하면 라우터의 `Form()` 파라미터가 제목과 내용을 받는다. 라우터는 값을 서비스에 전달하고, 서비스는 공백 제거와 필수값, 제목 최대 120자·내용 최대 1,000자를 검증한다. 검증에 실패하면 기존 입력값과 오류 메시지를 폼 템플릿에 다시 전달하며 DB에는 저장하지 않는다.
 
 ### PRG(Post-Redirect-Get)
 
@@ -258,7 +264,7 @@ Router
 
 ### SQLAlchemy ORM과 Session
 
-`Memo` ORM 클래스의 속성은 SQLite `memos` 테이블의 컬럼에 대응한다. 저장소는 SQLAlchemy `Session`으로 `select`, `add`, 값 변경, `delete`를 수행하고 `commit()`으로 트랜잭션을 DB에 반영한다. 서비스는 ORM 객체를 `MemoDTO`로 변환하므로 라우터와 템플릿이 DB 모델에 직접 의존하지 않는다.
+`Memo` ORM 클래스의 속성은 SQLite `memos` 테이블의 컬럼에 대응한다. 저장소는 SQLAlchemy `Session`으로 `select`, `add`, 값 변경, `delete`를 수행하고 `commit()`으로 트랜잭션을 DB에 반영한다. `expire_on_commit=False`로 저장 후 객체 값을 유지하며, 현재 모델의 ID와 Python 기본값은 저장 과정에서 채워지므로 별도 `refresh()` 없이 DTO로 변환한다. 서비스는 ORM 객체를 `MemoDTO`로 변환하므로 라우터와 템플릿이 DB 모델에 직접 의존하지 않는다.
 
 ### `Depends`와 레이어 분리
 
