@@ -2,6 +2,8 @@
 
 {% block title %}{{ memo.title }} | 나의 메모 앱{% endblock %}
 
+{% block body_class %}memo-detail-page{% endblock %}
+
 {% block content %}
 <article class="detail-card">
     <div class="detail-header">
@@ -9,37 +11,31 @@
             <p class="eyebrow">MEMO #{{ memo.id }}</p>
             <h1>{{ memo.title }}</h1>
         </div>
-        <div class="actions compact-actions">
-            <a class="button button-secondary" href="{{ url_for('memo_edit_form', memo_id=memo.id) }}">수정</a>
-            <form action="{{ url_for('memo_delete', memo_id=memo.id) }}" method="post" onsubmit="return confirm('이 메모를 삭제할까요? 삭제한 메모는 복구할 수 없습니다.');">
-                <button class="button button-danger" type="submit">삭제</button>
-            </form>
-        </div>
     </div>
 
     <dl class="memo-fields">
-        <div>
-            <dt>ID</dt>
-            <dd>{{ memo.id }}</dd>
-        </div>
-        <div>
-            <dt>제목</dt>
-            <dd>{{ memo.title }}</dd>
-        </div>
         <div class="full-field">
-            <dt>내용</dt>
+            <dt class="sr-only">내용</dt>
             <dd class="memo-content">{{ memo.content }}</dd>
         </div>
         <div>
             <dt>작성일시</dt>
             <dd><time datetime="{{ memo.created_at.isoformat() }}">{{ memo.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</time></dd>
         </div>
-        <div>
+        <div class="right-field">
             <dt>수정일시</dt>
             <dd><time datetime="{{ memo.updated_at.isoformat() }}">{{ memo.updated_at.strftime('%Y-%m-%d %H:%M:%S') }}</time></dd>
         </div>
     </dl>
 </article>
 
-<div class="bottom-link"><a href="{{ url_for('memo_list') }}">← 목록으로 돌아가기</a></div>
+<div class="bottom-link list-actions">
+    <a class="button button-ghost" href="{{ url_for('memo_list') }}">목록</a>
+    <div class="actions compact-actions">
+        <a class="button button-secondary" href="{{ url_for('memo_edit_form', memo_id=memo.id) }}">수정</a>
+        <form action="{{ url_for('memo_delete', memo_id=memo.id) }}" method="post" onsubmit="return confirm('이 메모를 삭제할까요? 삭제한 메모는 복구할 수 없습니다.');">
+            <button class="button button-danger" type="submit">삭제</button>
+        </form>
+    </div>
+</div>
 {% endblock %}

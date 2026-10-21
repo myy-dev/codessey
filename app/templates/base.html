@@ -8,14 +8,10 @@
     <link rel="icon" href="{{ url_for('static', path='/favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', path='/styles.css') }}?v={{ styles_version() }}">
 </head>
-<body>
+<body class="{% block body_class %}{% endblock %}">
     <header class="site-header">
         <nav class="nav container" aria-label="주요 메뉴">
             <a class="brand" href="{{ url_for('home') }}">나의 메모 앱</a>
-            <div class="nav-links">
-                <a href="{{ url_for('memo_list') }}">메모 목록</a>
-                <a class="button button-small" href="{{ url_for('memo_create_form') }}">새 메모</a>
-            </div>
         </nav>
     </header>
 
@@ -24,7 +20,7 @@
     </main>
 
     <footer class="site-footer">
-        <div class="container">FastAPI · SQLAlchemy · Jinja2</div>
+        <div class="container">나의 메모 앱 · 생각을 기록하는 공간</div>
     </footer>
 </body>
 </html>

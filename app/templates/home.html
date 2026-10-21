@@ -6,10 +6,6 @@
 <section class="hero">
     <p class="eyebrow">FASTAPI MEMO</p>
     <h1>생각을 간단히 기록하고<br>필요할 때 다시 꺼내 보세요.</h1>
-    <p class="hero-copy">
-        메모를 등록하고 목록·상세·수정·삭제할 수 있는 웹 애플리케이션입니다.<br>
-        모든 메모는 SQLite 데이터베이스에 안전하게 보관됩니다.
-    </p>
     <div class="actions">
         <a class="button" href="{{ url_for('memo_list') }}">메모 목록 보기</a>
         <a class="button button-secondary" href="{{ url_for('memo_create_form') }}">새 메모 작성</a>

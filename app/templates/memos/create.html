@@ -3,13 +3,7 @@
 {% block title %}새 메모 | 나의 메모 앱{% endblock %}
 
 {% block content %}
-<div class="page-heading">
-    <p class="eyebrow">NEW MEMO</p>
-    <h1>새 메모 작성</h1>
-    <p>기억하고 싶은 생각을 제목과 내용으로 남겨 보세요.</p>
-</div>
-
-<form class="memo-form" action="{{ url_for('memo_create') }}" method="post" novalidate>
+{% with form_heading="새 메모 작성", form_eyebrow="NEW MEMO", form_action=url_for('memo_create') %}
     {% include "memos/_form.html" %}
-</form>
+{% endwith %}
 {% endblock %}
