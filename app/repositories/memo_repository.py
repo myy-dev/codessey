@@ -5,7 +5,7 @@ from app.models.memo import Memo
 
 
 class MemoRepository:
-    """All database access for the Memo model."""
+    """메모 모델의 데이터베이스 접근 처리"""
 
     def __init__(self, db: Session) -> None:
         self.db = db
@@ -17,7 +17,7 @@ class MemoRepository:
         return self.db.scalars(statement).all()
 
     def get_by_id(self, memo_id: int) -> Memo | None:
-        # SQLite INTEGER values must fit in a signed 64-bit integer.
+        # SQLite INTEGER의 부호 있는 64비트 정수 범위 확인
         if not -(2**63) <= memo_id < 2**63:
             return None
         return self.db.get(Memo, memo_id)

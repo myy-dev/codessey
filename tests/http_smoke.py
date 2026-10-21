@@ -1,6 +1,6 @@
-"""End-to-end HTTP smoke test for a running local Uvicorn server.
+"""실행 중인 로컬 Uvicorn 서버의 전체 HTTP 흐름 검증
 
-Run the app first, then execute::
+앱 실행 후 테스트 명령::
 
     python tests/http_smoke.py
 """
@@ -106,7 +106,7 @@ def main() -> None:
         assert status == 200
         assert title in detail and "DB 저장 확인" in detail
 
-        # Refreshing the redirected GET must not repeat the preceding POST.
+        # 리다이렉트된 GET 화면 새로고침 시 이전 POST 요청의 중복 실행 방지 확인
         status, _, refreshed_detail = request(connection, "GET", detail_path)
         assert status == 200 and refreshed_detail == detail
 

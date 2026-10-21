@@ -1,1 +1,1 @@
-"""Application business rules."""
+"""애플리케이션의 비즈니스 규칙 처리 계층"""

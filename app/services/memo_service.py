@@ -4,7 +4,7 @@ from app.schemas.memo import MemoDTO, MemoFormData
 
 
 class MemoNotFoundError(LookupError):
-    """Raised when a requested memo does not exist."""
+    """요청한 메모 부재 시 발생하는 예외"""
 
 
 class MemoValidationError(ValueError):
@@ -15,7 +15,7 @@ class MemoValidationError(ValueError):
 
 
 class MemoService:
-    """Business rules and application flow for memos."""
+    """메모의 비즈니스 규칙 및 작업 흐름 처리"""
 
     def __init__(self, repository: MemoRepository) -> None:
         self.repository = repository

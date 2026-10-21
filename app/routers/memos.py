@@ -31,7 +31,7 @@ def memo_list(
     )
 
 
-# Keep this static path above /{memo_id} so "new" is not parsed as an ID.
+# "new"의 메모 ID 해석 방지를 위한 /{memo_id} 이전 고정 경로 등록
 @router.get("/new", response_class=HTMLResponse, name="memo_create_form")
 def memo_create_form(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(

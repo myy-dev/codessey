@@ -11,7 +11,7 @@ DATABASE_URL = f"sqlite:///{DATABASE_PATH}"
 
 
 class Base(DeclarativeBase):
-    """Base class shared by all SQLAlchemy ORM models."""
+    """모든 SQLAlchemy ORM 모델의 공통 기본 클래스"""
 
 
 engine = create_engine(
@@ -22,16 +22,16 @@ SessionLocal = sessionmaker(bind=engine, autoflush=False, expire_on_commit=False
 
 
 def create_db_and_tables() -> None:
-    """Create missing tables when the application starts."""
+    """애플리케이션 시작 시 누락된 테이블 생성"""
 
-    # Importing the model registers its table metadata on Base.
+    # 모델 로딩을 통한 Base의 테이블 메타데이터 등록
     from app.models.memo import Memo  # noqa: F401
 
     Base.metadata.create_all(bind=engine)
 
 
 def get_db() -> Generator[Session, None, None]:
-    """Provide one database session per request and always close it."""
+    """요청별 DB 세션 제공 및 요청 종료 시 세션 정리"""
 
     with SessionLocal() as db:
         yield db

@@ -26,10 +26,10 @@ class StylesheetVersionTestCase(unittest.TestCase):
 
         with TemporaryDirectory() as directory, patch("app.templating.STATIC_DIR", Path(directory)):
             stylesheet = Path(directory) / "styles.css"
-            stylesheet.write_text("/* first version */")
+            stylesheet.write_text("/* 첫 번째 버전 */")
             os.utime(stylesheet, ns=(1_000_000_000, 1_000_000_000))
             before = stylesheet_url()
-            stylesheet.write_text("/* changed version */")
+            stylesheet.write_text("/* 변경된 버전 */")
             os.utime(stylesheet, ns=(2_000_000_000, 2_000_000_000))
             after = stylesheet_url()
 
