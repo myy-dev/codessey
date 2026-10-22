@@ -2,7 +2,7 @@
 
 앱 실행 후 테스트 명령::
 
-    python tests/http_smoke.py
+    uv run python tests/http_smoke.py
 """
 
 from html import escape

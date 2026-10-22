@@ -17,13 +17,21 @@ FastAPI와 SQLAlchemy를 사용해 브라우저에서 데이터를 등록하고 
 | 화면 구성      | HTML, CSS        |
 | 폼 데이터 파싱 | python-multipart |
 
+## 실행
+
+```sh
+uv run uvicorn app.main:app --reload
+```
+
 ## 프로젝트 구조
 
 ```text
 B6-2/
 ├── .gitignore
 ├── README.md
-├── requirements.txt
+├── pyproject.toml            # 프로젝트 정보 및 직접 의존성
+├── uv.lock                   # 전체 의존성 버전 고정
+├── .python-version           # 개발용 Python 버전
 ├── database.db                # 애플리케이션 데이터가 저장되는 SQLite 파일
 ├── docs/                      # 화면·URL 참조 및 구조 설명 문서
 │   ├── routes.md
