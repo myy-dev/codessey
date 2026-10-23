@@ -18,7 +18,14 @@ def get_memo_service(db: Session = Depends(get_db)) -> MemoService:
     return MemoService(MemoRepository(db))
 
 
-@router.get("", response_class=HTMLResponse, name="memo_list")
+# 메모 목록 조회 및 제목 검색
+@router.get(
+    "",
+    response_class=HTMLResponse,
+    name="memo_list",
+    summary="메모 목록 조회",
+    description="검색어 q로 제목에 포함된 문자열 검색, 검색어가 없거나 공백이면 전체 목록을 HTML로 반환",
+)
 def memo_list(
     request: Request,
     q: str = "",
@@ -31,8 +38,13 @@ def memo_list(
     )
 
 
-# "new"의 메모 ID 해석 방지를 위한 /{memo_id} 이전 고정 경로 등록
-@router.get("/new", response_class=HTMLResponse, name="memo_create_form")
+# 메모 작성 화면 표시 ("new"의 메모 ID 해석 방지를 위해 /{memo_id}보다 먼저 등록)
+@router.get(
+    "/new",
+    response_class=HTMLResponse,
+    name="memo_create_form",
+    summary="메모 작성 화면 조회",
+)
 def memo_create_form(request: Request) -> HTMLResponse:
     return templates.TemplateResponse(
         request=request,
@@ -41,7 +53,16 @@ def memo_create_form(request: Request) -> HTMLResponse:
     )
 
 
-@router.post("", name="memo_create")
+# 메모 등록 및 상세 화면 이동, 입력 오류 시 작성 화면 재표시
+@router.post(
+    "",
+    name="memo_create",
+    summary="메모 등록",
+    description=(
+        "제목과 내용의 앞뒤 공백 제거 후 필수 입력 및 제목 최대 120자, 내용 최대 1000자 검증\n\n"
+        "성공 시 상세 화면으로 303 리다이렉트, 검증 실패 시 입력값과 오류를 포함한 작성 화면을 422로 반환"
+    ),
+)
 def memo_create(
     request: Request,
     title: Annotated[str, Form()] = "",
@@ -64,7 +85,14 @@ def memo_create(
     )
 
 
-@router.get("/{memo_id}", response_class=HTMLResponse, name="memo_detail")
+# 메모 상세 조회
+@router.get(
+    "/{memo_id}",
+    response_class=HTMLResponse,
+    name="memo_detail",
+    summary="메모 상세 조회",
+    description="메모 번호에 해당하는 상세 화면 반환, 잘못된 번호이거나 메모가 없으면 404 오류 화면 반환",
+)
 def memo_detail(
     request: Request,
     memo_id: int,
@@ -79,7 +107,14 @@ def memo_detail(
     )
 
 
-@router.get("/{memo_id}/edit", response_class=HTMLResponse, name="memo_edit_form")
+# 기존 메모를 채운 수정 화면 표시
+@router.get(
+    "/{memo_id}/edit",
+    response_class=HTMLResponse,
+    name="memo_edit_form",
+    summary="메모 수정 화면 조회",
+    description="기존 제목과 내용을 채운 수정 화면 반환, 잘못된 번호이거나 메모가 없으면 404 오류 화면 반환",
+)
 def memo_edit_form(
     request: Request,
     memo_id: int,
@@ -98,7 +133,17 @@ def memo_edit_form(
     )
 
 
-@router.post("/{memo_id}/edit", name="memo_update")
+# 메모 수정 및 상세 화면 이동, 입력 오류 시 수정 화면 재표시
+@router.post(
+    "/{memo_id}/edit",
+    name="memo_update",
+    summary="메모 수정",
+    description=(
+        "메모 존재 여부 확인 후 앞뒤 공백 제거 및 필수 입력, 제목 최대 120자, 내용 최대 1000자 검증\n\n"
+        "성공 시 상세 화면으로 303 리다이렉트, 검증 실패 시 입력값과 오류를 포함한 수정 화면을 422로 반환\n\n"
+        "잘못된 메모 번호이거나 메모가 없으면 404 오류 화면 반환"
+    ),
+)
 def memo_update(
     request: Request,
     memo_id: int,
@@ -122,7 +167,13 @@ def memo_update(
     )
 
 
-@router.post("/{memo_id}/delete", name="memo_delete")
+# 메모 삭제 및 목록 화면 이동
+@router.post(
+    "/{memo_id}/delete",
+    name="memo_delete",
+    summary="메모 삭제",
+    description="삭제 성공 시 목록 화면으로 303 리다이렉트, 잘못된 번호이거나 메모가 없으면 404 오류 화면 반환",
+)
 def memo_delete(
     request: Request,
     memo_id: int,
