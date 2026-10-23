@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}메모 수정 | 나의 메모 앱{% endblock %}
+
+{% block content %}
+{% with form_heading="메모 수정", form_eyebrow="EDIT MEMO #" ~ memo_id, form_action=url_for('memo_update', memo_id=memo_id) %}
+    {% include "memos/_form.html" %}
+{% endwith %}
+{% endblock %}

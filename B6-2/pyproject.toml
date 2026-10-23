@@ -1,0 +1,13 @@
+[project]
+name = "b6-2"
+version = "0.1.0"
+description = "FastAPI와 SQLAlchemy 기반 메모 웹 애플리케이션"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "fastapi==0.140.9",
+    "uvicorn==0.51.0",
+    "sqlalchemy==2.0.51",
+    "jinja2==3.1.6",
+    "python-multipart==0.0.32",
+]

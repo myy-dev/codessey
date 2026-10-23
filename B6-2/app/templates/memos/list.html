@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}메모 목록 | 나의 메모 앱{% endblock %}
+
+{% block content %}
+<section class="memo-list-heading" aria-labelledby="memo-list-title">
+    <header class="detail-header">
+        <div>
+            <p class="eyebrow">MEMOS</p>
+            <h1 id="memo-list-title">메모 목록</h1>
+        </div>
+    </header>
+
+    <form class="search-form" action="{{ url_for('memo_list') }}" method="get" role="search">
+        <label class="sr-only" for="q">제목 검색</label>
+        <input id="q" name="q" type="search" value="{{ query }}" placeholder="제목에 포함된 단어를 입력하세요.">
+        <button class="button" type="submit">검색</button>
+        {% if query %}
+        <a class="button button-ghost" href="{{ url_for('memo_list') }}">초기화</a>
+        {% endif %}
+    </form>
+</section>
+
+{% if memos %}
+<section class="memo-grid" aria-label="메모 목록">
+    {% for memo in memos %}
+    <a class="memo-card" href="{{ url_for('memo_detail', memo_id=memo.id) }}" aria-labelledby="memo-title-{{ memo.id }}">
+        <div class="memo-card-meta">
+            <span class="eyebrow">MEMO #{{ memo.id }}</span>
+            <time datetime="{{ memo.created_at.isoformat() }}">{{ memo.created_at.strftime('%Y-%m-%d %H:%M') }}</time>
+        </div>
+        <h2 id="memo-title-{{ memo.id }}">{{ memo.title }}</h2>
+        <p>{{ memo.content | truncate(110) }}</p>
+    </a>
+    {% endfor %}
+</section>
+{% else %}
+<section class="empty-state">
+    {% if query %}
+    <h2>검색 결과가 없습니다.</h2>
+    <p>“{{ query }}”이(가) 제목에 포함된 메모를 찾지 못했습니다.</p>
+    <a class="button button-secondary" href="{{ url_for('memo_list') }}">전체 메모 보기</a>
+    {% else %}
+    <h2>아직 작성한 메모가 없습니다.</h2>
+    <a class="button" href="{{ url_for('memo_create_form') }}">첫 메모 작성하기</a>
+    {% endif %}
+</section>
+{% endif %}
+
+<div class="bottom-link list-actions">
+    <a class="button button-ghost" href="{{ url_for('home') }}">홈으로 돌아가기</a>
+    <a class="button" href="{{ url_for('memo_create_form') }}">새 메모 작성</a>
+</div>
+{% endblock %}

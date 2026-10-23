@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+
+{% block title %}홈 | 나의 메모 앱{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <p class="eyebrow">생각이 머무는 곳</p>
+    <h1>생각을 간단히 기록하고<br>필요할 때 다시 꺼내 보세요.</h1>
+    <div class="actions">
+        <a class="button" href="{{ url_for('memo_list') }}">메모 목록 보기</a>
+        <a class="button button-secondary" href="{{ url_for('memo_create_form') }}">새 메모 작성</a>
+    </div>
+</section>
+
+<section class="feature-grid" aria-label="주요 특징">
+    <article class="feature-card">
+        <span class="feature-number">01</span>
+        <h2>빠른 기록</h2>
+        <p>제목과 내용을 입력해 새로운 메모를 바로 저장합니다.</p>
+    </article>
+    <article class="feature-card">
+        <span class="feature-number">02</span>
+        <h2>쉬운 탐색</h2>
+        <p>제목 검색과 최신순 목록으로 원하는 메모를 찾습니다.</p>
+    </article>
+    <article class="feature-card">
+        <span class="feature-number">03</span>
+        <h2>자유로운 관리</h2>
+        <p>상세 화면에서 내용을 확인하고 수정하거나 삭제합니다.</p>
+    </article>
+</section>
+{% endblock %}

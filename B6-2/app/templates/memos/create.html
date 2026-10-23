@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+
+{% block title %}새 메모 | 나의 메모 앱{% endblock %}
+
+{% block content %}
+{% with form_heading="새 메모 작성", form_eyebrow="NEW MEMO", form_action=url_for('memo_create') %}
+    {% include "memos/_form.html" %}
+{% endwith %}
+{% endblock %}
