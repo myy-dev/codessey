@@ -13,6 +13,28 @@ from app.templating import templates
 
 router = APIRouter(prefix="/memos", tags=["memos"])
 
+MEMO_RESPONSES = {
+    404: {
+        "description": "잘못된 메모 번호이거나 메모가 없을 때 표시하는 HTML 오류 화면",
+        "content": {"text/html": {"schema": {"type": "string"}}},
+    },
+    # 메모 ID 검증 실패를 처리하는 404 대신 자동 422 응답이 표기되는 현상 방지
+    "default": {"description": "기타 HTTP 오류"},
+}
+FORM_ERROR_RESPONSE = {
+    "description": "입력값 검증 실패 시 HTML 폼, 요청 형식 검증 실패 시 JSON 오류",
+    "content": {
+        "text/html": {"schema": {"type": "string"}},
+        "application/json": {
+            "schema": {
+                "type": "object",
+                "properties": {"detail": {"type": "array", "items": {"type": "object"}}},
+                "required": ["detail"],
+            },
+        },
+    },
+}
+
 
 def get_memo_service(db: Session = Depends(get_db)) -> MemoService:
     return MemoService(MemoRepository(db))
@@ -56,6 +78,9 @@ def memo_create_form(request: Request) -> HTMLResponse:
 # 메모 등록 및 상세 화면 이동, 입력 오류 시 작성 화면 재표시
 @router.post(
     "",
+    status_code=303,
+    response_class=RedirectResponse,
+    responses={422: FORM_ERROR_RESPONSE},
     name="memo_create",
     summary="메모 등록",
     description=(
@@ -89,6 +114,7 @@ def memo_create(
 @router.get(
     "/{memo_id}",
     response_class=HTMLResponse,
+    responses=MEMO_RESPONSES,
     name="memo_detail",
     summary="메모 상세 조회",
     description="메모 번호에 해당하는 상세 화면 반환, 잘못된 번호이거나 메모가 없으면 404 오류 화면 반환",
@@ -111,6 +137,7 @@ def memo_detail(
 @router.get(
     "/{memo_id}/edit",
     response_class=HTMLResponse,
+    responses=MEMO_RESPONSES,
     name="memo_edit_form",
     summary="메모 수정 화면 조회",
     description="기존 제목과 내용을 채운 수정 화면 반환, 잘못된 번호이거나 메모가 없으면 404 오류 화면 반환",
@@ -136,6 +163,9 @@ def memo_edit_form(
 # 메모 수정 및 상세 화면 이동, 입력 오류 시 수정 화면 재표시
 @router.post(
     "/{memo_id}/edit",
+    status_code=303,
+    response_class=RedirectResponse,
+    responses={**MEMO_RESPONSES, 422: FORM_ERROR_RESPONSE},
     name="memo_update",
     summary="메모 수정",
     description=(
@@ -170,6 +200,9 @@ def memo_update(
 # 메모 삭제 및 목록 화면 이동
 @router.post(
     "/{memo_id}/delete",
+    status_code=303,
+    response_class=RedirectResponse,
+    responses=MEMO_RESPONSES,
     name="memo_delete",
     summary="메모 삭제",
     description="삭제 성공 시 목록 화면으로 303 리다이렉트, 잘못된 번호이거나 메모가 없으면 404 오류 화면 반환",
