@@ -17,12 +17,6 @@ FastAPI와 SQLAlchemy를 사용해 브라우저에서 데이터를 등록하고 
 | 화면 구성      | HTML, CSS        |
 | 폼 데이터 파싱 | python-multipart |
 
-## 실행
-
-```sh
-uv run uvicorn app.main:app --reload
-```
-
 ## 프로젝트 구조
 
 ```text
@@ -75,6 +69,12 @@ B6-2/
     ├── test_memo_service.py
     ├── test_templating.py
     └── http_smoke.py
+```
+
+## 실행
+
+```sh
+uv run uvicorn app.main:app --reload
 ```
 
 ## 수행 항목 체크리스트
