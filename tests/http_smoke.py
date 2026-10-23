@@ -6,7 +6,9 @@
 """
 
 from html import escape
+from html.parser import HTMLParser
 from http.client import HTTPConnection
+import json
 import re
 from urllib.parse import urlencode, urlsplit
 from uuid import uuid4
@@ -16,17 +18,56 @@ HOST = "127.0.0.1"
 PORT = 8000
 
 
+class MemoCardParser(HTMLParser):
+    """메모 카드의 상세 경로와 제목 추출"""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.cards: list[tuple[str, str]] = []
+        self.href: str | None = None
+        self.in_title = False
+        self.title = ""
+
+    def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        attributes = dict(attrs)
+        if tag == "a" and "memo-card" in (attributes.get("class") or "").split():
+            self.href = attributes.get("href")
+            self.title = ""
+        elif tag == "h2" and self.href is not None:
+            self.in_title = True
+
+    def handle_data(self, data: str) -> None:
+        if self.in_title:
+            self.title += data
+
+    def handle_endtag(self, tag: str) -> None:
+        if tag == "h2":
+            self.in_title = False
+        elif tag == "a" and self.href is not None:
+            self.cards.append((urlsplit(self.href).path, self.title))
+            self.href = None
+
+
+def assert_search_result(html: str, detail_path: str, title: str) -> None:
+    """검색 결과 카드 안의 상세 링크와 제목 일치 여부 검증"""
+    parser = MemoCardParser()
+    parser.feed(html)
+    assert parser.cards == [(detail_path, title)], parser.cards
+
+
 def request(
     connection: HTTPConnection,
     method: str,
     path: str,
-    data: dict[str, str] | None = None,
+    data: dict[str, str] | bytes | None = None,
+    *,
+    content_type: str = "application/x-www-form-urlencoded",
 ) -> tuple[int, dict[str, str], str]:
     headers: dict[str, str] = {}
     body = None
     if data is not None:
-        body = urlencode(data)
-        headers["Content-Type"] = "application/x-www-form-urlencoded"
+        body = data if isinstance(data, bytes) else urlencode(data)
+        headers["Content-Type"] = content_type
 
     connection.request(method, path, body=body, headers=headers)
     response = connection.getresponse()
@@ -44,6 +85,23 @@ def main() -> None:
     status, _, home = request(connection, "GET", "/")
     assert status == 200
     assert "메모 목록 보기" in home and "새 메모 작성" in home
+
+    status, _, schema = request(connection, "GET", "/openapi.json")
+    assert status == 200
+    paths = json.loads(schema)["paths"]
+    for path in ("/memos", "/memos/{memo_id}/edit", "/memos/{memo_id}/delete"):
+        responses = paths[path]["post"]["responses"]
+        assert "303" in responses and "200" not in responses, (path, responses)
+        if path != "/memos":
+            assert "text/html" in responses["404"]["content"], path
+        if path.endswith("/delete"):
+            assert "422" not in responses, path
+        else:
+            assert set(responses["422"]["content"]) == {"text/html", "application/json"}, path
+    for path in ("/memos/{memo_id}", "/memos/{memo_id}/edit"):
+        responses = paths[path]["get"]["responses"]
+        assert "text/html" in responses["404"]["content"], path
+        assert "422" not in responses, path
 
     stylesheet_link = re.search(r'<link rel="stylesheet" href="([^"]+)"', home)
     assert stylesheet_link is not None
@@ -131,7 +189,8 @@ def main() -> None:
             "GET",
             f"/memos?{urlencode({'q': updated_title})}",
         )
-        assert status == 200 and updated_title in searched
+        assert status == 200
+        assert_search_result(searched, detail_path, updated_title)
 
         status, _, no_results = request(
             connection,
@@ -165,6 +224,30 @@ def main() -> None:
                     assert "내용은 1,000자 이하로 입력해 주세요." in invalid
                 for value in data.values():
                     assert escape(value.strip()) in invalid
+
+            # 문자열 필드에 파일을 전송한 요청의 JSON 검증 오류 확인
+            boundary = f"smoke-{run_id}"
+            for file_field in ("title", "content"):
+                parts = []
+                for field in ("title", "content"):
+                    filename = '; filename="input.txt"' if field == file_field else ""
+                    parts.append(
+                        f'--{boundary}\r\n'
+                        f'Content-Disposition: form-data; name="{field}"{filename}\r\n'
+                        '\r\n검증용 값\r\n'
+                    )
+                body = ("".join(parts) + f"--{boundary}--\r\n").encode("utf-8")
+                status, headers, invalid = request(
+                    connection, "POST", path, body,
+                    content_type=f"multipart/form-data; boundary={boundary}",
+                )
+                assert status == 422, (path, file_field, status)
+                assert "application/json" in headers["content-type"], (path, file_field)
+                errors = json.loads(invalid)["detail"]
+                assert any(
+                    error["loc"] == ["body", file_field] and error["type"] == "string_type"
+                    for error in errors
+                ), (path, file_field, errors)
 
         status, _, listing_after_invalid = request(connection, "GET", "/memos")
         assert status == 200 and listing_after_invalid == listing_before_invalid
