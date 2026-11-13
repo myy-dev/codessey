@@ -10,16 +10,6 @@ from repositories import TaskRepository
 from services.project_service import ProjectService
 
 
-ALLOWED_TRANSITIONS: dict[str, set[str]] = {
-    TaskStatus.TODO.value: {TaskStatus.IN_PROGRESS.value},
-    TaskStatus.IN_PROGRESS.value: {
-        TaskStatus.TODO.value,
-        TaskStatus.COMPLETED.value,
-    },
-    TaskStatus.COMPLETED.value: {TaskStatus.TODO.value},
-}
-
-
 class TaskService:
     """할 일의 입력 검증과 소유권 검사 및 상태 변경 규칙을 담당하는 서비스"""
 
@@ -106,10 +96,6 @@ class TaskService:
             raise AppError("올바르지 않은 상태입니다.")
         if new_status == task.status:
             raise AppError("이미 선택한 상태입니다.")
-        if new_status not in ALLOWED_TRANSITIONS[task.status]:
-            raise AppError(
-                f"{task.status_label} 상태에서 요청한 상태로 변경할 수 없습니다."
-            )
         previous_status = task.status_label
         if not self.tasks.change_status(task, owner_id=owner_id, new_status=new_status):
             raise AppError(

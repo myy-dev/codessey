@@ -85,7 +85,7 @@ erDiagram
 | `created_at` | `DateTime(timezone=True)` | 아니요 | 생성 시 현재 UTC 시각 | 할 일 생성 시각 |
 | `updated_at` | `DateTime(timezone=True)` | 아니요 | 생성 시 현재 UTC 시각, 수정 시 갱신 | 할 일 최종 수정 시각 |
 
-상태 컬럼은 문자열로 저장하며, 허용 상태와 상태 전이는 [TaskService](../services/task_service.py)에서 검사. DB의 Enum 또는 CHECK 제약으로 제한하는 구조는 아님.
+상태 컬럼은 문자열로 저장하며, [TaskService](../services/task_service.py)에서 정의된 상태 값인지와 중복 변경 여부를 검사. 대기·진행 중·완료 사이의 모든 상태 변경 허용. DB의 Enum 또는 CHECK 제약으로 제한하는 구조는 아님.
 
 ## ORM 관계와 삭제 정책
 

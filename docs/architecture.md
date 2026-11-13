@@ -9,7 +9,7 @@
 - 비로그인 사용자의 보호 페이지 접근 차단
 - 사용자별 프로젝트 소유권 검사
 - `User → Project → Task` 연관관계 데이터 출력
-- 서비스 계층에서 검증하는 할 일 상태 전이
+- 서비스 계층에서 검증하는 할 일 상태 변경
 - 프로젝트 검색, 할 일 검색·상태 필터
 - GitHub OAuth2 Authorization Code Flow
 - CSRF 토큰 검증과 일관된 전역 예외 화면
@@ -24,7 +24,7 @@
 | 공통 예외 | 인증·인가·도메인 오류 정의 | [core/exceptions.py](../core/exceptions.py) |
 | 인증·인가 | 세션 사용자 조회, 보호 경로 검사, CSRF, OAuth 통신 | [auth/](../auth/) |
 | 라우터 | 요청값 수신, 서비스 호출, 화면 응답과 리다이렉트 | [routers/](../routers/) |
-| 서비스 | 입력 검증, 소유권 확인, 상태 전이 규칙 | [services/](../services/) |
+| 서비스 | 입력 검증, 소유권 확인, 상태 값과 중복 변경 검사 | [services/](../services/) |
 | 저장소 | SQLAlchemy를 사용한 데이터 조회·변경 | [repositories/](../repositories/) |
 | 모델 | 테이블, 외래 키, 양방향 연관관계 | [models/](../models/) |
 | 화면 | 공통 템플릿 컨텍스트, Jinja2 SSR, 반응형 스타일 | [core/ui.py](../core/ui.py), [templates/](../templates/), [static/](../static/) |
@@ -81,11 +81,11 @@ erDiagram
 
 | 현재 상태 | 허용되는 다음 상태 | 화면 동작 |
 | --- | --- | --- |
-| 대기 (`todo`) | 진행 중 (`in_progress`) | 진행 시작 |
+| 대기 (`todo`) | 진행 중 (`in_progress`), 완료 (`completed`) | 진행 시작, 완료하기 |
 | 진행 중 (`in_progress`) | 완료 (`completed`), 대기 (`todo`) | 완료하기, 대기로 |
-| 완료 (`completed`) | 대기 (`todo`) | 다시 열기 |
+| 완료 (`completed`) | 진행 중 (`in_progress`), 대기 (`todo`) | 진행 재개, 다시 열기 |
 
-대기 상태에서 바로 완료하는 등 허용되지 않은 전이는 `AppError`로 차단한다. 성공한 상태 변경은 `대기 → 진행 중`과 같은 플래시 메시지와 카드 색상·버튼 변화로 즉시 확인할 수 있다.
+대기·진행 중·완료 사이의 모든 상태 변경을 허용한다. 알 수 없는 상태와 동일 상태로의 변경은 `AppError`로 차단하고, 소유권과 동시 변경 충돌을 검사한다. 성공한 상태 변경은 `대기 → 진행 중`과 같은 플래시 메시지와 카드 색상·버튼 변화로 즉시 확인할 수 있다.
 
 ## 보안 설계
 
@@ -107,5 +107,5 @@ GitHub 로그인은 인증 시작 → 사용자 승인 → 콜백의 일회성 `
 - **인증 흐름:** 로그인 폼 → `AuthService.authenticate` → 세션에 사용자 ID 저장 → `Depends(require_user)`가 후속 요청을 검증한다.
 - **인가 흐름:** `ProjectService`와 `TaskService`가 현재 사용자 ID와 프로젝트 `owner_id`를 비교해 다른 사용자의 데이터를 차단한다.
 - **객체 관계:** `User.projects`, `Project.owner`, `Project.tasks`, `Task.project`로 FK 데이터를 객체 그래프로 탐색한다.
-- **상태 로직:** 상태 전이는 데이터 수정 이상의 도메인 규칙이므로 HTTP 라우터가 아닌 서비스 계층에서 허용 목록으로 관리한다.
+- **상태 로직:** 상태 사이의 이동을 제한하지 않으며, 서비스 계층에서 상태 값·중복 변경·소유권을 검사하고 동시 변경 충돌을 처리한다.
 - **전체 구조:** 라우터가 입력과 응답을 맡고, 서비스가 규칙을 적용하며, 저장소가 DB를 조작하고, Jinja2 화면이 사용자에게 결과를 전달한다.

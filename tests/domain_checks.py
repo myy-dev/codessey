@@ -358,6 +358,9 @@ class DomainChecks(unittest.TestCase):
                 lambda: service.change_status(
                     task_id=task.id, owner_id=outsider.id, new_status="in_progress"
                 ),
+                lambda: service.change_status(
+                    task_id=task.id, owner_id=outsider.id, new_status="completed"
+                ),
                 lambda: service.delete_task(task_id=task.id, owner_id=outsider.id),
             ):
                 with self.assertRaises(ForbiddenError):
@@ -430,12 +433,37 @@ class DomainChecks(unittest.TestCase):
             self.assertEqual([item.id for item in loaded_user.projects], [project.id])
             self.assertEqual([item.id for item in loaded_project.tasks], [task.id])
 
-            with self.assertRaises(AppError):
-                TaskService(db).change_status(
-                    task_id=task.id,
-                    owner_id=user.id,
-                    new_status="completed",
+            task, before = TaskService(db).change_status(
+                task_id=task.id, owner_id=user.id, new_status="completed"
+            )
+            self.assertEqual(before, "대기")
+            self.assertEqual(task.status_label, "완료")
+            with SessionLocal() as other:
+                self.assertEqual(other.get(Task, task.id).status, "completed")
+                self.assertEqual(
+                    ProjectService(other).dashboard_counts(user.id), (1, 1, 1)
                 )
+            for invalid_status in ("invalid", "completed"):
+                with self.subTest(new_status=invalid_status), self.assertRaises(AppError):
+                    TaskService(db).change_status(
+                        task_id=task.id, owner_id=user.id, new_status=invalid_status
+                    )
+                self.assertEqual(task.status, "completed")
+            task, before = TaskService(db).change_status(
+                task_id=task.id, owner_id=user.id, new_status="in_progress"
+            )
+            self.assertEqual(before, "완료")
+            self.assertEqual(task.status_label, "진행 중")
+            with SessionLocal() as other:
+                self.assertEqual(other.get(Task, task.id).status, "in_progress")
+                self.assertEqual(
+                    ProjectService(other).dashboard_counts(user.id), (1, 1, 0)
+                )
+            task, before = TaskService(db).change_status(
+                task_id=task.id, owner_id=user.id, new_status="todo"
+            )
+            self.assertEqual(before, "진행 중")
+            self.assertEqual(task.status, "todo")
             task, before = TaskService(db).change_status(
                 task_id=task.id,
                 owner_id=user.id,

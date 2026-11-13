@@ -43,12 +43,14 @@
           <div class="task-body"><h3>{{ task.title }}</h3>{% if task.description %}<p>{{ task.description }}</p>{% endif %}<small>최근 변경 {{ task.updated_at.strftime('%Y.%m.%d %H:%M') }}</small></div>
           <div class="task-actions">
             {% if task.status == 'todo' %}
+            {{ status_form(task.id, 'completed', '완료하기', 'button button-primary button-small') }}
             {{ status_form(task.id, 'in_progress', '진행 시작', 'button button-secondary button-small') }}
             {% elif task.status == 'in_progress' %}
             {{ status_form(task.id, 'completed', '완료하기', 'button button-primary button-small') }}
             {{ status_form(task.id, 'todo', '대기로', 'text-button') }}
             {% else %}
-            {{ status_form(task.id, 'todo', '다시 열기', 'button button-secondary button-small') }}
+            {{ status_form(task.id, 'in_progress', '진행 재개', 'button button-secondary button-small') }}
+            {{ status_form(task.id, 'todo', '다시 열기', 'text-button') }}
             {% endif %}
             <form action="/app/tasks/{{ task.id }}/delete" method="post" onsubmit="return confirm('이 할 일을 삭제할까요?')"><input type="hidden" name="csrf" value="{{ csrf_token }}"><button class="text-button danger-text" type="submit">삭제</button></form>
           </div>

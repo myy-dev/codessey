@@ -206,6 +206,32 @@ class FlowTaskIntegrationTest(unittest.TestCase):
         task_match = re.search(r'action="/app/tasks/(\d+)/status"', body)
         self.assertIsNotNone(task_match)
         task_id = int(task_match.group(1))
+        self.assertIn('name="new_status" value="completed"', body)
+        self.assertIn('>완료하기</button>', body)
+
+        token = csrf_from_html(body)
+        status, _url, _body = browser.request(
+            f"/app/tasks/{task_id}/status",
+            data={"csrf": "invalid", "new_status": "completed"},
+        )
+        self.assertEqual(status, 403)
+        status, _url, body = browser.request(
+            f"/app/tasks/{task_id}/status",
+            data={"csrf": token, "new_status": "completed"},
+        )
+        self.assertEqual(status, 200)
+        self.assertIn("대기 → 완료", body)
+        self.assertIn('task-card status-completed', body)
+        token, body = browser.csrf(f"/app/projects/{project_id}?status=completed")
+        self.assertIn(task_title, body)
+        self.assertIn('task-card status-completed', body)
+        status, _url, body = browser.request(
+            f"/app/tasks/{task_id}/status",
+            data={"csrf": token, "new_status": "todo"},
+        )
+        self.assertEqual(status, 200)
+        self.assertIn("완료 → 대기", body)
+        self.assertIn('name="new_status" value="completed"', body)
 
         token = csrf_from_html(body)
         status, _url, body = browser.request(
@@ -256,6 +282,7 @@ class FlowTaskIntegrationTest(unittest.TestCase):
         for path, data in (
             (f"/app/projects/{project_id}/tasks", {"title": "침입", "description": ""}),
             (f"/app/tasks/{task_id}/status", {"new_status": "todo"}),
+            (f"/app/tasks/{task_id}/status", {"new_status": "completed"}),
             (f"/app/tasks/{task_id}/delete", {}),
             (f"/app/projects/{project_id}/delete", {}),
         ):
@@ -265,7 +292,11 @@ class FlowTaskIntegrationTest(unittest.TestCase):
 
         token, body = browser.csrf(f"/app/projects/{project_id}")
         self.assertIn("다시 열기", body)
+        self.assertIn(">진행 재개</button>", body)
+        self.assertIn('name="new_status" value="in_progress"', body)
         for new_status, message in (
+            ("in_progress", "완료 → 진행 중"),
+            ("completed", "진행 중 → 완료"),
             ("todo", "완료 → 대기"),
             ("in_progress", "대기 → 진행 중"),
             ("todo", "진행 중 → 대기"),
