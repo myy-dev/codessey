@@ -8,13 +8,12 @@
 {% endmacro %}
 {% block title %}{{ project.name }} — FlowTask{% endblock %}
 {% block content %}
-<section class="workspace">
-  <a class="back-link" href="/app/projects">← 모든 프로젝트</a>
+<section class="workspace project-detail">
   <header class="project-heading">
     <div>
       <div class="project-title-row"><span class="project-icon large">{{ project.name[0] }}</span><h1>{{ project.name }}</h1></div>
       {% if project.description %}<p>{{ project.description }}</p>{% endif %}
-      <small>소유자 {{ project.owner.display_name }} · {{ project.created_at.strftime('%Y.%m.%d') }} 생성</small>
+      <small>{{ project.created_at.strftime('%Y.%m.%d') }}</small>
     </div>
     <form action="/app/projects/{{ project.id }}/delete" method="post" onsubmit="return confirm('프로젝트와 모든 할 일을 삭제할까요?')">
       <input type="hidden" name="csrf" value="{{ csrf_token }}">
@@ -26,12 +25,12 @@
     <div class="task-section">
       <div class="section-heading"><div><h2>할 일 {{ tasks|length }}개</h2></div></div>
       <form class="filter-bar" method="get" action="/app/projects/{{ project.id }}">
-        <input name="q" value="{{ q }}" placeholder="할 일 검색" aria-label="할 일 검색">
+        <input name="q" value="{{ q }}" aria-label="할 일 검색">
         <select name="status" aria-label="상태 필터">
           <option value="">모든 상태</option>
           {% for item in statuses %}<option value="{{ item.value }}" {% if selected_status == item.value %}selected{% endif %}>{{ item.label }}</option>{% endfor %}
         </select>
-        <button class="button button-secondary" type="submit">필터</button>
+        <button class="button button-secondary" type="submit">검색</button>
         {% if q or selected_status %}<a class="text-link" href="/app/projects/{{ project.id }}">초기화</a>{% endif %}
       </form>
 
@@ -72,6 +71,9 @@
       </form>
     </aside>
   </div>
+  <nav class="project-navigation" aria-label="프로젝트 탐색">
+    <a class="button button-secondary" href="/app/projects">← 모든 프로젝트</a>
+  </nav>
 </section>
 {% endblock %}
 

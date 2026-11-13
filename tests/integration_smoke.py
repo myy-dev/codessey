@@ -187,7 +187,7 @@ class FlowTaskIntegrationTest(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertRegex(project_url, r"/app/projects/\d+$")
         self.assertIn(project_name, body)
-        self.assertIn("소유자 데모 사용자", body)
+        self.assertIn("<strong>데모 사용자</strong>님", body)
         project_id = int(project_url.rsplit("/", 1)[1])
 
         token = csrf_from_html(body)
@@ -331,7 +331,7 @@ class FlowTaskIntegrationTest(unittest.TestCase):
 
         status, _url, body = Browser().request("/auth/github")
         self.assertEqual(status, 503)
-        self.assertIn("GitHub 로그인이 설정되지 않았습니다", body)
+        self.assertNotIn("GitHub 로그인이 설정되지 않았습니다", body)
 
         status, _url, body = Browser().request("/does-not-exist")
         self.assertEqual(status, 404)

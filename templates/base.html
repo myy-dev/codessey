@@ -30,6 +30,11 @@
 
   {% if flash %}
     <div class="flash flash-{{ flash.category }}" role="status">{{ flash.message }}</div>
+    <script>
+      window.setTimeout(() => {
+        document.querySelector('.flash')?.remove();
+      }, 5000);
+    </script>
   {% endif %}
 
   <main>{% block content %}{% endblock %}</main>

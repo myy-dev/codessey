@@ -20,7 +20,7 @@ def github_authorize_url(*, state: str) -> str:
     """OAuth 설정 확인 후 state와 사용자 조회 권한을 포함한 GitHub 인증 URL 생성"""
     if not settings.github_client_id or not settings.github_client_secret:
         raise AppError(
-            "GitHub 로그인이 설정되지 않았습니다. 관리자에게 문의해 주세요.",
+            "",
             status_code=503,
         )
     return f"{GITHUB_AUTHORIZE_URL}?{urlencode({'client_id': settings.github_client_id, 'state': state, 'scope': 'read:user'})}"
