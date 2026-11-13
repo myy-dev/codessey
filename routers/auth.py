@@ -1,3 +1,5 @@
+"""로그인·회원가입·로그아웃 및 GitHub OAuth 요청 처리"""
+
 from __future__ import annotations
 
 import secrets
@@ -23,6 +25,7 @@ def login_form(
     user: OptionalUser,
     next_url: Annotated[str | None, Query(alias="next")] = None,
 ):
+    """로그인 화면 렌더링 및 기존 로그인 사용자의 프로젝트 목록 이동"""
     if user:
         return RedirectResponse("/app/projects", status_code=303)
     return render(
@@ -43,6 +46,7 @@ def login(
     csrf: Annotated[str, Form()],
     next_url: Annotated[str, Form()] = "/app/projects",
 ):
+    """CSRF·계정 검증 후 로그인 세션 시작 및 복귀 경로 이동"""
     validate_csrf(request, csrf)
     try:
         user = AuthService(db).authenticate(username=username, password=password)
@@ -63,6 +67,7 @@ def login(
 
 @router.get("/signup", name="signup_form")
 def signup_form(request: Request, user: OptionalUser):
+    """회원가입 화면 렌더링 및 기존 로그인 사용자의 프로젝트 목록 이동"""
     if user:
         return RedirectResponse("/app/projects", status_code=303)
     return render(request, "signup.html", user=None, error=None)
@@ -77,6 +82,7 @@ def signup(
     password: Annotated[str, Form()],
     csrf: Annotated[str, Form()],
 ):
+    """CSRF 검증 후 계정 생성·로그인 세션 시작 및 프로젝트 목록 이동"""
     validate_csrf(request, csrf)
     try:
         user = AuthService(db).register(
@@ -105,6 +111,7 @@ def logout(
     _user: CurrentUser,
     csrf: Annotated[str, Form()],
 ):
+    """CSRF 검증 후 세션 초기화·로그아웃 알림 저장 및 홈 이동"""
     validate_csrf(request, csrf)
     request.session.clear()
     add_flash(request, "안전하게 로그아웃되었습니다.")
@@ -113,6 +120,7 @@ def logout(
 
 @router.get("/auth/github", name="github_login")
 def github_login(request: Request):
+    """OAuth state 생성·세션 저장 및 GitHub 인증 페이지 이동"""
     state = secrets.token_urlsafe(32)
     request.session["oauth_state"] = state
     return RedirectResponse(github_authorize_url(state=state), status_code=302)
@@ -125,6 +133,7 @@ def github_callback(
     code: str = "",
     state: str = "",
 ):
+    """일회성 state·인증 코드 검사 후 GitHub 프로필 조회·계정 연결 및 세션 시작"""
     expected_state = request.session.pop("oauth_state", None)
     if not expected_state or not secrets.compare_digest(
         expected_state.encode("utf-8"), state.encode("utf-8")

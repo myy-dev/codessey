@@ -1,3 +1,5 @@
+"""프로젝트 정보와 사용자·할 일 관계 정의"""
+
 from __future__ import annotations
 
 from datetime import datetime, timezone
@@ -8,12 +10,18 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from core.database import Base
 
+# 런타임 순환 import 방지를 위한 타입 검사 전용 import
 if TYPE_CHECKING:
     from models.task import Task
     from models.user import User
 
 
 class Project(Base):
+    """사용자가 소유하고 여러 할 일을 포함하는 프로젝트 모델
+
+    User.projects와 연결되는 소유자 관계
+    Task.project와 연결되는 양방향 1:N 관계
+    """
     __tablename__ = "projects"
 
     id: Mapped[int] = mapped_column(primary_key=True)
@@ -27,7 +35,7 @@ class Project(Base):
     )
 
     owner: Mapped["User"] = relationship(back_populates="projects")
-    # Tasks are project-owned records; orphan tasks are deleted with their project.
+    # 소속 프로젝트 없는 할 일 방지를 위한 프로젝트 삭제 시 할 일 연쇄 삭제
     tasks: Mapped[list["Task"]] = relationship(
         back_populates="project",
         cascade="all, delete-orphan",

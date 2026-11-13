@@ -39,6 +39,8 @@
 
 ## 데이터 모델과 연관관계
 
+전체 컬럼과 제약 조건은 [데이터베이스 ERD와 컬럼 설명](erd.md) 참고.
+
 ```mermaid
 erDiagram
     USER ||--o{ PROJECT : owns

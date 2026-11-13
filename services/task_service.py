@@ -1,3 +1,5 @@
+"""할 일 조회·생성·삭제와 소유권 및 상태 변경 검증"""
+
 from __future__ import annotations
 
 from sqlalchemy.orm import Session
@@ -19,11 +21,15 @@ ALLOWED_TRANSITIONS: dict[str, set[str]] = {
 
 
 class TaskService:
+    """할 일의 입력 검증과 소유권 검사 및 상태 변경 규칙을 담당하는 서비스"""
+
     def __init__(self, db: Session) -> None:
+        """동일 DB 세션을 사용하는 프로젝트 서비스와 할 일 저장소 준비"""
         self.projects = ProjectService(db)
         self.tasks = TaskRepository(db)
 
     def _get_owned_task(self, task_id: int, owner_id: int) -> Task:
+        """할 일 존재 여부와 소속 프로젝트의 소유권 검사 후 반환"""
         task = self.tasks.get_by_id(task_id)
         if not task:
             raise NotFoundError("할 일을 찾을 수 없습니다.")
@@ -38,6 +44,7 @@ class TaskService:
         status: str = "",
         query: str = "",
     ) -> list[Task]:
+        """프로젝트 상세 조회 결과에서 검색·상태 필터를 적용한 할 일 목록 반환"""
         _, tasks = self.get_project_detail(
             project_id=project_id, owner_id=owner_id, status=status, query=query
         )
@@ -51,6 +58,7 @@ class TaskService:
         status: str = "",
         query: str = "",
     ) -> tuple[Project, list[Task]]:
+        """프로젝트 소유권과 상태 필터 검증 후 프로젝트·할 일 목록 반환"""
         project = self.projects.get_owned_project(project_id, owner_id)
         if status and status not in {item.value for item in TaskStatus}:
             raise AppError("올바르지 않은 상태 필터입니다.")
@@ -67,6 +75,7 @@ class TaskService:
         title: str,
         description: str,
     ) -> Task:
+        """프로젝트 소유권과 입력 길이 검증 후 대기 상태의 할 일 생성 및 충돌 처리"""
         self.projects.get_owned_project(project_id, owner_id)
         title = title.strip()
         description = description.strip()
@@ -91,6 +100,7 @@ class TaskService:
     def change_status(
         self, *, task_id: int, owner_id: int, new_status: str
     ) -> tuple[Task, str]:
+        """소유권·상태 값·중복 변경 검증과 충돌 처리 후 할 일 및 변경 전 한글 상태명 반환"""
         task = self._get_owned_task(task_id, owner_id)
         if new_status not in {item.value for item in TaskStatus}:
             raise AppError("올바르지 않은 상태입니다.")
@@ -109,6 +119,7 @@ class TaskService:
         return task, previous_status
 
     def delete_task(self, *, task_id: int, owner_id: int) -> int:
+        """소유권 검사 후 할 일 삭제 및 충돌 처리와 소속 프로젝트 ID 반환"""
         task = self._get_owned_task(task_id, owner_id)
         project_id = task.project_id
         if not self.tasks.delete(task, owner_id=owner_id):
@@ -117,4 +128,3 @@ class TaskService:
                 status_code=409,
             )
         return project_id
-

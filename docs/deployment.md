@@ -64,7 +64,7 @@ uvicorn main:app --reload
 ### Blueprint로 생성
 
 1. 배포할 코드와 [render.yaml](../render.yaml)을 GitHub 저장소에 반영한다.
-2. Render에서 **New → Blueprint**를 선택하고 `myy-dev/B6-3` 저장소와 변경사항이 반영된 브랜치를 연결한다.
+2. Render에서 **New → Blueprint**를 선택하고 `myy-dev/B5-3` 저장소와 변경사항이 반영된 브랜치를 연결한다.
 3. `render.yaml`의 무료 웹 서비스 설정을 확인하고 배포한다. Python 버전은 저장소의 `.python-version`을 사용한다.
 4. 배포 완료 후 서비스의 실제 `onrender.com` 주소와 `/health` 응답을 확인한다.
 5. GitHub 로그인을 사용하려면 위 OAuth 설정을 적용하고 실제 계정으로 로그인·새로고침 후 세션 유지를 확인한다.

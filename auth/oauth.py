@@ -1,3 +1,5 @@
+"""GitHub OAuth 인증 URL 생성과 토큰 교환 및 사용자 정보 조회"""
+
 from __future__ import annotations
 
 import json
@@ -15,6 +17,7 @@ GITHUB_USER_URL = "https://api.github.com/user"
 
 
 def github_authorize_url(*, state: str) -> str:
+    """OAuth 설정 확인 후 state와 사용자 조회 권한을 포함한 GitHub 인증 URL 생성"""
     if not settings.github_client_id or not settings.github_client_secret:
         raise AppError(
             "GitHub 로그인이 설정되지 않았습니다. 관리자에게 문의해 주세요.",
@@ -24,14 +27,20 @@ def github_authorize_url(*, state: str) -> str:
 
 
 def _json_request(request: Request) -> dict[str, object]:
+    """GitHub HTTP 요청과 JSON 응답 해석 및 통신·JSON 오류의 502 예외 변환"""
     try:
-        with urlopen(request, timeout=10) as response:  # noqa: S310 - fixed trusted URLs
+        with urlopen(
+            request, timeout=10
+        ) as response:  # noqa: S310 - 고정된 신뢰 URL 사용
             return json.loads(response.read().decode("utf-8"))
     except (HTTPError, URLError, TimeoutError, json.JSONDecodeError) as exc:
-        raise AppError("GitHub 인증 서버와 통신하지 못했습니다.", status_code=502) from exc
+        raise AppError(
+            "GitHub 인증 서버와 통신하지 못했습니다.", status_code=502
+        ) from exc
 
 
 def fetch_github_user(*, code: str) -> dict[str, str]:
+    """인증 코드의 액세스 토큰 교환 및 GitHub 사용자 정보 조회·변환"""
     if not settings.github_client_id or not settings.github_client_secret:
         raise AppError("GitHub 로그인이 설정되지 않았습니다.", status_code=503)
 
@@ -74,4 +83,3 @@ def fetch_github_user(*, code: str) -> dict[str, str]:
         "username": login,
         "display_name": name if isinstance(name, str) and name else login,
     }
-

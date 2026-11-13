@@ -1,3 +1,5 @@
+"""소유권과 동시 변경 조건을 반영한 할 일 데이터 접근"""
+
 from __future__ import annotations
 
 from sqlalchemy import delete, insert, literal, or_, select, update
@@ -7,10 +9,13 @@ from models import Project, Task
 
 
 class TaskRepository:
+    """SQLAlchemy를 이용한 할 일 조회·생성·상태 변경·삭제"""
     def __init__(self, db: Session) -> None:
+        """할 일 DB 작업에 사용할 세션 보관"""
         self.db = db
 
     def get_by_id(self, task_id: int) -> Task | None:
+        """기본 키로 할 일 조회 또는 None 반환"""
         return self.db.get(Task, task_id)
 
     def list_for_project(
@@ -21,6 +26,7 @@ class TaskRepository:
         status: str = "",
         query: str = "",
     ) -> list[Task]:
+        """프로젝트·소유자 조건과 상태·검색어 필터를 적용한 최신순 할 일 조회"""
         statement = select(Task).where(
             Task.project_id == project_id,
             Task.project.has(Project.owner_id == owner_id),
@@ -38,7 +44,8 @@ class TaskRepository:
     def create(
         self, *, project_id: int, owner_id: int, title: str, description: str, status: str
     ) -> Task | None:
-        # Authorize the parent in the INSERT itself; it may have been replaced.
+        """프로젝트 소유권 조건으로 할 일 생성 및 커밋 전 조회 후 반환, 생성 실패 시 None 반환"""
+        # 프로젝트 교체에 대비한 INSERT 내부의 소유권 재검사
         statement = (
             insert(Task)
             .from_select(
@@ -51,8 +58,8 @@ class TaskRepository:
         if result.rowcount != 1:
             self.db.rollback()
             return None
-        # Read our inserted row while the write transaction still holds the lock.
-        # cursor.lastrowid also works on SQLite releases without RETURNING.
+        # 쓰기 트랜잭션의 잠금 해제 전 생성한 행 조회
+        # RETURNING 미지원 SQLite와의 호환성을 위한 lastrowid 사용
         task = self.db.scalar(
             select(Task)
             .where(
@@ -69,7 +76,8 @@ class TaskRepository:
         return task
 
     def change_status(self, task: Task, *, owner_id: int, new_status: str) -> bool:
-        # Recheck ownership in the write even if a deleted ID has been reused.
+        """할 일 ID·프로젝트·기존 상태·소유자 조건으로 상태 변경 및 객체 갱신과 성공 여부 반환"""
+        # 삭제된 ID 재사용에 대비한 UPDATE 시 소유권 재검사
         result = self.db.execute(
             update(Task)
             .where(
@@ -89,6 +97,7 @@ class TaskRepository:
         return True
 
     def delete(self, task: Task, *, owner_id: int) -> bool:
+        """할 일 ID·프로젝트·소유자 조건으로 삭제 및 성공 여부 반환"""
         result = self.db.execute(
             delete(Task)
             .where(

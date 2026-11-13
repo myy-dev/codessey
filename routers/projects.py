@@ -1,3 +1,5 @@
+"""로그인 사용자 전용 프로젝트·할 일 요청 처리와 화면 응답"""
+
 from __future__ import annotations
 
 from typing import Annotated
@@ -22,6 +24,7 @@ def project_list(
     user: CurrentUser,
     q: str = "",
 ):
+    """로그인 사용자의 프로젝트 검색 결과와 전체 집계를 담은 목록 화면 렌더링"""
     service = ProjectService(db)
     projects = service.list_projects(user.id, query=q)
     project_count, task_count, completed_count = service.dashboard_counts(user.id)
@@ -48,6 +51,7 @@ def project_create(
     description: Annotated[str, Form()] = "",
     csrf: Annotated[str, Form()] = "",
 ):
+    """CSRF 검증 후 프로젝트 생성 및 상세 화면으로 이동"""
     validate_csrf(request, csrf)
     project = ProjectService(db).create_project(
         owner_id=user.id, name=name, description=description
@@ -65,6 +69,7 @@ def project_detail(
     status: Annotated[str, Query()] = "",
     q: Annotated[str, Query()] = "",
 ):
+    """소유 프로젝트와 검색·상태 필터를 적용한 할 일 목록의 상세 화면 렌더링"""
     project, tasks = TaskService(db).get_project_detail(
         project_id=project_id,
         owner_id=user.id,
@@ -93,6 +98,7 @@ def task_create(
     description: Annotated[str, Form()] = "",
     csrf: Annotated[str, Form()] = "",
 ):
+    """CSRF 검증 후 소유 프로젝트에 할 일 추가 및 상세 화면으로 이동"""
     validate_csrf(request, csrf)
     task = TaskService(db).create_task(
         project_id=project_id,
@@ -113,6 +119,7 @@ def task_change_status(
     new_status: Annotated[str, Form()],
     csrf: Annotated[str, Form()],
 ):
+    """CSRF 검증 후 할 일 상태 변경 및 변경 전후 상태 알림 저장"""
     validate_csrf(request, csrf)
     task, previous_status = TaskService(db).change_status(
         task_id=task_id,
@@ -134,6 +141,7 @@ def task_delete(
     user: CurrentUser,
     csrf: Annotated[str, Form()],
 ):
+    """CSRF 검증 후 할 일 삭제 및 소속 프로젝트 상세 화면으로 이동"""
     validate_csrf(request, csrf)
     project_id = TaskService(db).delete_task(task_id=task_id, owner_id=user.id)
     add_flash(request, "할 일을 삭제했습니다.")
@@ -148,8 +156,8 @@ def project_delete(
     user: CurrentUser,
     csrf: Annotated[str, Form()],
 ):
+    """CSRF 검증 후 프로젝트와 소속 할 일 삭제 및 프로젝트 목록으로 이동"""
     validate_csrf(request, csrf)
     ProjectService(db).delete_project(project_id=project_id, owner_id=user.id)
     add_flash(request, "프로젝트와 연결된 할 일을 삭제했습니다.")
     return RedirectResponse("/app/projects", status_code=303)
-
