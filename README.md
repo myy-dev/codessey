@@ -6,35 +6,72 @@ FastAPI와 SQLAlchemy를 사용해 사용자 인증·인가, 모델 연관관계
 
 ## 기술 스택
 
-| 구분 | 기술 |
-| --- | --- |
-| 언어 | Python 3.10 이상 |
-| 프레임워크 | FastAPI 0.116.1 |
-| ASGI 서버 | Uvicorn 0.35.0 |
-| ORM | SQLAlchemy 2.0.41 |
-| 데이터베이스 | SQLite |
-
-전체 의존성과 버전은 [requirements.txt](requirements.txt) 참고
+| 구분         | 기술                |
+| ------------ | ------------------- |
+| 언어         | Python 3.10 이상    |
+| 프레임워크   | FastAPI 0.116.1     |
+| ASGI 서버    | Uvicorn 0.35.0      |
+| ORM          | SQLAlchemy 2.0.41 |
+| 데이터베이스 | SQLite              |
 
 ## 프로젝트 구조
 
 ```text
 B6-3/
-├── main.py             # 앱 초기화, 미들웨어, 전역 예외 처리
-├── core/               # 설정, DB, 공통 예외와 화면 도구
-├── auth/               # 인증·인가, CSRF, OAuth
-├── routers/            # 요청·응답 처리
-├── services/           # 입력 검증, 소유권, 상태 변경 규칙
-├── repositories/       # 데이터 조회·변경
-├── models/             # User, Project, Task ORM 모델
-├── templates/          # Jinja2 SSR 화면
-├── static/             # 반응형 스타일
-├── tests/              # 도메인·저장소·HTTP 검사
-├── docs/               # 구조, ERD, 인증, 경로, 배포 문서
-├── requirements.txt    # 의존성과 버전
-├── .env.example        # 환경 변수 예시
-├── render.yaml         # Render 배포 설정
-└── Procfile            # 배포 서버 실행 명령
+├── .env.example                # 환경 변수 예시
+├── .gitignore
+├── README.md
+├── requirements.txt            # 직접 의존성과 버전
+├── render.yaml                 # Render 무료 웹 서비스 배포 설정
+├── Procfile                    # 배포 서버 실행 명령
+├── database.db                 # 최초 실행 시 생성되는 SQLite 파일, Git 제외
+├── main.py                     # 앱 생성, 미들웨어, 라우터 등록, 전역 예외 처리
+├── core/                       # 공통 설정과 기반 코드
+│   ├── config.py               # 환경 변수 설정
+│   ├── database.py             # 엔진, 세션, ORM Base, 테이블 생성, SQLite FK 활성화
+│   ├── exceptions.py           # 인증·인가·도메인 예외
+│   └── ui.py                   # Jinja2 공통 컨텍스트, 알림, 스타일시트 버전 관리
+├── auth/                       # 인증·인가와 OAuth
+│   ├── dependencies.py         # Depends 기반 사용자 조회와 로그인 필수 검사
+│   ├── security.py             # 세션 시작, CSRF, 로그인 후 이동 경로 검증
+│   └── oauth.py                # GitHub 인증 요청과 사용자 정보 조회
+├── routers/                    # 요청 수신, 서비스 호출, SSR 응답과 리다이렉트
+│   ├── web.py
+│   ├── auth.py
+│   └── projects.py
+├── services/                   # 입력 검증, 소유권 검사, 상태 전이 비즈니스 로직
+│   ├── auth_service.py
+│   ├── project_service.py
+│   └── task_service.py
+├── repositories/               # SQLAlchemy 기반 데이터 접근
+│   ├── user_repository.py
+│   ├── project_repository.py
+│   └── task_repository.py
+├── models/                     # ORM 모델과 양방향 1:N 연관관계
+│   ├── user.py
+│   ├── project.py
+│   └── task.py
+├── templates/                  # Jinja2 SSR 화면
+│   ├── base.html
+│   ├── home.html
+│   ├── login.html
+│   ├── signup.html
+│   ├── error.html
+│   └── projects/
+│       ├── index.html
+│       └── detail.html
+├── static/
+│   └── styles.css              # 데스크톱·모바일 반응형 스타일
+├── tests/
+│   ├── domain_checks.py        # 인증·관계·상태 전이·삭제 정책 검사
+│   ├── repository_checks.py    # 저장소·동시 요청·SQLite 호환성 회귀 검사
+│   └── integration_smoke.py    # 실행 중인 서버의 HTTP 사용자 흐름 검사
+└── docs/
+    ├── architecture.md         # 계층별 역할, 요청 흐름, 모델 관계와 상태 변경
+    ├── authentication.md       # 테스트 계정과 인증 방식
+    ├── routes.md               # 공개·보호 정책과 주요 기능 경로
+    ├── erd.md                  # ERD, 컬럼, 연관관계와 삭제 정책
+    └── deployment.md           # 환경 변수, GitHub OAuth, Render 무료 배포
 ```
 
 ## 배포 주소
@@ -51,67 +88,122 @@ uvicorn main:app --reload
 # http://127.0.0.1:8000 접속
 ```
 
-## 테스트 계정과 인증
-
-| 항목 | 내용 |
-| --- | --- |
-| 테스트 계정 | ID `demo` / PW `demo1234` |
-| 저장 방식 | DB 저장, 서버 시작 시 계정이 없으면 생성 |
-| 인증 방식 | 서명된 세션 쿠키의 `user_id`로 사용자 조회 |
-| 선택 이유 | 브라우저 기반 SSR에 적합한 쿠키를 통한 로그인 상태 전달 |
-
-## 공개·보호 경로 정책
-
-| HTTP | 경로 | 접근 정책 |
-| --- | --- | --- |
-| `GET` | `/`, `/health`, `/docs`, `/redoc`, `/openapi.json`, `/static/*` | 공개 |
-| `GET`, `POST` | `/login`, `/signup` | 공개 |
-| `GET` | `/auth/github`, `/auth/github/callback` | 공개 |
-| `POST` | `/logout` | 로그인 필수 |
-| `GET`, `POST` | 등록된 `/app/` 기능 경로 | 로그인 필수, 본인 소유 데이터만 접근 |
-
-보호 라우터의 `CurrentUser` 의존성을 통한 인증 검사와 비로그인 요청의 로그인 화면 이동
-
-## 주요 기능 경로
-
-| 기능 | HTTP | 경로 |
-| --- | --- | --- |
-| 프로젝트 목록·검색 | `GET` | `/app/projects?q=검색어` |
-| 프로젝트 생성 | `POST` | `/app/projects` |
-| 프로젝트 상세·할 일 검색·필터 | `GET` | `/app/projects/{project_id}?q=검색어&status=completed` |
-| 할 일 생성 | `POST` | `/app/projects/{project_id}/tasks` |
-| 할 일 상태 변경 | `POST` | `/app/tasks/{task_id}/status` |
-| 할 일 삭제 | `POST` | `/app/tasks/{task_id}/delete` |
-| 프로젝트와 자식 할 일 삭제 | `POST` | `/app/projects/{project_id}/delete` |
-
 ## 수행 항목 체크리스트
 
-- [x] Python 가상환경, 패키지 버전, 실행 방법 명시
-- [x] 인증·요청·서비스·저장소·모델·화면 계층 분리
-- [x] `Depends` 기반 인증, 로그인·로그아웃, 성공·실패 안내
-- [x] 로그인 여부에 따른 상단 메뉴 변경과 보호 경로 접근 제어
+### 개발 환경 준비
+
+- [x] Python 3.10 이상 사용
+- [x] 가상환경 생성·활성화와 패키지 설치 방법 작성
+- [x] `requirements.txt`에 주요 패키지 버전 명시
+- [x] FastAPI 서버 실행과 브라우저 접속 확인
+
+### 프로젝트 구조
+
+- [x] `auth/`, `routers/`, `services/`, `repositories/`, `models/`, `templates/` 구성
+- [x] 인증·인가, 요청·응답, 비즈니스 규칙, 데이터 접근, 화면 역할 분리
+- [x] 애플리케이션 시작과 전역 설정을 별도 파일로 구성
+
+### 인증
+
+- [x] FastAPI `Depends` 기반 인증 구현
+- [x] 세션 기반 인증 방식 선택과 이유 작성
+- [x] 로그인 성공·실패 결과 안내
+- [x] 로그인 성공 시 세션에 사용자 식별자 저장
+- [x] 로그아웃 시 세션 제거
+- [x] DB 테스트 계정 자동 생성과 [인증 문서에 ID/PW 명시](docs/authentication.md)
+- [x] 인증 의존성을 `auth/` 모듈로 분리
+
+### 접근 제어와 UI
+
+- [x] 비로그인 사용자의 핵심 기능 접근 차단
+- [x] 비로그인 보호 경로 접근 시 로그인 화면으로 이동
+- [x] [공개·보호 경로 정책](docs/routes.md)을 표로 문서화
+- [x] 로그인 전에는 로그인·회원가입 버튼 표시
+- [x] 로그인 후에는 사용자 이름·로그아웃·프로젝트 이동 메뉴 표시
 - [x] 프로젝트와 할 일의 사용자별 소유권 검사
-- [x] `User → Project → Task` 모델 3개와 양방향 1:N 관계 2개 구성, N:M 미사용
-- [x] 프로젝트 목록의 할 일 수와 상세 화면의 연관 할 일 목록 표시
-- [x] 부모 삭제 시 자식 연쇄 삭제, 선택 이유를 모델 코드 주석에 명시
-- [x] SQLAlchemy ORM·SQLite 저장과 요청별 DB 세션 정리
-- [x] 대기·진행 중·완료 사이 상태 변경, 잘못된 값·동일 상태 변경 차단
-- [x] 알림과 카드 표시로 상태 변경 결과 확인
-- [x] Jinja2 SSR·반응형 화면, 변경 성공 후 HTTP 303 이동
+
+### 도메인 모델과 연관관계
+
+- [x] `User`, `Project`, `Task` 모델 3개 구성
+- [x] `User → Project` 1:N 관계 구현
+- [x] `Project → Task` 1:N 관계 구현
+- [x] `relationship`과 `back_populates`로 양방향 관계 구현
+- [x] 프로젝트 목록에 연관된 할 일 수 표시
+- [x] 상세 화면에 프로젝트와 연결된 할 일 목록 표시
+- [x] 부모 삭제 시 자식 삭제 정책과 선택 이유를 코드 주석으로 명시
+- [x] N:M 관계 미사용
+
+### 데이터 저장
+
+- [x] 모든 핵심 데이터를 SQLAlchemy ORM과 SQLite에 저장
+- [x] 외래 키와 연관관계를 DB 기준으로 조회
+- [x] FastAPI `Depends`로 DB 세션 전달
+- [x] 요청 종료 시 DB 세션 정리
+
+### 상태 변경 비즈니스 기능
+
+- [x] 대기 → 진행 중 → 완료 및 대기 → 완료 상태 전이 구현
+- [x] 진행 중 → 대기, 완료 → 대기·진행 중 전이 구현
+- [x] 잘못된 상태 값과 동일 상태로의 변경을 서비스 계층에서 차단
+- [x] 상태 변경 전·후를 알림 메시지와 카드 표시로 구분
+
+### 화면 흐름과 SSR
+
+- [x] 주요 화면을 Jinja2 `TemplateResponse`로 렌더링
+- [x] 공통 레이아웃과 템플릿 컨텍스트 구성
+- [x] 로그인 → 핵심 기능 → 생성·조회 → 상태 변경 → 결과 확인 흐름 연결
+- [x] 데이터 변경 성공 후 HTTP 303으로 GET 화면에 이동
+- [x] 데스크톱·모바일 반응형 화면 구성
 
 ## 보너스 과제
 
-- [x] 전역 예외 처리와 공통 오류 화면
-- [x] 프로젝트·할 일 검색과 상태 필터
-- [x] GitHub OAuth2 로그인과 실제 계정 세션 유지 확인
-- [x] 회원가입, 입력값·아이디 중복 검사, PBKDF2-SHA256 비밀번호 해싱
-- [x] Render 배포와 외부 접속 URL 제출
+### 전역 예외 처리
 
-추가 라이브러리 없이 표준 라이브러리 `urllib`로 OAuth HTTP 통신 구현
+- [x] 커스텀 예외와 FastAPI 전역 예외 처리기 구현
+- [x] 없는 데이터·권한 없는 접근 등 실패 상황을 공통 화면으로 안내
+
+### 검색과 필터
+
+- [x] 프로젝트 이름·설명 검색
+- [x] 할 일 제목·설명 검색과 상태 필터
+- [x] 검색 결과 없음 안내와 필터 초기화 제공
+
+### OAuth2 소셜 로그인
+
+- [x] GitHub OAuth2 Authorization Code Flow 구현
+- [x] OAuth state 검증과 GitHub 계정 기반 사용자 연결
+- [x] Render 배포 주소에서 실제 GitHub 계정 로그인과 세션 유지 확인
+
+### 비밀번호 해싱과 회원가입
+
+- [x] 사용자 회원가입과 아이디 중복 검사
+- [x] 비밀번호 해시 저장과 로그인 시 검증
+- [x] 닉네임·아이디·비밀번호 입력값 검증
+
+### 외부 배포
+
+- [x] 환경 변수 기반 실행 설정과 배포 시작 명령 구성
+- [x] Render 무료 웹 서비스·SQLite 배포 설정과 절차 문서화
+- [x] Render에 실제 배포하고 외부 접속 URL 제출
+
+## 제약 사항
+
+- Python 3.10 이상 사용
+- 핵심 패키지로 FastAPI, Uvicorn, SQLAlchemy, Jinja2, python-multipart 사용
+- 인증 패키지는 과제에서 허용한 passlib, itsdangerous, Starlette 범위에서 사용
+- 허용 범위 밖의 외부 라이브러리 추가 금지와 OAuth HTTP 통신의 표준 라이브러리 사용
+- 모든 핵심 데이터의 SQLAlchemy ORM·관계형 DB 저장
+- 모델 최소 3개, 1:N 또는 N:1 관계 최소 2개, 양방향 관계 최소 1개 구성
+- 직접적인 N:M 관계 미사용
+- 인증·인가, 도메인, 데이터 접근, 화면 처리의 역할 분리
+- 복잡한 다단계 역할 권한 체계는 요구 범위에서 제외
+- 주요 화면의 Jinja2 기반 SSR 출력
+- 소셜 로그인·외부 배포는 선택 보너스로 실제 검증 완료 여부 별도 표시
 
 ## 결과물
 
-- [테스트 계정과 인증 방식](docs/authentication.md)
-- [경로와 접근 정책](docs/routes.md)
-- [서비스 구조와 동작](docs/architecture.md)
-- [환경 변수와 배포](docs/deployment.md)
+- [서비스 구조와 동작](docs/architecture.md): 계층별 역할, 요청 흐름, 모델 관계와 상태 변경
+- [데이터베이스 ERD와 컬럼 설명](docs/erd.md): 테이블·컬럼, 연관관계와 삭제 정책
+- [테스트 계정과 인증 방식](docs/authentication.md): 데모 계정, 세션 인증 선택 이유, 비밀번호 저장 방식
+- [경로와 접근 정책](docs/routes.md): 공개·보호 경로 정책과 주요 기능 경로
+- [환경 변수와 배포](docs/deployment.md): 로컬·운영 환경 설정, GitHub OAuth, Render 무료 배포
