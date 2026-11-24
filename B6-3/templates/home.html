@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}FlowTask — 작은 진전이 선명해지는 곳{% endblock %}
+{% block content %}
+<section class="hero">
+  <div class="hero-copy">
+    <h1>해야 할 일을<br><span>흐름으로 바꾸세요.</span></h1>
+  </div>
+  <div class="hero-board" aria-label="FlowTask 상태 흐름 미리보기">
+    <div class="board-top"><span>이번 주 제품 출시</span><span class="board-count">6 tasks</span></div>
+    <div class="flow-row">
+      <span class="status-dot dot-todo"></span>
+      <div><strong>출시 체크리스트</strong><small>대기</small></div>
+      <span class="flow-arrow">→</span>
+    </div>
+    <div class="flow-row active">
+      <span class="status-dot dot-progress"></span>
+      <div><strong>랜딩 페이지 QA</strong><small>진행 중</small></div>
+      <span class="flow-arrow">→</span>
+    </div>
+    <div class="flow-row">
+      <span class="status-dot dot-completed"></span>
+      <div><strong>배포 환경 구성</strong><small>완료</small></div>
+      <span class="flow-check">✓</span>
+    </div>
+    <div class="board-progress"><span style="width: 67%"></span></div>
+    <small class="board-caption">오늘의 진행률 67%</small>
+  </div>
+</section>
+
+{% endblock %}
+

@@ -1,0 +1,154 @@
+"""로그인·회원가입·로그아웃 및 GitHub OAuth 요청 처리"""
+
+from __future__ import annotations
+
+import secrets
+from typing import Annotated
+
+from fastapi import APIRouter, Form, Query, Request
+from fastapi.responses import RedirectResponse
+
+from auth.dependencies import CurrentUser, DbSession, OptionalUser
+from auth.oauth import fetch_github_user, github_authorize_url
+from auth.security import safe_next_url, start_session, validate_csrf
+from core.exceptions import AppError
+from services import AuthService
+from core.ui import add_flash, render
+
+
+router = APIRouter()
+
+
+@router.get("/login", name="login_form")
+def login_form(
+    request: Request,
+    user: OptionalUser,
+    next_url: Annotated[str | None, Query(alias="next")] = None,
+):
+    """로그인 화면 렌더링 및 기존 로그인 사용자의 프로젝트 목록 이동"""
+    if user:
+        return RedirectResponse("/app/projects", status_code=303)
+    return render(
+        request,
+        "login.html",
+        user=None,
+        next_url=safe_next_url(next_url),
+        error=None,
+    )
+
+
+@router.post("/login", name="login")
+def login(
+    request: Request,
+    db: DbSession,
+    username: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+    csrf: Annotated[str, Form()],
+    next_url: Annotated[str, Form()] = "/app/projects",
+):
+    """CSRF·계정 검증 후 로그인 세션 시작 및 복귀 경로 이동"""
+    validate_csrf(request, csrf)
+    try:
+        user = AuthService(db).authenticate(username=username, password=password)
+    except AppError as exc:
+        return render(
+            request,
+            "login.html",
+            user=None,
+            status_code=exc.status_code,
+            next_url=safe_next_url(next_url),
+            error=exc.message,
+            username=username,
+        )
+    start_session(request, user.id)
+    add_flash(request, f"{user.display_name}님, 다시 오신 것을 환영합니다.")
+    return RedirectResponse(safe_next_url(next_url), status_code=303)
+
+
+@router.get("/signup", name="signup_form")
+def signup_form(request: Request, user: OptionalUser):
+    """회원가입 화면 렌더링 및 기존 로그인 사용자의 프로젝트 목록 이동"""
+    if user:
+        return RedirectResponse("/app/projects", status_code=303)
+    return render(request, "signup.html", user=None, error=None)
+
+
+@router.post("/signup", name="signup")
+def signup(
+    request: Request,
+    db: DbSession,
+    username: Annotated[str, Form()],
+    display_name: Annotated[str, Form()],
+    password: Annotated[str, Form()],
+    csrf: Annotated[str, Form()],
+):
+    """CSRF 검증 후 계정 생성·로그인 세션 시작 및 프로젝트 목록 이동"""
+    validate_csrf(request, csrf)
+    try:
+        user = AuthService(db).register(
+            username=username,
+            display_name=display_name,
+            password=password,
+        )
+    except AppError as exc:
+        return render(
+            request,
+            "signup.html",
+            user=None,
+            status_code=exc.status_code,
+            error=exc.message,
+            username=username,
+            display_name=display_name,
+        )
+    start_session(request, user.id)
+    add_flash(request, "회원가입이 완료되었습니다. 첫 프로젝트를 만들어 보세요.")
+    return RedirectResponse("/app/projects", status_code=303)
+
+
+@router.post("/logout", name="logout")
+def logout(
+    request: Request,
+    _user: CurrentUser,
+    csrf: Annotated[str, Form()],
+):
+    """CSRF 검증 후 세션 초기화·로그아웃 알림 저장 및 홈 이동"""
+    validate_csrf(request, csrf)
+    request.session.clear()
+    add_flash(request, "안전하게 로그아웃되었습니다.")
+    return RedirectResponse("/", status_code=303)
+
+
+@router.get("/auth/github", name="github_login")
+def github_login(request: Request):
+    """OAuth state 생성·세션 저장 및 GitHub 인증 페이지 이동"""
+    state = secrets.token_urlsafe(32)
+    request.session["oauth_state"] = state
+    return RedirectResponse(github_authorize_url(state=state), status_code=302)
+
+
+@router.get("/auth/github/callback", name="github_callback")
+def github_callback(
+    request: Request,
+    db: DbSession,
+    code: str = "",
+    state: str = "",
+):
+    """일회성 state·인증 코드 검사 후 GitHub 프로필 조회·계정 연결 및 세션 시작"""
+    expected_state = request.session.pop("oauth_state", None)
+    if not expected_state or not secrets.compare_digest(
+        expected_state.encode("utf-8"), state.encode("utf-8")
+    ):
+        raise AppError("소셜 로그인 요청 상태가 올바르지 않습니다.", status_code=401)
+    if not code:
+        raise AppError("GitHub에서 인증 코드를 전달받지 못했습니다.", status_code=401)
+
+    profile = fetch_github_user(code=code)
+    user = AuthService(db).get_or_create_oauth_user(
+        provider="github",
+        subject=profile["subject"],
+        suggested_username=profile["username"],
+        display_name=profile["display_name"],
+    )
+    start_session(request, user.id)
+    add_flash(request, "GitHub 계정으로 로그인했습니다.")
+    return RedirectResponse("/app/projects", status_code=303)
